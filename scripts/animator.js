@@ -8,9 +8,7 @@ $(document).ready(function () {
   var selectedNode; // The node being selected
   var startX, startY;
   var isMouseDown;
-  var isFirstClick;
-
-  // Experiment!
+  var nodeJustBeenPlaced;
 
   function Node (x, y) {
     this.x = x;
@@ -96,7 +94,7 @@ $(document).ready(function () {
     startX = 0;
     startY = 0;
     isMouseDown = false;
-    isFirstClick = true;
+    nodeJustBeenPlaced = false;
 
     // Attach the mousemove event handler.
     canvas.addEventListener('mousemove', ev_mousemove, false);
@@ -124,41 +122,16 @@ $(document).ready(function () {
     return false;
   }
 
-  function registerClick () {
-    // If this is the first click for at least 300 milliseconds, 
-    // set isFirstClick to false to show that any subsequent clicks
-    // over the next 300 milliseconds will be a second click to
-    // create a double click. A timer is started to reset the variable
-    // when the valid period for a double click is over.
-    if (isFirstClick) {
-      isFirstClick = false; 
-      setTimeout(function () { isFirstClick = true; }, 300);
-    }
-    // If a double click has been made, reset the isFirstClick variable 
-    else {
-      isFirstClick = true;  
-    }
-  }
-
   function ev_mousedown (ev) {
     // Prevents text from being selected after a double click; this prevents
     // an error that causes dragging to stop working properly
     ev.preventDefault();
     
-    // If this events creates a double click AND the cursor is over a
-    // node, perform node selection.
-    if (!isFirstClick && currentNode != null) {
-      performNodeSelection();
-    }
-    
     // Attempt to place a node. If a new node cannot be placed, the user may 
     // have intended to have been trying to place a new edge; try this instead.
     if (!placeNode()) { 
       placeEdge();
-    }
-
-    // Register the current click
-    registerClick();
+    }  
 
     // Attempt to initiate a dragging action
     initiateDrag();
@@ -167,6 +140,19 @@ $(document).ready(function () {
   function ev_mouseup (ev) {
     // Record that the mouse button is no longer being held down
     isMouseDown = false;
+    
+    // If this events creates a double click AND the cursor is over a
+    // node, perform node selection.
+    if (cursorX == startX && cursorY == startY && 
+        currentNode != null && !nodeJustBeenPlaced) {
+      performNodeSelection();
+    }  
+    
+    // Record that a node has finished being placed on the canvas. It can now
+    // be selected.
+    if (nodeJustBeenPlaced) {
+      nodeJustBeenPlaced = false;
+    }
   }
 
   function ev_mousemove (ev) {
@@ -252,15 +238,33 @@ $(document).ready(function () {
       currentNode.highlight();
       highlightMode = true;
       $('p#numberOfNodes').html(nodes.length);
+      nodeJustBeenPlaced = true;
       return true;
     }
     return false;
   }
   
   function placeEdge() {
-    if (selectedNode != null && currentNode != null && currentNode != selectedNode) {
+    if (edgeCanBePlaced()) {
       edges.push(new Edge(selectedNode, currentNode));
+      $('p#numberOfEdges').html(edges.length);
     }
+  }
+  
+  function edgeCanBePlaced() {
+    if (selectedNode == null || currentNode == null || currentNode == selectedNode) {
+      return false;
+    }
+    for (var i = 0; i < edges.length; i++) {
+      if ((edges[i].getFromNode() == selectedNode && 
+          edges[i].getToNode() == currentNode) ||
+          (edges[i].getToNode() == selectedNode && 
+          edges[i].getFromNode() == currentNode)) {
+          // Note that the last two expressions disallow directed graphs for now
+        return false;
+      }
+    }
+    return true;
   }
   
   function initiateDrag () {
