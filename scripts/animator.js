@@ -10,6 +10,8 @@ $(document).ready(function () {
   var isMouseDown;
   var isFirstClick;
 
+  // Experiment!
+
   function Node (x, y) {
     this.x = x;
     this.y = y;
