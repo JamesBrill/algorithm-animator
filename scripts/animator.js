@@ -1,4 +1,4 @@
-$(document).bind('pageinit',function () {
+$(document).bind('pagecreate',function () {
   var canvas, context, nodeRadius;
   var cursorX, cursorY;
   var nodes = new Array();
@@ -9,6 +9,7 @@ $(document).bind('pageinit',function () {
   var startX, startY;
   var isMouseDown;
   var nodeJustBeenPlaced;
+  var graphMode;
   var popupMenuOnScreen;
 
   function Node (x, y) {
@@ -85,7 +86,7 @@ $(document).bind('pageinit',function () {
       alert('Error: failed to getContext!');
       return;
     }
-
+        
     nodeRadius = 20;
     cursorX = -1;
     cursorY = -1;
@@ -96,6 +97,7 @@ $(document).bind('pageinit',function () {
     startY = 0;
     isMouseDown = false;
     nodeJustBeenPlaced = false;
+    graphMode = "build";
     popupMenuOnScreen = false;
 
     setInterval(function () { draw() }, 25);
@@ -121,54 +123,94 @@ $(document).bind('pageinit',function () {
   }
   
   $('#snow').bind('vmousedown', function (ev) {
-    // Prevents text from being selected after a double click; this prevents
-    // an error that causes dragging to stop working properly
-    ev.preventDefault();
-    
-    // Attempt to place a node. If a new node cannot be placed, the user may 
-    // have intended to have been trying to place a new edge; try this instead.
-    if (!placeNode()) { 
-      placeEdge();
-    }  
+    if (graphMode == "build") {
+      // Prevents text from being selected after a double click; this prevents
+      // an error that causes dragging to stop working properly
+      ev.preventDefault();
 
-    // Attempt to initiate a dragging action
-    initiateDrag();
+      // Attempt to place a node. If a new node cannot be placed, the user may 
+      // have intended to have been trying to place a new edge; try this instead.
+      if (!placeNode()) { 
+        placeEdge();
+      }  
+    }
+    
+    if (graphMode == "build" || graphMode == "modify") {
+      // Attempt to initiate a dragging action
+      initiateDrag();    
+    }
   });
 
   $('#snow').bind('vmouseup', function (ev) {
-    // Record that the mouse button is no longer being held down
-    isMouseDown = false;
+    if (graphMode == "build") {
+      // If no drag was performed and the cursor is over a node that hasn't
+      // just been placed, perform node selection.
+      if (cursorX == startX && cursorY == startY && 
+          currentNode != null && !nodeJustBeenPlaced) {
+        performNodeSelection();
+      }  
+
+      // Record that a node has finished being placed on the canvas. It can now
+      // be selected.
+      if (nodeJustBeenPlaced) {
+        nodeJustBeenPlaced = false;
+      }
+    }
     
-    // If this events creates a double click AND the cursor is over a
-    // node, perform node selection.
-    if (cursorX == startX && cursorY == startY && 
-        currentNode != null && !nodeJustBeenPlaced) {
-      performNodeSelection();
-    }  
+    if (graphMode == "build" || graphMode == "modify") {
+      // Record that the mouse button is no longer being held down
+      isMouseDown = false;
+    }
     
-    // Record that a node has finished being placed on the canvas. It can now
-    // be selected.
-    if (nodeJustBeenPlaced) {
-      nodeJustBeenPlaced = false;
+    if (graphMode == "modify") {
+      if (cursorX == startX && cursorY == startY && currentNode != null) {
+        deleteIncidentEdges(); // Disallows directional edges for now
+        var index = nodes.indexOf(currentNode);
+        nodes.splice(index, 1); 
+      }       
     }
   });
 
   $('#snow').bind('vmousemove', function (ev) {
-    // Get the mouse position relative to the canvas element
-    cursorX = ev.pageX - this.offsetLeft;
-    cursorY = ev.pageY - this.offsetTop;
-    
-    // Get the node that currently contains the cursor, if there is one
-    var containingNode = getContainingNode(cursorX, cursorY);
-    
-    // Update the current node that the cursor is on
-    updateCurrentNode(containingNode);
+    if (graphMode == "build" || graphMode == "modify") {
+      // Get the mouse position relative to the canvas element
+      cursorX = ev.pageX - this.offsetLeft;
+      cursorY = ev.pageY - this.offsetTop;
+
+      // Get the node that currently contains the cursor, if there is one
+      var containingNode = getContainingNode(cursorX, cursorY);
+
+      // Update the current node that the cursor is on
+      updateCurrentNode(containingNode);
+    }
+  });
+  
+  $('input[name=radio-choice]').change(function() {
+    graphMode = $('input[name=radio-choice]:checked').val();
+    if (selectedNode != null) { 
+      selectedNode.select(); 
+      selectedNode = null;
+    }
   });
   
   function moveCurrentNodeToCursor() {
     if (!overlapsWithAnotherNode(cursorX, cursorY, true)) {
       currentNode.setX(cursorX);
       currentNode.setY(cursorY); 
+    }
+  }
+  
+  function deleteIncidentEdges() {
+    var deletedEdges = new Array();
+    for (var i = 0; i < edges.length; i++) {
+      if (edges[i].getToNode() == currentNode || 
+          edges[i].getFromNode() == currentNode) {
+        deletedEdges.push(edges[i]);
+      }
+    }
+    for (var j = 0; j < deletedEdges.length; j++) {
+      var index = edges.indexOf(deletedEdges[j]);
+      edges.splice(index,1);
     }
   }
   
