@@ -1,4 +1,4 @@
-$(document).ready(function () {
+$(document).bind('pageinit',function () {
   var canvas, context, nodeRadius;
   var cursorX, cursorY;
   var nodes = new Array();
@@ -9,6 +9,7 @@ $(document).ready(function () {
   var startX, startY;
   var isMouseDown;
   var nodeJustBeenPlaced;
+  var popupMenuOnScreen;
 
   function Node (x, y) {
     this.x = x;
@@ -85,7 +86,7 @@ $(document).ready(function () {
       return;
     }
 
-    nodeRadius = 15;
+    nodeRadius = 20;
     cursorX = -1;
     cursorY = -1;
     currentNode = null;
@@ -95,11 +96,8 @@ $(document).ready(function () {
     startY = 0;
     isMouseDown = false;
     nodeJustBeenPlaced = false;
+    popupMenuOnScreen = false;
 
-    // Attach the mousemove event handler.
-    canvas.addEventListener('mousemove', ev_mousemove, false);
-    canvas.addEventListener('mouseup', ev_mouseup, false);
-    canvas.addEventListener('mousedown', ev_mousedown, false);
     setInterval(function () { draw() }, 25);
   }
 
@@ -121,8 +119,8 @@ $(document).ready(function () {
     }
     return false;
   }
-
-  function ev_mousedown (ev) {
+  
+  $('#snow').bind('vmousedown', function (ev) {
     // Prevents text from being selected after a double click; this prevents
     // an error that causes dragging to stop working properly
     ev.preventDefault();
@@ -135,9 +133,9 @@ $(document).ready(function () {
 
     // Attempt to initiate a dragging action
     initiateDrag();
-  }
+  });
 
-  function ev_mouseup (ev) {
+  $('#snow').bind('vmouseup', function (ev) {
     // Record that the mouse button is no longer being held down
     isMouseDown = false;
     
@@ -153,9 +151,9 @@ $(document).ready(function () {
     if (nodeJustBeenPlaced) {
       nodeJustBeenPlaced = false;
     }
-  }
+  });
 
-  function ev_mousemove (ev) {
+  $('#snow').bind('vmousemove', function (ev) {
     // Get the mouse position relative to the canvas element
     cursorX = ev.pageX - this.offsetLeft;
     cursorY = ev.pageY - this.offsetTop;
@@ -165,7 +163,7 @@ $(document).ready(function () {
     
     // Update the current node that the cursor is on
     updateCurrentNode(containingNode);
-  }
+  });
   
   function moveCurrentNodeToCursor() {
     if (!overlapsWithAnotherNode(cursorX, cursorY, true)) {
@@ -238,7 +236,7 @@ $(document).ready(function () {
       currentNode.highlight();
       highlightMode = true;
       $('p#numberOfNodes').html(nodes.length);
-      nodeJustBeenPlaced = true;
+      nodeJustBeenPlaced = true;      
       return true;
     }
     return false;
@@ -312,7 +310,7 @@ $(document).ready(function () {
       drawEdge(toNode, fromNode);
     }
     var dataDisplay = document.getElementById('smeg2');
-    dataDisplay.innerHTML = "isMouseDown: " + isMouseDown + " isFirstClick: " + isFirstClick;
+    dataDisplay.innerHTML = "isMouseDown: " + isMouseDown;
   }
 
   function drawNode (i) {
