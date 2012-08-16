@@ -10,61 +10,6 @@ $(document).bind('pagecreate',function () {
   var isMouseDown;
   var nodeJustBeenPlaced;
   var graphMode;
-  var popupMenuOnScreen;
-
-  function Node (x, y) {
-    this.x = x;
-    this.y = y;
-    this.selected = false; 
-    this.highlighted = false;
-
-    this.getX = function () {
-      return this.x;
-    }
-
-    this.setX = function (newX) {
-      this.x = newX;
-    }
-  
-    this.getY = function () {
-      return this.y;
-    }
-
-    this.setY = function (newY) {
-      this.y = newY; 
-    }
-   
-    this.select = function () {
-      this.selected = !this.selected;
-    }
-
-    this.isSelected = function () {
-      return this.selected;
-    }
- 
-    this.highlight = function () {
-      this.highlighted = !this.highlighted;
-    }
-   
-    this.isHighlighted = function () {
-      return this.highlighted; 
-    }
-  }  
-  
-  function Edge (x, y) {
-    this.fromNode = x;
-    this.toNode = y;
-    this.selected = false; 
-    this.highlighted = false;
-
-    this.getFromNode = function () {
-      return this.fromNode;
-    }
-  
-    this.getToNode = function () {
-      return this.toNode;
-    }   
-  }
 
   // Initialization sequence.
   function init () {
@@ -98,7 +43,6 @@ $(document).bind('pagecreate',function () {
     isMouseDown = false;
     nodeJustBeenPlaced = false;
     graphMode = "build";
-    popupMenuOnScreen = false;
 
     setInterval(function () { draw() }, 25);
   }
@@ -123,11 +67,10 @@ $(document).bind('pagecreate',function () {
   }
   
   $('#snow').bind('vmousedown', function (ev) {
+    
+    ev.preventDefault();
+    
     if (graphMode == "build") {
-      // Prevents text from being selected after a double click; this prevents
-      // an error that causes dragging to stop working properly
-      ev.preventDefault();
-
       // Attempt to place a node. If a new node cannot be placed, the user may 
       // have intended to have been trying to place a new edge; try this instead.
       if (!placeNode()) { 
@@ -273,12 +216,12 @@ $(document).bind('pagecreate',function () {
     // create a new node there
     if (nodeCanBePlaced()) {
       var newNode = new Node(cursorX,cursorY);
-      nodes.push(newNode);   
+      nodes.push(new Node(cursorX,cursorY,nodeRadius));   
       currentNode = newNode;
       currentNode.highlight();
       highlightMode = true;
       $('p#numberOfNodes').html(nodes.length);
-      nodeJustBeenPlaced = true;      
+      nodeJustBeenPlaced = true;  
       return true;
     }
     return false;
@@ -286,7 +229,8 @@ $(document).bind('pagecreate',function () {
   
   function placeEdge() {
     if (edgeCanBePlaced()) {
-      edges.push(new Edge(selectedNode, currentNode));
+      var newEdge = new Edge(selectedNode, currentNode);
+      edges.push(newEdge);
       $('p#numberOfEdges').html(edges.length);
     }
   }
@@ -351,9 +295,10 @@ $(document).bind('pagecreate',function () {
       var fromNode = edges[i].getFromNode();
       drawEdge(toNode, fromNode);
     }
+    
     var dataDisplay = document.getElementById('smeg2');
     dataDisplay.innerHTML = "isMouseDown: " + isMouseDown;
-  }
+  }  
 
   function drawNode (i) {
     var x = nodes[i].getX();
