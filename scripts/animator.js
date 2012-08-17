@@ -43,7 +43,7 @@ $(document).bind('pagecreate',function () {
     isMouseDown = false;
     nodeJustBeenPlaced = false;
     graphMode = "build";
-
+    $('#mod-buttons').hide();
     setInterval(function () { draw() }, 25);
   }
 
@@ -66,8 +66,7 @@ $(document).bind('pagecreate',function () {
     return false;
   }
   
-  $('#snow').bind('vmousedown', function (ev) {
-    
+  $('#snow').bind('vmousedown', function (ev) {    
     ev.preventDefault();
     
     if (graphMode == "build") {
@@ -106,13 +105,26 @@ $(document).bind('pagecreate',function () {
     }
     
     if (graphMode == "modify") {
-      if (cursorX == startX && cursorY == startY && currentNode != null) {
-        deleteIncidentEdges(); // Disallows directional edges for now
-        var index = nodes.indexOf(currentNode);
-        nodes.splice(index, 1); 
+      if (cursorX == startX && cursorY == startY && currentNode != null) {  
+        performNodeSelection();        
+        if (selectedNode == null) {
+          $('#mod-buttons').hide();     
+        }
+        else {
+          $('#mod-buttons').show();     
+        }
       }       
     }
   });
+  
+  $('#delete').click(function () {
+    deleteIncidentEdges(); // Disallows directional edges for now
+    var index = nodes.indexOf(selectedNode);
+    nodes.splice(index, 1);
+    selectedNode = null;
+    $('#mod-buttons').hide();
+  });
+  
 
   $('#snow').bind('vmousemove', function (ev) {
     if (graphMode == "build" || graphMode == "modify") {
@@ -128,8 +140,11 @@ $(document).bind('pagecreate',function () {
     }
   });
   
-  $('input[name=radio-choice]').change(function() {
-    graphMode = $('input[name=radio-choice]:checked').val();
+  $('input[name=graph-mode]').change(function() {
+    graphMode = $('input[name=graph-mode]:checked').val();
+    if (graphMode == "build") {
+      $('#mod-buttons').hide();
+    }
     if (selectedNode != null) { 
       selectedNode.select(); 
       selectedNode = null;
@@ -146,8 +161,8 @@ $(document).bind('pagecreate',function () {
   function deleteIncidentEdges() {
     var deletedEdges = new Array();
     for (var i = 0; i < edges.length; i++) {
-      if (edges[i].getToNode() == currentNode || 
-          edges[i].getFromNode() == currentNode) {
+      if (edges[i].getToNode() == selectedNode || 
+          edges[i].getFromNode() == selectedNode) {
         deletedEdges.push(edges[i]);
       }
     }
@@ -289,7 +304,9 @@ $(document).bind('pagecreate',function () {
       context.arc(cursorX,cursorY,nodeRadius,0,Math.PI*2,false);
       context.stroke();
     }
-    suggestEdgePosition();
+    if (graphMode == "build") {
+      suggestEdgePosition();
+    }
     for (var i = 0; i < edges.length; i++) {
       var toNode = edges[i].getToNode();
       var fromNode = edges[i].getFromNode();
