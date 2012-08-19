@@ -1,9 +1,17 @@
-function Node (x, y, radius) {
+function Node (x, y, radius, nodeNumber) {
   this.x = x;
   this.y = y;
-  this.selected = false; 
   this.highlighted = false;
   this.radius = radius;
+  this.label = "Node " + nodeNumber;
+  
+  this.getLabel = function () {
+    return this.label;
+  }
+  
+  this.setLabel = function (newLabel) {
+    this.label = newLabel;  
+  }
   
   this.getRadius = function () {
     return this.radius;
@@ -27,14 +35,6 @@ function Node (x, y, radius) {
 
   this.setY = function (newY) {
     this.y = newY; 
-  }
-
-  this.select = function () {
-    this.selected = !this.selected;
-  }
-
-  this.isSelected = function () {
-    return this.selected;
   }
 
   this.highlight = function () {
