@@ -1,48 +1,48 @@
-function Node (x, y, radius, nodeNumber) {
-  this.x = x;
-  this.y = y;
-  this.highlighted = false;
-  this.radius = radius;
-  this.label = "Node " + nodeNumber;
+function Node (initX, initY, initRadius, nodeNumber) {
+  var x = initX;
+  var y = initY;
+  var highlighted = false;
+  var radius = initRadius;
+  var label = "N" + nodeNumber;
   
   this.getLabel = function () {
-    return this.label;
+    return label;
   }
   
   this.setLabel = function (newLabel) {
-    this.label = newLabel;  
+    label = newLabel;  
   }
   
   this.getRadius = function () {
-    return this.radius;
+    return radius;
   }
   
   this.setRadius = function (newRadius) {
-    this.radius = newRadius;
+    radius = newRadius;
   }
 
   this.getX = function () {
-    return this.x;
+    return x;
   }
 
   this.setX = function (newX) {
-    this.x = newX;
+    x = newX;
   }
 
   this.getY = function () {
-    return this.y;
+    return y;
   }
 
   this.setY = function (newY) {
-    this.y = newY; 
+    y = newY; 
   }
-
+  
   this.highlight = function () {
-    this.highlighted = !this.highlighted;
+    highlighted = !highlighted;
   }
 
   this.isHighlighted = function () {
-    return this.highlighted; 
+    return highlighted; 
   }
 }  
 

@@ -1,21 +1,25 @@
 $(document).bind('pagecreate',function () {
-  var canvas, context, nodeRadius;
-  var cursorX, cursorY;
-  var nodes = new Array();
-  var edges = new Array();
-  var currentNode; // Node cursor is currently on, if any
-  var highlightMode;
-  var selectedItem; // The node being selected
-  var startX, startY;
-  var isMouseDown;
-  var nodeJustBeenPlaced;
-  var graphMode;
-  var nodeNumber;
+  var canvas, context; // Canvas variables
+  var nodeRadius; // Radius of all nodes on the canvas
+  var cursorX, cursorY; // Coordinates of cursor
+  var nodes = new Array(); // Collection of nodes
+  var edges = new Array(); // Coolection of edges
+  var currentItem; // Item that cursor is currently on
+  var highlightMode; // Is an item being highlighted?
+  var selectedItem; // The item currently selected
+  var startX, startY; // Starting coordinates of a drag
+  var isMouseDown; // Is the left mouse button held down?
+  var nodeJustBeenPlaced; // Has a node just been placed?
+  var graphMode; // The editing mode for the graph editor (build/modify/run)
+  var nodeNumber; // Current node number
 
-  // Initialization sequence.
+  // Begin running the app
+  init(); 
+
+  // Initialization sequence
   function init () {
-    // Find the canvas element.
-    canvas = $('#snow')[0];
+    // Find the canvas element
+    canvas = $('#canvas')[0];
     if (!canvas) {
       alert('Error: I cannot find the canvas element!');
       return;
@@ -26,17 +30,18 @@ $(document).bind('pagecreate',function () {
       return;
     }
 
-    // Get the 2D canvas context.
+    // Get the 2D canvas context
     context = canvas.getContext('2d');
     if (!context) {
       alert('Error: failed to getContext!');
       return;
     }
         
+    // Initialise variables
     nodeRadius = 20;
     cursorX = -1;
     cursorY = -1;
-    currentNode = null;
+    currentItem = null;
     highlightMode = false;
     selectedItem = null; 
     startX = 0;
@@ -45,32 +50,20 @@ $(document).bind('pagecreate',function () {
     nodeJustBeenPlaced = false;
     graphMode = "build";
     nodeNumber = 1;
+    
+    // Hide all buttons related to item modification
     $('#mod-buttons').hide();
+    
+    // Begin drawing on the canvas
     setInterval(function () { draw() }, 25);
   }
-
-  function distance (x0, y0, x1, y1) {
-    var distance = Math.sqrt((x0-x1)*(x0-x1)+(y0-y1)*(y0-y1));
-    return distance;
-  }
-
-  function overlapsWithAnotherNode (x,y,ignoreCurrentNode) {    
-    for (var i = 0; i < nodes.length; i++) {
-      if (!ignoreCurrentNode || nodes[i] != currentNode) {
-        var nodeX = nodes[i].getX();
-        var nodeY = nodes[i].getY();
-        var distanceBetweenNodes = distance(x,y,nodeX,nodeY);
-        if (distanceBetweenNodes < 2*nodeRadius) {
-          return true;
-        } 
-      }
-    }
-    return false;
-  }
   
-  $('#snow').bind('vmousedown', function (ev) {    
+  // Virtual mouse-down event handler
+  $('#canvas').bind('vmousedown', function (ev) {   
+    // Prevent text from being highlighted
     ev.preventDefault();
     
+    // If in Build Mode...
     if (graphMode == "build") {
       // Attempt to place a node. If a new node cannot be placed, the user may 
       // have intended to have been trying to place a new edge; try this instead.
@@ -79,19 +72,22 @@ $(document).bind('pagecreate',function () {
       }  
     }
     
+    // If in Build Mode or Modify Mode...
     if (graphMode == "build" || graphMode == "modify") {
       // Attempt to initiate a dragging action
       initiateDrag();    
     }
   });
 
-  $('#snow').bind('vmouseup', function (ev) {
+  // Virtual mouse-up event handler 
+  $('#canvas').bind('vmouseup', function () {
+    // If in Build Mode...
     if (graphMode == "build") {
       // If no drag was performed and the cursor is over a node that hasn't
       // just been placed, perform node selection.
       if (cursorX == startX && cursorY == startY && 
-          currentNode != null && !nodeJustBeenPlaced) {
-        performNodeSelection();
+          currentItem != null && !nodeJustBeenPlaced) {
+        updateSelectedItem();
       }  
 
       // Record that a node has finished being placed on the canvas. It can now
@@ -100,154 +96,224 @@ $(document).bind('pagecreate',function () {
         nodeJustBeenPlaced = false;
       }
     }
+        
+    // If in Modify Mode...
+    if (graphMode == "modify") {
+      // If the user has not performed a drag...
+      if (cursorX == startX && cursorY == startY) {
+        // Record any changes to the selected item
+        updateSelectedItem();
+        
+        // Update the mod buttons accordingly
+        updateModificationButtons();
+      }     
+    }
     
+    // If in Build Mode or Modify Mode...
     if (graphMode == "build" || graphMode == "modify") {
       // Record that the mouse button is no longer being held down
       isMouseDown = false;
     }
+  });
+  
+  // Virtual mouse-move event handler
+  $('#canvas').bind('vmousemove', function (ev) {
+    // If in Build Mode or Modify Mode...
+    if (graphMode == "build" || graphMode == "modify") {
+      // Get the mouse position relative to the canvas element
+      cursorX = ev.pageX - this.offsetLeft - 2; // Accommodates border of 2px
+      cursorY = ev.pageY - this.offsetTop - 2; // Accommodates border of 2px
+    }
     
-    // Refactor this area to remove duplication *******************************************
+    // If in Build Mode...
+    if (graphMode == "build") {
+      // Get the node that the cursor is currently on, if there is one
+      var containingNode = getNearbyNode(cursorX, cursorY, false, 1);
+      
+      // Update the current item that the cursor is on
+      updateCurrentItem(containingNode);
+    }
+    
+    // If in Build Mode
     if (graphMode == "modify") {
-      if (cursorX == startX && cursorY == startY) {
-        var itemClickedOn = determineSelectedItem(); // What did the user just click on?
-        if (itemClickedOn == selectedItem) {
-          selectedItem = null;
-        }       
-        else {
-          selectedItem = itemClickedOn;
-        }
-        if (selectedItem == null) {
-          $('#mod-buttons').hide();     
-        }
-        else {
-          $('#mod-buttons').show();
-          if (selectedItem instanceof Node) {
-            $('#rename-item').val(selectedItem.getLabel());
-          }
-          else if (selectedItem instanceof Edge) {
-            $('#rename-item').val(selectedItem.getValue()); 
-          }
-        }
-      }     
+      // Get the node or edge that the cursor is currently on, if there is one
+      var containingItem = determineSelectedItem();
+      
+      // Update the current item that the cursor is on
+      updateCurrentItem(containingItem);
     }
   });
   
+  // Click event handler for the 'delete' button
   $('#delete').click(function () {
+    // Index of item to remove
     var index;
+    // If selected item is a node...
     if (selectedItem instanceof Node) {
-      deleteIncidentEdges(); // Disallows directional edges for now
+      // Delete any incident edges (disallows directional edges for now)
+      deleteIncidentEdges(); 
+      // Delete selected node
       index = nodes.indexOf(selectedItem);
       nodes.splice(index, 1);
       selectedItem = null;
     }
+    
+    // If selected item is an edge...
     else if (selectedItem instanceof Edge) {
+      // Delete selected edge
       index = edges.indexOf(selectedItem);
       edges.splice(index, 1);
       selectedItem = null;
     }
+    // Hide mod buttons as no item is currently selected
     $('#mod-buttons').hide();
   });
   
+  // 'Change' event handler for the 'rename' text box
   $('#rename-item').change(function () {
+    // If selected item is a node...
     if (selectedItem instanceof Node) {
+      // Set the node's label to the contents of the text box
       selectedItem.setLabel($('#rename-item').val());
     }
+    
+    // If selected item is an edge...
     else if (selectedItem instanceof Edge) {
+      // Set the edge's value to the contents of the text box 
+      // (need to restrict to numerical values)
       selectedItem.setValue($('#rename-item').val());
     }
   })
   
-
-  $('#snow').bind('vmousemove', function (ev) {
-    if (graphMode == "build" || graphMode == "modify") {
-      // Get the mouse position relative to the canvas element
-      cursorX = ev.pageX - this.offsetLeft;
-      cursorY = ev.pageY - this.offsetTop;
-
-      // Get the node that currently contains the cursor, if there is one
-      var containingNode = getContainingNode(cursorX, cursorY);
-
-      // Update the current node that the cursor is on
-      updateCurrentNode(containingNode);
-    }
-  });
-  
+  // 'Change' event handler for the graph mode selector
   $('input[name=graph-mode]').change(function() {
+    // Get current value of the selector
     graphMode = $('input[name=graph-mode]:checked').val();
+    // If in Build Mode, hide the mod buttons (can't be used in this mode)
     if (graphMode == "build") {
       $('#mod-buttons').hide();
     }
+    
+    // Ensure there is no selected item after mode has been changed
     if (selectedItem != null) { 
       selectedItem = null;
     }
   });
   
-  function determineSelectedItem() {
-    var edgePotentials = nearbyEdges();
-    var nodePotential = getContainingNode(cursorX, cursorY);
-    var shortestDistance = 100000;
-    var distanceToNode = 0;
-    if (nodePotential != null) {   
-      distanceToNode = distance(cursorX, cursorY, 
-          nodePotential.getX(), nodePotential.getY()); 
-      if (distanceToNode < nodeRadius) {
-        return nodePotential;
-      }
-      shortestDistance = distanceToNode;
+  // Updates the node or edge that is currently selected
+  function updateSelectedItem() {
+    // What did the user just click on?
+    var itemClickedOn = determineSelectedItem(); 
+    // If the user clicked on a selected item, un-select it
+    if (itemClickedOn == selectedItem) {
+      selectedItem = null;
+    }   
+    // Otherwise, select the item that the user clicked on    
+    else {
+      selectedItem = itemClickedOn;
+    }  
+  }
+  
+  // Update buttons used to modify the attributes of nodes and edges
+  function updateModificationButtons() {
+    // If no node or edge is selected, hide the mod buttons
+    if (selectedItem == null) {
+      $('#mod-buttons').hide();     
     }
-    var nearestItem = nodePotential;
+    // Otherwise, show them
+    else {
+      $('#mod-buttons').show();
+      // Show appropriate value in rename box
+      if (selectedItem instanceof Node) {
+        $('#rename-item').val(selectedItem.getLabel());
+      }
+      else if (selectedItem instanceof Edge) {
+        $('#rename-item').val(selectedItem.getValue()); 
+      }
+    }
+  }
+  
+  // Test if a given node overlaps with any other node. The 
+  // ignoreCurrentNode parameter determines whether the 
+  // current node is included in this test. The checkLengthMultiplier
+  // parameter determines whether a given node is overlapping any 
+  // other node (value: 2) or has its centre inside another node 
+  // (value: 1).
+  function getNearbyNode (x,y,ignoreCurrentNode, checkLengthMultiplier) {  
+    // For each node...
+    for (var i = 0; i < nodes.length; i++) {
+      // If current node isn't being ignored or this node isn't the current node...
+      if (!ignoreCurrentNode || nodes[i] != currentItem) {
+        // Coordinates of this node
+        var nodeX = nodes[i].getX();
+        var nodeY = nodes[i].getY();
+        // Distance between this node and the given node
+        var distanceBetweenNodes = distance(x,y,nodeX,nodeY);
+        // If the two nodes overlap, return true
+        if (distanceBetweenNodes < checkLengthMultiplier*nodeRadius) {
+          return nodes[i];
+        } 
+      }
+    }
+    // If no node overlaps with given node, return false
+    return null;
+  }  
+  
+  // Determine which single node or edge the cursor is pointing to
+  function determineSelectedItem() {
+    // The only edges to be considered are ones that are nearby, reducing
+    // the number of expensive distance calculations
+    var edgePotentials = nearbyEdges();
+    // The only node to be considered is the one containing the cursor
+    var nodePotential = getNearbyNode(cursorX, cursorY, false, 1);
+    // If the cursor is inside a node, return that node    
+    if (nodePotential != null) {   
+      return nodePotential;
+    }
+    
+    // Nearest item found so far
+    var nearestItem = null;
+    // Distance to nearest item found so far
+    var shortestDistance = 100000;   
+
+    // For each of the potential edges...
     for (var i = 0; i < edgePotentials.length; i++) {
+      // Coordinates of the edge's start and end points
       var startX = edgePotentials[i].getFromNode().getX();
       var startY = edgePotentials[i].getFromNode().getY();
       var endX = edgePotentials[i].getToNode().getX();
       var endY = edgePotentials[i].getToNode().getY();
-      var edgeDistance = distanceFromCursorToLineSegment(startX,startY,endX,endY);
-      if (edgeDistance < shortestDistance) {
+      
+      // Distance from cursor to edge
+      var edgeDistance = distanceFromPointToLineSegment(startX,startY,endX,endY,cursorX,cursorY);
+      // If this distance is shorter than the shortest distance so far and is within the
+      // cursor's radius, update the shortest distance and nearest item.
+      if (edgeDistance < shortestDistance && edgeDistance < nodeRadius) {
         shortestDistance = edgeDistance;
         nearestItem = edgePotentials[i];
       }
     }    
-    if (shortestDistance < nodeRadius) { 
-      return nearestItem;
-    }
-    return null;
+    // Return the nearest item that was found
+    return nearestItem;
   }
   
-  function distanceFromCursorToLineSegment(ax,ay,bx,by) {
-    var cx = cursorX;
-    var cy = cursorY;
-    var r_numerator = (cx-ax)*(bx-ax) + (cy-ay)*(by-ay);
-	  var r_denominator = (bx-ax)*(bx-ax) + (by-ay)*(by-ay);
-	  var r = r_numerator / r_denominator;
-    var s = ((ay-cy)*(bx-ax)-(ax-cx)*(by-ay)) / r_denominator; 
-	  var distanceLine = Math.abs(s) * Math.sqrt(r_denominator);
-    var distanceSegment = 0;
-
-    if ((r >= 0) && (r <= 1)) {
-      distanceSegment = distanceLine;
-    }
-    else {
-      var dist1 = (cx-ax)*(cx-ax) + (cy-ay)*(cy-ay);
-      var dist2 = (cx-bx)*(cx-bx) + (cy-by)*(cy-by);
-      if (dist1 < dist2) {
-        distanceSegment = Math.sqrt(dist1);
-      }
-      else {
-        distanceSegment = Math.sqrt(dist2);
-      }
-    }        
-    return distanceSegment;
-  }
-  
+  // Returns an array of edges that are near to the cursor
   function nearbyEdges() {
+    // Initialise array for nearby edges
     var edgePotentials = new Array();
+    
+    // For each edge...
     for (var i = 0; i < edges.length; i++) {
+      // Coordinates of the edge's start and end points
       var startX = edges[i].getFromNode().getX();
       var startY = edges[i].getFromNode().getY();
       var endX = edges[i].getToNode().getX();
       var endY = edges[i].getToNode().getY();
+      // Vertical and horizontal distances between cursor and edge
       var xDiff = Math.min(Math.abs(startX-cursorX), Math.abs(endX-cursorX));
       var yDiff = Math.min(Math.abs(startY-cursorY), Math.abs(endY-cursorY));
+      // If both of these distances are greater than the cursor's radius AND
+      // the edge does not cross the cursor diagonally, ignore the edge
       if (xDiff > nodeRadius && yDiff > nodeRadius &&
           (startX > cursorX && endX > cursorX ||
           startX < cursorX && endX < cursorX ||
@@ -255,90 +321,94 @@ $(document).bind('pagecreate',function () {
           startY < cursorY && endY < cursorY)) {
             continue;        
       }
+      // Otherwise, add it to the array of nearby edges
       else {
         edgePotentials.push(edges[i]);
       }
     }
+    // Return the array of nearby edges
     return edgePotentials;
   }
   
+  // Moves the current node (selected node in Build Mode) to the cursor
   function moveCurrentNodeToCursor() {
-    if (!overlapsWithAnotherNode(cursorX, cursorY, true)) {
-      currentNode.setX(cursorX);
-      currentNode.setY(cursorY); 
+    // If the cursor does not overlap any other node, move the current node
+    // to its location.
+    if (currentItem instanceof Node &&
+        getNearbyNode(cursorX, cursorY, true, 2) == null) {
+      currentItem.setX(cursorX);
+      currentItem.setY(cursorY); 
     }
   }
   
+  // Deletes edges incident to the selected node in Modify Mode
   function deleteIncidentEdges() {
+    // Initialise an array of edges to be deleted
     var deletedEdges = new Array();
+    
+    // For each edge...
     for (var i = 0; i < edges.length; i++) {
+      // If the edge is incident to the selected node, add it to the array of
+      // edges to be deleted.
       if (edges[i].getToNode() == selectedItem || 
           edges[i].getFromNode() == selectedItem) {
         deletedEdges.push(edges[i]);
       }
     }
+    
+    // Delete each edge from the array
     for (var j = 0; j < deletedEdges.length; j++) {
       var index = edges.indexOf(deletedEdges[j]);
       edges.splice(index,1);
     }
   }
   
-  function updateCurrentNode (containingNode) {
+  // Update the current item that the cursor is on
+  function updateCurrentItem (containingItem) {
     // Check if a node is currently being dragged
     var isDragged = nodeIsBeingDragged();   
-    // If cursor is on a node AND no node is being dragged... 
-    if (containingNode != null && !isDragged) {
-      // If there is still a different current node, un-highlight it
-      if (currentNode != null) {
-        currentNode.highlight();
+    // If cursor is on an item AND no node is being dragged... 
+    if (containingItem != null && !isDragged) {
+      // If there is still a different current item, un-highlight it
+      if (currentItem != null) {
+        currentItem.highlight();
       }
-      // Make current node the node that the cursor is on
-      currentNode = containingNode;
-      // Highlight the containing node and activate highlight mode    
-      currentNode.highlight();
+      // Make current item the item that the cursor is on
+      currentItem = containingItem;
+      // Highlight the containing item and activate highlight mode    
+      currentItem.highlight();
       highlightMode = true;
     }
-    // If cursor is not on a node...
+    // If cursor is not on an item...
     else {       
-      // If the current node is highlighted and no node is being dragged,
+      // If the current item is highlighted and no node is being dragged,
       // unhighlight it and deactivate highlight mode.
-      if (currentNode.isHighlighted() && !isDragged) {
-        currentNode.highlight();
+      if (currentItem.isHighlighted() && !isDragged) {
+        currentItem.highlight();
         highlightMode = false;
       }
-      // There is now no longer a current node, unless it is still being dragged
+      // There is now no longer a current item, unless it is still being dragged
       if (!isDragged) {
-        currentNode = null;
+        currentItem = null;
       }
     }   
     
-    // If the current node is being dragged, move it to where the cursor is
+    // If a node being dragged, move it to where the cursor is
     if (isDragged) {
       moveCurrentNodeToCursor();
     }
   }
-  
-  function performNodeSelection () {
-    // If the current node isn't selected...
-    if (currentNode != selectedItem) {
-      // Make the current node the selected node
-      selectedItem = currentNode;
-    } 
-    // If the current node is selected, nullify the selected node variable
-    else {
-      selectedItem = null;
-    }    
-  }
-  
+
+  // Attempt to place a new node where the cursor is
   function placeNode () {
     // If there is space for a node to be placed at the cursor's position,
     // create a new node there
-    if (nodeCanBePlaced()) {
+    if (nodeCanBePlaced()) {      
       var newNode = new Node(cursorX,cursorY,nodeRadius,nodeNumber);
       nodes.push(newNode);  
       nodeNumber++;
-      currentNode = newNode;
-      currentNode.highlight();
+      currentItem = newNode;
+      currentItem.highlight();
       highlightMode = true;
       $('p#numberOfNodes').html(nodes.length);
       nodeJustBeenPlaced = true;  
@@ -347,118 +417,187 @@ $(document).bind('pagecreate',function () {
     return false;
   }
   
+  // Attempt to place a new edge 
   function placeEdge() {
+    // If an edge can be placed between the selected and current nodes, do so
     if (edgeCanBePlaced()) {
-      var newEdge = new Edge(selectedItem, currentNode);
+      var newEdge = new Edge(selectedItem, currentItem);
       edges.push(newEdge);
       $('p#numberOfEdges').html(edges.length);
     }
   }
   
+  // Returns true if edge can be placed between the selected and current nodes
   function edgeCanBePlaced() {
-    if (selectedItem == null || currentNode == null || currentNode == selectedItem) {
+    // If user has not clicked a node different to the selected node, return false
+    if (selectedItem == null || currentItem == null || currentItem == selectedItem) {
       return false;
     }
+    
+    // If an edge already exists between the two nodes, return false
     for (var i = 0; i < edges.length; i++) {
       if ((edges[i].getFromNode() == selectedItem && 
-          edges[i].getToNode() == currentNode) ||
+          edges[i].getToNode() == currentItem) ||
           (edges[i].getToNode() == selectedItem && 
-          edges[i].getFromNode() == currentNode)) {
+          edges[i].getFromNode() == currentItem)) {
           // Note that the last two expressions disallow directed graphs for now
         return false;
       }
     }
+    // If no edge already exists between the two nodes, return true
     return true;
   }
   
-  function initiateDrag () {
-    // Record that the mouse button is being held down and the starting 
-    // coordinates of the dragging action.
+  // Record that the mouse button is being held down and the starting 
+  // coordinates of the dragging action.
+  function initiateDrag () {    
     isMouseDown = true;
     startX = cursorX;
     startY = cursorY;
   }
   
+  // Returns true if a node is being dragged. Note that the cursor may not
+  // currently be over a node due to latency, so a node check is not included.
   function nodeIsBeingDragged () {
     return isMouseDown && (startX != cursorX || startY != cursorY);
   }
   
+  // Returns true if a node can be placed at the cursor's position
   function nodeCanBePlaced () {
     return isInsideCanvas(cursorX, cursorY) && 
-           !overlapsWithAnotherNode(cursorX, cursorY, false);
+           getNearbyNode(cursorX, cursorY, false, 2) == null;
+  }    
+
+  // Returns true if the given coordinates are inside the canvas
+  function isInsideCanvas (x,y) {
+    if (x >= nodeRadius && y >= nodeRadius && x <= canvas.width-nodeRadius && 
+        y <= canvas.height-nodeRadius) {
+      return true;
+    }
+    return false;
   }
 
+  // Draws all items to the canvas
   function draw () {
-    context.clearRect(0,0,canvas.width,canvas.height);
+    // Clear the contents of the canvas
+    context.clearRect(0,0,canvas.width,canvas.height);  
+       
+    // Draw each node
     for (var i = 0; i < nodes.length; i++) {
-      drawNode(i);
+      drawNode(nodes[i]);
     }
-    if (!highlightMode) {
-      context.beginPath();
-      if (isInsideCanvas(cursorX, cursorY) && !overlapsWithAnotherNode(cursorX, cursorY, false)) {
-        context.strokeStyle = "#008000";
-      }
-      else {
-        context.strokeStyle = "#FF0000";
-      }
-      context.arc(cursorX,cursorY,nodeRadius,0,Math.PI*2,false);
-      context.stroke();
+    
+    // If nothing is being highlighted while building, draw an appropriate cursor
+    if (!highlightMode && graphMode == "build") {
+      drawCursor();
     }
+    
+    // If the user is in build mode, suggest a potential edge if possible
     if (graphMode == "build") {
-      suggestEdgePosition();
+      drawPotentialEdge();
     }    
-    for (i = 0; i < edges.length; i++) {
-      var toNode = edges[i].getToNode();
-      var fromNode = edges[i].getFromNode();
-      var isSelected = selectedItem == edges[i];
-      drawEdgeValue(edges[i]);
-      drawEdge(toNode, fromNode, isSelected);
+    
+    // Draw each edge
+    for (i = 0; i < edges.length; i++) {      
+      drawEdge(edges[i]);
     }    
   }  
-
-  function drawNode (i) {
-    var x = nodes[i].getX();
-    var y = nodes[i].getY();
+  
+  // Draws a cursor on the canvas
+  function drawCursor() {
+    // Begin drawing
     context.beginPath();
+    
+    // If a node could be placed here, draw a green cursor
+    if (isInsideCanvas(cursorX, cursorY) && getNearbyNode(cursorX, cursorY, false, 2) == null) {
+      context.strokeStyle = "#008000";
+    }
+    // Otherwise, draw a red cursor
+    else {
+      context.strokeStyle = "#FF0000";
+    }
+    
+    // Draw cursor
+    context.arc(cursorX,cursorY,nodeRadius,0,Math.PI*2,false);
+    context.stroke();
+  }
+
+  // Draws a given node on to the canvas
+  function drawNode(node) {
+    // Coordinates of the node's centre
+    var x = node.getX();
+    var y = node.getY();
+    
+    // Begin drawing
+    context.beginPath();
+    
+    // Draw the node's label
     context.fillStyle = "#000000";
     context.font="18px sans-serif";
-    context.fillText(nodes[i].getLabel(), x + nodeRadius, y - nodeRadius);
-    if (selectedItem == nodes[i]) {
+    context.fillText(node.getLabel(), x + nodeRadius, y - nodeRadius);
+    
+    // If the node is selected, set it's colour to blue
+    if (selectedItem == node) {
       context.fillStyle = "#0000FF"; 
     }
+    
+    // Draw the node
     context.arc(x,y,nodeRadius,0,Math.PI*2,false);
     context.fill();  
-    if (nodes[i].isHighlighted()) {
+    
+    // If the node is highlighted, give it a yellow outer ring
+    if (node.isHighlighted()) {
       context.strokeStyle = "#FFD700";
-      context.arc(x,y,nodeRadius,0,Math.PI*2,false);
-      context.arc(x,y,nodeRadius-1,0,Math.PI*2,false);
-      context.arc(x,y,nodeRadius-2,0,Math.PI*2,false);
+      for (var i = 0; i < 3; i++) {
+        context.arc(x,y,nodeRadius-i,0,Math.PI*2,false);
+      }
       context.stroke(); 
     } 
   }
 
-  function suggestEdgePosition() {
-    if (selectedItem != null && currentNode != null && currentNode != selectedItem) {
-      drawEdge(currentNode, selectedItem);
+  // Draws a 'ghost' edge that could potentially be placed if the mouse was clicked
+  function drawPotentialEdge() {
+    // If user has clicked a node different to the selected node, draw the potential edge
+    if (selectedItem != null && currentItem != null && currentItem != selectedItem) {
+      var potentialEdge = new Edge(currentItem,selectedItem); 
+      potentialEdge.setValue("");
+      drawEdge(potentialEdge);
     }
   }
   
-  function drawEdge(toNode, fromNode, isSelected) {
-    var x0 = toNode.getX();
-    var y0 = toNode.getY();
-    var x1 = fromNode.getX();
-    var y1 = fromNode.getY();
+  // Draw edge with given endpoints on to the canvas
+  function drawEdge(edge) {
+    // Coordinates of the edge's endpoints
+    var x0 = edge.getToNode().getX();
+    var y0 = edge.getToNode().getY();
+    var x1 = edge.getFromNode().getX();
+    var y1 = edge.getFromNode().getY();
+    
+    // Begin drawing
     context.beginPath();
+    
+    // Edges are coloured black by default, yellow if they are highlighted and
+    // blue if they are selected
     context.strokeStyle = "#000000";
-    if (isSelected) {
+    if (edge == selectedItem) {
       context.strokeStyle = "#0000FF"; 
     }
+    else if (edge.isHighlighted()) {
+      context.strokeStyle = "#FFD700";
+    }    
+    
+    // Draw the edge
     context.moveTo(x0,y0);
     context.lineTo(x1,y1); 
     context.stroke();   
+    
+    // Draw the edge's value
+    drawEdgeValue(edge);
   }
   
+  // Draw the value of an edge on to the canvas
   function drawEdgeValue(edge) {
+    // Calculate appropriate coordinates to draw text next to edge
     var fromNode = edge.getFromNode();
     var toNode = edge.getToNode();
     var x1 = fromNode.getX();
@@ -476,46 +615,18 @@ $(document).bind('pagecreate',function () {
     var y3 = midpointY - 15*dx;
     var x4 = midpointX - 15*dy;
     var y4 = midpointY + 15*dx;
+    
+    // Begin drawing
     context.beginPath();
     context.fillStyle = "#000000";
     context.font="16px sans-serif";
+    
+    // Draw at coordinates where the edge is least likely to cross the text 
     if (y1 < y2) {
-      //if (x1 < x2) {
-        //context.fillText(edge.getValue(), x3,y3+10); 
-      //}
-      //else {
-        context.fillText(edge.getValue(), x3,y3);
-      //}
+      context.fillText(edge.getValue(), x3,y3+5);
     }
     else {
-      //if (x1 < x2) {
-        //context.fillText(edge.getValue(), x4,y4);
-      //}
-      //else {
-        context.fillText(edge.getValue(), x4,y4+10);
-      //}
+      context.fillText(edge.getValue(), x4,y4+5);
     }
-  }
-
-  function getContainingNode (x,y) {
-    for (var i = 0; i < nodes.length; i++) {
-      var nodeX = nodes[i].getX();
-      var nodeY = nodes[i].getY();
-      var distanceFromCursorToNode = distance(x,y,nodeX,nodeY);
-      if (distanceFromCursorToNode < nodeRadius) {
-        return nodes[i];
-      }
-    }
-    return null; 
-  }
-
-  function isInsideCanvas (x,y) {
-    if (x >= nodeRadius && y >= nodeRadius && x <= canvas.width-nodeRadius && 
-        y <= canvas.height-nodeRadius) {
-      return true;
-    }
-    return false;
-  }
-
-  init();
+  }  
 }); 

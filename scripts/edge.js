@@ -1,23 +1,30 @@
-function Edge (x, y) {
-  this.fromNode = x;
-  this.toNode = y;
-  this.highlighted = false;
-  this.value = 0;
+function Edge (initFromNode, initToNode) {
+  var fromNode = initFromNode;
+  var toNode = initToNode;
+  var highlighted = false;
+  var value = 0;
+    
+  this.highlight = function () {
+    highlighted = !highlighted;
+  }
 
+  this.isHighlighted = function () {
+    return highlighted; 
+  }
   this.getValue = function () {
-    return this.value;
+    return value;
   }
   
   this.setValue = function (newValue) {
-    this.value = newValue;
+    value = newValue;
   }
 
   this.getFromNode = function () {
-    return this.fromNode;
+    return fromNode;
   }
 
   this.getToNode = function () {
-    return this.toNode;
+    return toNode;
   }   
 }
 
