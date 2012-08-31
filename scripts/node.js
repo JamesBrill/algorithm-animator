@@ -4,6 +4,15 @@ function Node (initX, initY, initRadius, nodeNumber) {
   var highlighted = false;
   var radius = initRadius;
   var label = "N" + nodeNumber;
+  var algorithmSpecificData = 0;
+  
+  this.getAlgorithmSpecificData = function () {
+    return algorithmSpecificData;
+  }
+  
+  this.setAlgorithmSpecificData = function (newAlgorithmSpecificData) {
+    algorithmSpecificData = newAlgorithmSpecificData;  
+  }
   
   this.getLabel = function () {
     return label;

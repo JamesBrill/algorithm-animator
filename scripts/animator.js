@@ -3,7 +3,7 @@ $(document).bind('pagecreate',function () {
   var nodeRadius; // Radius of all nodes on the canvas
   var cursorX, cursorY; // Coordinates of cursor
   var nodes = new Array(); // Collection of nodes
-  var edges = new Array(); // Coolection of edges
+  var edges = new Array(); // Collection of edges
   var currentItem; // Item that cursor is currently on
   var highlightMode; // Is an item being highlighted?
   var selectedItem; // The item currently selected
@@ -181,7 +181,7 @@ $(document).bind('pagecreate',function () {
     else if (selectedItem instanceof Edge) {
       // Set the edge's value to the contents of the text box 
       // (need to restrict to numerical values)
-      selectedItem.setValue($('#rename-item').val());
+      selectedItem.setWeight(parseInt($('#rename-item').val()));
     }
   })
   
@@ -197,6 +197,11 @@ $(document).bind('pagecreate',function () {
     // Ensure there is no selected item after mode has been changed
     if (selectedItem != null) { 
       selectedItem = null;
+    }
+    
+    if (graphMode == "run") {
+      var dijkstraTest = new DijkstraAnimator(nodes,edges,nodes[0]);
+      dijkstraTest.showShortestDistances();
     }
   });
   
@@ -228,7 +233,7 @@ $(document).bind('pagecreate',function () {
         $('#rename-item').val(selectedItem.getLabel());
       }
       else if (selectedItem instanceof Edge) {
-        $('#rename-item').val(selectedItem.getValue()); 
+        $('#rename-item').val(selectedItem.getWeight()); 
       }
     }
   }
@@ -274,7 +279,7 @@ $(document).bind('pagecreate',function () {
     // Nearest item found so far
     var nearestItem = null;
     // Distance to nearest item found so far
-    var shortestDistance = 100000;   
+    var shortestDistance = Infinity;   
 
     // For each of the potential edges...
     for (var i = 0; i < edgePotentials.length; i++) {
@@ -560,7 +565,7 @@ $(document).bind('pagecreate',function () {
     // If user has clicked a node different to the selected node, draw the potential edge
     if (selectedItem != null && currentItem != null && currentItem != selectedItem) {
       var potentialEdge = new Edge(currentItem,selectedItem); 
-      potentialEdge.setValue("");
+      potentialEdge.setWeight(0);
       drawEdge(potentialEdge);
     }
   }
@@ -623,10 +628,10 @@ $(document).bind('pagecreate',function () {
     
     // Draw at coordinates where the edge is least likely to cross the text 
     if (y1 < y2) {
-      context.fillText(edge.getValue(), x3,y3+5);
+      context.fillText(edge.getWeight(), x3,y3+5);
     }
     else {
-      context.fillText(edge.getValue(), x4,y4+5);
+      context.fillText(edge.getWeight(), x4,y4+5);
     }
   }  
 }); 
