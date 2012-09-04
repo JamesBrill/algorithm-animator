@@ -12,6 +12,8 @@ $(document).bind('pagecreate',function () {
   var nodeJustBeenPlaced; // Has a node just been placed?
   var graphMode; // The editing mode for the graph editor (build/modify/run)
   var nodeNumber; // Current node number
+  var algorithmAnimator; // Object that controls animation
+  var animationTimer; // Timer that controls speed of animation
 
   // Begin running the app
   init(); 
@@ -50,6 +52,8 @@ $(document).bind('pagecreate',function () {
     nodeJustBeenPlaced = false;
     graphMode = "build";
     nodeNumber = 1;
+    algorithmAnimator = null;
+    animationTimer = null;
     
     // Hide all buttons related to item modification
     $('#mod-buttons').hide();
@@ -187,8 +191,12 @@ $(document).bind('pagecreate',function () {
   
   // 'Change' event handler for the graph mode selector
   $('input[name=graph-mode]').change(function() {
+    // Ensure there are no timer duplicates
+    clearInterval(animationTimer);
+    
     // Get current value of the selector
     graphMode = $('input[name=graph-mode]:checked').val();
+    
     // If in Build Mode, hide the mod buttons (can't be used in this mode)
     if (graphMode == "build") {
       $('#mod-buttons').hide();
@@ -199,12 +207,13 @@ $(document).bind('pagecreate',function () {
       selectedItem = null;
     }
     
-    if (graphMode == "run") {
-      var dijkstraTest = new DijkstraAnimator(nodes,edges,nodes[0]);
-      dijkstraTest.showShortestDistances();
+    if (graphMode == "run") {      
+      algorithmAnimator = new DijkstraAnimator(nodes,edges,nodes[0]);
+      algorithmAnimator.buildAnimation();
+      animationTimer = setInterval(function () { algorithmAnimator.nextState() }, 1000);
     }
   });
-  
+   
   // Updates the node or edge that is currently selected
   function updateSelectedItem() {
     // What did the user just click on?
@@ -528,7 +537,7 @@ $(document).bind('pagecreate',function () {
   }
 
   // Draws a given node on to the canvas
-  function drawNode(node) {
+  function drawNode(node) {    
     // Coordinates of the node's centre
     var x = node.getX();
     var y = node.getY();
@@ -540,6 +549,11 @@ $(document).bind('pagecreate',function () {
     context.fillStyle = "#000000";
     context.font="18px sans-serif";
     context.fillText(node.getLabel(), x + nodeRadius, y - nodeRadius);
+    
+    if (graphMode == "run" && algorithmAnimator != null &&
+      $.inArray(node, algorithmAnimator.getCurrentState().getCloudNodes()) != -1) {
+      context.fillStyle = "#ADD8E6";
+    }
     
     // If the node is selected, set it's colour to blue
     if (selectedItem == node) {

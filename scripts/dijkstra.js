@@ -2,6 +2,8 @@ DijkstraAnimator = function (nodes,edges,startingNode) {
   this.nodes = nodes;
   this.edges = edges;
   this.startingNode = startingNode;
+  this.dijkstraStates = new Array();
+  this.stateIndex = 0;
 }
 
 var compareDijkstraNodes = function (a,b) {
@@ -14,8 +16,14 @@ var compareDijkstraNodes = function (a,b) {
   return 0;
 }
 
-DijkstraAnimator.prototype.showShortestDistances = function () {
+DijkstraAnimator.prototype.numberOfStates = function () {
+  return this.dijkstraStates.length;
+}
+
+DijkstraAnimator.prototype.buildAnimation = function () {
   var Q = new buckets.PriorityQueue(compareDijkstraNodes);
+  var C = new Array();
+  
   for (var i = 0; i < this.nodes.length; i++) {
     if (this.nodes[i] == this.startingNode) {
       this.nodes[i].setAlgorithmSpecificData(0);
@@ -28,6 +36,10 @@ DijkstraAnimator.prototype.showShortestDistances = function () {
   
   while (!Q.isEmpty()) {
     var u = Q.dequeue();
+    C.push(u);
+    var newDijkstraState = new DijkstraState(C.slice(0));
+    this.dijkstraStates.push(newDijkstraState);
+    
     var adjacentNodesOutsideCloud = new Array();
     for (i = 0; i < this.edges.length; i++) {
       if ((this.edges[i].getToNode() == u && Q.contains(this.edges[i].getFromNode()))) {
@@ -53,6 +65,31 @@ DijkstraAnimator.prototype.showShortestDistances = function () {
   for (i = 0; i < this.nodes.length; i++) {
     this.nodes[i].setLabel(this.nodes[i].getAlgorithmSpecificData());
   }
+}
+
+DijkstraAnimator.prototype.getCurrentState = function () {
+  if (this.dijkstraStates.length == 0) {
+    alert("No animation has been built.");
+    return null;
+  }
+  return this.dijkstraStates[this.stateIndex];
+}
+
+DijkstraAnimator.prototype.nextState = function () {
+  if (this.stateIndex < this.dijkstraStates.length - 1) {
+    this.stateIndex++;
+  }
+  else {
+    this.stateIndex = 0;
+  }  
+}
+
+DijkstraState = function (cloudNodes) {
+  this.cloudNodes = cloudNodes;  
+}
+
+DijkstraState.prototype.getCloudNodes = function () {
+  return this.cloudNodes;
 }
 
 
