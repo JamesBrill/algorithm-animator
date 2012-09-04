@@ -178,7 +178,7 @@ $(document).bind('pagecreate',function () {
     // If selected item is a node...
     if (selectedItem instanceof Node) {
       // Set the node's label to the contents of the text box
-      selectedItem.setLabel($('#rename-item').val());
+      selectedItem.setName($('#rename-item').val());
     }
     
     // If selected item is an edge...
@@ -194,8 +194,19 @@ $(document).bind('pagecreate',function () {
     // Ensure there are no timer duplicates
     clearInterval(animationTimer);
     
+    // Record the previous graph mode
+    var oldGraphMode = graphMode;
+    
     // Get current value of the selector
     graphMode = $('input[name=graph-mode]:checked').val();
+    
+    // If the user left Run Mode, remove the algorithm data from the nodes
+    if (oldGraphMode == "run" && graphMode != "run") {
+      for (var i = 0; i < nodes.length; i++) {
+        nodes[i].setLabel(nodes[i].getName());
+        nodes[i].resetAlgorithmSpecificData();
+      }
+    }
     
     // If in Build Mode, hide the mod buttons (can't be used in this mode)
     if (graphMode == "build") {
@@ -548,6 +559,7 @@ $(document).bind('pagecreate',function () {
     // Draw the node's label
     context.fillStyle = "#000000";
     context.font="18px sans-serif";
+    var label = "";
     context.fillText(node.getLabel(), x + nodeRadius, y - nodeRadius);
     
     if (graphMode == "run" && algorithmAnimator != null &&

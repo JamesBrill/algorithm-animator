@@ -7,10 +7,10 @@ DijkstraAnimator = function (nodes,edges,startingNode) {
 }
 
 var compareDijkstraNodes = function (a,b) {
-  if (a.getAlgorithmSpecificData() > b.getAlgorithmSpecificData()) {
+  if (a.getAlgorithmSpecificData(Infinity) > b.getAlgorithmSpecificData(Infinity)) {
     return -1;
   }
-  if (b.getAlgorithmSpecificData() > a.getAlgorithmSpecificData()) {
+  if (b.getAlgorithmSpecificData(Infinity) > a.getAlgorithmSpecificData(Infinity)) {
     return 1;
   }
   return 0;
@@ -23,22 +23,20 @@ DijkstraAnimator.prototype.numberOfStates = function () {
 DijkstraAnimator.prototype.buildAnimation = function () {
   var Q = new buckets.PriorityQueue(compareDijkstraNodes);
   var C = new Array();
+  var stateCounter = 0;
   
   for (var i = 0; i < this.nodes.length; i++) {
     if (this.nodes[i] == this.startingNode) {
-      this.nodes[i].setAlgorithmSpecificData(0);
+      this.nodes[i].setAlgorithmSpecificData(stateCounter,0);
     }
     else {
-      this.nodes[i].setAlgorithmSpecificData(Infinity);
+      this.nodes[i].setAlgorithmSpecificData(stateCounter,Infinity);
     }
     Q.enqueue(this.nodes[i]);
   }
   
   while (!Q.isEmpty()) {
     var u = Q.dequeue();
-    C.push(u);
-    var newDijkstraState = new DijkstraState(C.slice(0));
-    this.dijkstraStates.push(newDijkstraState);
     
     var adjacentNodesOutsideCloud = new Array();
     for (i = 0; i < this.edges.length; i++) {
@@ -52,18 +50,19 @@ DijkstraAnimator.prototype.buildAnimation = function () {
       }
     }
     for (i = 0; i < adjacentNodesOutsideCloud.length; i++) {
-      var dValueOfU = u.getAlgorithmSpecificData();
-      var dValueOfZ = adjacentNodesOutsideCloud[i].adjacentNode.getAlgorithmSpecificData();
+      var dValueOfU = u.getAlgorithmSpecificData(stateCounter);
+      var dValueOfZ = adjacentNodesOutsideCloud[i].adjacentNode.getAlgorithmSpecificData(stateCounter);
       var weight = adjacentNodesOutsideCloud[i].weight;
       if (dValueOfU + weight < dValueOfZ) {
-        adjacentNodesOutsideCloud[i].adjacentNode.setAlgorithmSpecificData(dValueOfU + weight);
+        adjacentNodesOutsideCloud[i].adjacentNode.setAlgorithmSpecificData(stateCounter,dValueOfU + weight);
         Q.updateItem(adjacentNodesOutsideCloud[i].adjacentNode);
       }
     }
-  }
-  
-  for (i = 0; i < this.nodes.length; i++) {
-    this.nodes[i].setLabel(this.nodes[i].getAlgorithmSpecificData());
+    
+    C.push(u);
+    var newDijkstraState = new DijkstraState(C.slice(0));
+    this.dijkstraStates.push(newDijkstraState);
+    stateCounter++;
   }
 }
 
@@ -82,6 +81,15 @@ DijkstraAnimator.prototype.nextState = function () {
   else {
     this.stateIndex = 0;
   }  
+  
+  for (var i = 0; i < this.nodes.length; i++) {
+    var nodeName = this.nodes[i].getName();
+    var nodeAlgorithmData = this.nodes[i].getAlgorithmSpecificData(this.stateIndex);
+    if (nodeAlgorithmData == Infinity) {
+      nodeAlgorithmData = String.fromCharCode(8734);
+    }
+    this.nodes[i].setLabel(nodeName + " [" + nodeAlgorithmData + "]");
+  }
 }
 
 DijkstraState = function (cloudNodes) {
