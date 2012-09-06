@@ -24,6 +24,7 @@ DijkstraAnimator.prototype.buildAnimation = function () {
   var Q = new buckets.PriorityQueue(compareDijkstraNodes);
   var C = new Array();
   var stateCounter = 0;
+  var tentativeNodes = new Array();
   
   for (var i = 0; i < this.nodes.length; i++) {
     if (this.nodes[i] == this.startingNode) {
@@ -37,6 +38,15 @@ DijkstraAnimator.prototype.buildAnimation = function () {
   
   while (!Q.isEmpty()) {
     var u = Q.dequeue();
+    C.push(u);
+    
+    if (u != this.startingNode) {
+      var index = tentativeNodes.indexOf(u);
+      tentativeNodes.splice(index,1);
+    }
+    var newDijkstraState = new DijkstraState(C.slice(0),tentativeNodes.slice(0),u);
+    this.dijkstraStates.push(newDijkstraState);
+    stateCounter++;
     
     var adjacentNodesOutsideCloud = new Array();
     for (i = 0; i < this.edges.length; i++) {
@@ -57,12 +67,15 @@ DijkstraAnimator.prototype.buildAnimation = function () {
         adjacentNodesOutsideCloud[i].adjacentNode.setAlgorithmSpecificData(stateCounter,dValueOfU + weight);
         Q.updateItem(adjacentNodesOutsideCloud[i].adjacentNode);
       }
+      
+      if ($.inArray(adjacentNodesOutsideCloud[i].adjacentNode, tentativeNodes) == -1 &&
+          $.inArray(adjacentNodesOutsideCloud[i].adjacentNode, C) == -1) {
+        tentativeNodes.push(adjacentNodesOutsideCloud[i].adjacentNode);
+        newDijkstraState = new DijkstraState(C.slice(0),tentativeNodes.slice(0),u);
+        this.dijkstraStates.push(newDijkstraState);
+        stateCounter++;
+      }
     }
-    
-    C.push(u);
-    var newDijkstraState = new DijkstraState(C.slice(0));
-    this.dijkstraStates.push(newDijkstraState);
-    stateCounter++;
   }
 }
 
@@ -92,13 +105,59 @@ DijkstraAnimator.prototype.nextState = function () {
   }
 }
 
-DijkstraState = function (cloudNodes) {
-  this.cloudNodes = cloudNodes;  
+DijkstraAnimator.prototype.drawNode = function (node, context) {
+  var state = this.dijkstraStates[this.stateIndex];
+  var radius = node.getRadius();
+  var x = node.getX();
+  var y = node.getY();
+  
+  context.fillStyle = "#000000";
+  
+  if (state.nodeType(node) == "cloud" || state.nodeType(node) == "current") {
+    context.fillStyle = "#ADD8E6";
+  }
+  if (state.nodeType(node) == "tentative") {
+    context.fillStyle = "#FFFF00";
+  }
+  
+  context.arc(x,y,radius,0,Math.PI*2,false);
+  context.fill();
+  
+  if (node == this.startingNode) {
+    context.strokeStyle = "#00008B";
+    for (var i = 0; i < 3; i++) {
+      context.arc(x,y,radius-i,0,Math.PI*2,false);
+    }
+    context.stroke(); 
+  }
+  if (state.nodeType(node) == "current") {
+    context.strokeStyle = "#008000";
+    for (var i = 0; i < 3; i++) {
+      context.arc(x,y,radius-i,0,Math.PI*2,false);
+    }
+    context.stroke();     
+  }
 }
 
-DijkstraState.prototype.getCloudNodes = function () {
-  return this.cloudNodes;
+DijkstraState = function (cloudNodes, tentativeNodes, currentNode) {
+  this.cloudNodes = cloudNodes;  
+  this.tentativeNodes = tentativeNodes;
+  this.currentNode = currentNode;
 }
+
+DijkstraState.prototype.nodeType = function (node) {
+  if (this.currentNode != null && node == this.currentNode) {
+    return "current";
+  }
+  if (this.cloudNodes != null && $.inArray(node, this.cloudNodes) != -1) {
+    return "cloud";
+  }
+  if (this.tentativeNodes != null && $.inArray(node, this.tentativeNodes) != -1) {
+    return "tentative";
+  }
+  return "unvisited";  
+}
+
 
 
 

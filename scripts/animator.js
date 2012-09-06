@@ -559,31 +559,30 @@ $(document).bind('pagecreate',function () {
     // Draw the node's label
     context.fillStyle = "#000000";
     context.font="18px sans-serif";
-    var label = "";
     context.fillText(node.getLabel(), x + nodeRadius, y - nodeRadius);
     
-    if (graphMode == "run" && algorithmAnimator != null &&
-      $.inArray(node, algorithmAnimator.getCurrentState().getCloudNodes()) != -1) {
-      context.fillStyle = "#ADD8E6";
+    if (graphMode == "run" && algorithmAnimator != null) {
+      algorithmAnimator.drawNode(node, context);
     }
-    
-    // If the node is selected, set it's colour to blue
-    if (selectedItem == node) {
-      context.fillStyle = "#0000FF"; 
-    }
-    
-    // Draw the node
-    context.arc(x,y,nodeRadius,0,Math.PI*2,false);
-    context.fill();  
-    
-    // If the node is highlighted, give it a yellow outer ring
-    if (node.isHighlighted()) {
-      context.strokeStyle = "#FFD700";
-      for (var i = 0; i < 3; i++) {
-        context.arc(x,y,nodeRadius-i,0,Math.PI*2,false);
+    else {
+      // If the node is selected, set it's colour to blue
+      if (selectedItem == node) {
+        context.fillStyle = "#0000FF"; 
       }
-      context.stroke(); 
-    } 
+
+      // Draw the node
+      context.arc(x,y,nodeRadius,0,Math.PI*2,false);
+      context.fill();  
+
+      // If the node is highlighted, give it a yellow outer ring
+      if (node.isHighlighted()) {
+        context.strokeStyle = "#FFD700";
+        for (var i = 0; i < 3; i++) {
+          context.arc(x,y,nodeRadius-i,0,Math.PI*2,false);
+        }
+        context.stroke(); 
+      } 
+    }
   }
 
   // Draws a 'ghost' edge that could potentially be placed if the mouse was clicked
