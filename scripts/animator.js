@@ -218,6 +218,7 @@ $(document).bind('pagecreate',function () {
       selectedItem = null;
     }
     
+    // If in Run Mode, set up algorithm animator and being animation
     if (graphMode == "run") {      
       algorithmAnimator = new DijkstraAnimator(nodes,edges,nodes[0]);
       algorithmAnimator.buildAnimation();
@@ -556,11 +557,14 @@ $(document).bind('pagecreate',function () {
     // Begin drawing
     context.beginPath();
     
-    // Draw the node's label
+    // Fill style is black by default
     context.fillStyle = "#000000";
+    
+    // Draw the node's label
     context.font="18px sans-serif";
     context.fillText(node.getLabel(), x + nodeRadius, y - nodeRadius);
     
+    // Use the algorithm animator to draw the node if in Run Mode
     if (graphMode == "run" && algorithmAnimator != null) {
       algorithmAnimator.drawNode(node, context);
     }

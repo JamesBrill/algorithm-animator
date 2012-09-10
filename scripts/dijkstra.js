@@ -1,11 +1,18 @@
+/* Creates a DijkstraAnimator, an object that alters the colour of a given
+ * set of nodes to represent the execution of the Dijkstra shortest path 
+ * algorithm. The object also produces an information feed to show the user
+ * each step of the algorithm in various forms of pseudo-code. 
+ */
 DijkstraAnimator = function (nodes,edges,startingNode) {
-  this.nodes = nodes;
-  this.edges = edges;
-  this.startingNode = startingNode;
-  this.dijkstraStates = new Array();
-  this.stateIndex = 0;
+  this.nodes = nodes; // Nodes in graph to be operated on
+  this.edges = edges; // Edges in graph to be operated on
+  this.startingNode = startingNode; // Node from which shortest distances are calculated
+  this.dijkstraStates = new Array(); // Array of all states reached during the algorithm
+  this.stateIndex = 0; // Index of current state
 }
 
+// Comparator function to pass to Buckets priority queue implementation. 
+// a is 'greater' than b if its most recent d-value is lesser.
 var compareDijkstraNodes = function (a,b) {
   if (a.getAlgorithmSpecificData(Infinity) > b.getAlgorithmSpecificData(Infinity)) {
     return -1;
@@ -16,69 +23,103 @@ var compareDijkstraNodes = function (a,b) {
   return 0;
 }
 
-DijkstraAnimator.prototype.numberOfStates = function () {
-  return this.dijkstraStates.length;
-}
-
+// Run Dijkstra's shortest path algorithm to build an array of states, each state
+// representing each step of the algorithm.
 DijkstraAnimator.prototype.buildAnimation = function () {
-  var Q = new buckets.PriorityQueue(compareDijkstraNodes);
-  var C = new Array();
-  var stateCounter = 0;
-  var tentativeNodes = new Array();
+  // Priority queue to store nodes. Node at the front of the queue is always the 
+  // one with the smallest d-value. All nodes in the priority queue have not had
+  // their shortest distance from the starting node calculated yet.
+  var queue = new buckets.PriorityQueue(compareDijkstraNodes);
+  // Array of nodes that are in the cloud
+  var cloud = new Array();
+  // Array of node that are adjacent to the cloud
+  var fringe = new Array();
   
+  // Initialise the d-values of all nodes. Starting node initialised to 0, 
+  // all other initialised to Infinity. Nodes than added to priority queue.
   for (var i = 0; i < this.nodes.length; i++) {
     if (this.nodes[i] == this.startingNode) {
-      this.nodes[i].setAlgorithmSpecificData(stateCounter,0);
+      this.nodes[i].setAlgorithmSpecificData(this.stateIndex,0);
     }
     else {
-      this.nodes[i].setAlgorithmSpecificData(stateCounter,Infinity);
+      this.nodes[i].setAlgorithmSpecificData(this.stateIndex,Infinity);
     }
-    Q.enqueue(this.nodes[i]);
+    queue.enqueue(this.nodes[i]);
   }
   
-  while (!Q.isEmpty()) {
-    var u = Q.dequeue();
-    C.push(u);
+  // While the priority queue still contains nodes...
+  while (!queue.isEmpty()) {
+    // Remove node with smallest d-value and add it to the cloud
+    var newCloudNode = queue.dequeue();
+    cloud.push(newCloudNode);
     
-    if (u != this.startingNode) {
-      var index = tentativeNodes.indexOf(u);
-      tentativeNodes.splice(index,1);
+    // Remove the new cloud node from the fringe. If it is the starting node, it
+    // will never be in the fringe, so will not need to be removed from it.
+    if (newCloudNode != this.startingNode) {
+      var index = fringe.indexOf(newCloudNode);
+      fringe.splice(index,1);
     }
-    var newDijkstraState = new DijkstraState(C.slice(0),tentativeNodes.slice(0),u);
-    this.dijkstraStates.push(newDijkstraState);
-    stateCounter++;
     
-    var adjacentNodesOutsideCloud = new Array();
+    // Add a new state that represents the current step of the algorithm
+    this.addNewState(cloud,fringe,newCloudNode);
+    
+    // Build an array of all nodes that are adjacent to the new cloud node and 
+    // outside the cloud. In this array, nodes are paired with the weight of the
+    // edge that connects them to the new cloud node to save later computation.
+    var adjacentUnvisitedNodes = new Array();
+    // For each edge...
     for (i = 0; i < this.edges.length; i++) {
-      if ((this.edges[i].getToNode() == u && Q.contains(this.edges[i].getFromNode()))) {
-        adjacentNodesOutsideCloud.push({adjacentNode: this.edges[i].getFromNode(),
+      // If edge connects the new cloud node to a node outside the cloud, 
+      // collect the adjacent node and the weight of the connecting edge.
+      if ((this.edges[i].getToNode() == newCloudNode && $.inArray(this.edges[i].getFromNode(), cloud) == -1)) {
+        adjacentUnvisitedNodes.push({adjacentNode: this.edges[i].getFromNode(),
                                         weight: this.edges[i].getWeight()});
       }
-      else if (this.edges[i].getFromNode() == u && Q.contains(this.edges[i].getToNode())) {
-        adjacentNodesOutsideCloud.push({adjacentNode: this.edges[i].getToNode(),
+      else if (this.edges[i].getFromNode() == newCloudNode && $.inArray(this.edges[i].getToNode(), cloud) == -1) {
+        adjacentUnvisitedNodes.push({adjacentNode: this.edges[i].getToNode(),
                                         weight: this.edges[i].getWeight()});
       }
     }
-    for (i = 0; i < adjacentNodesOutsideCloud.length; i++) {
-      var dValueOfU = u.getAlgorithmSpecificData(stateCounter);
-      var dValueOfZ = adjacentNodesOutsideCloud[i].adjacentNode.getAlgorithmSpecificData(stateCounter);
-      var weight = adjacentNodesOutsideCloud[i].weight;
-      if (dValueOfU + weight < dValueOfZ) {
-        adjacentNodesOutsideCloud[i].adjacentNode.setAlgorithmSpecificData(stateCounter,dValueOfU + weight);
-        Q.updateItem(adjacentNodesOutsideCloud[i].adjacentNode);
+    
+    // For each unvisited node adjacent to the new cloud node... 
+    for (i = 0; i < adjacentUnvisitedNodes.length; i++) {
+      // Adjacent node
+      var adjacentNode = adjacentUnvisitedNodes[i].adjacentNode;
+      // The d-value of the new cloud node
+      var cloudNodeDValue = newCloudNode.getAlgorithmSpecificData(this.stateIndex);
+      // The d-value of the adjacent node
+      var adjacentNodeDValue = adjacentNode.getAlgorithmSpecificData(this.stateIndex);
+      // Weight of the edge connecting them
+      var weight = adjacentUnvisitedNodes[i].weight;
+      
+      // Perform 'edge relaxation' to update d-value of adjacent node. The node is 
+      // also repositioned in the priority queue to accommodate this adjustment.
+      if (cloudNodeDValue + weight < adjacentNodeDValue) {
+        adjacentNode.setAlgorithmSpecificData(this.stateIndex,cloudNodeDValue + weight);
+        queue.updateItem(adjacentNode);
       }
       
-      if ($.inArray(adjacentNodesOutsideCloud[i].adjacentNode, tentativeNodes) == -1 &&
-          $.inArray(adjacentNodesOutsideCloud[i].adjacentNode, C) == -1) {
-        tentativeNodes.push(adjacentNodesOutsideCloud[i].adjacentNode);
-        newDijkstraState = new DijkstraState(C.slice(0),tentativeNodes.slice(0),u);
-        this.dijkstraStates.push(newDijkstraState);
-        stateCounter++;
+      // If adjacent node is not yet in the fringe, add it to the fringe
+      // before adding a new state to represent this step in the algorithm.
+      if ($.inArray(adjacentNode, fringe) == -1) {
+        fringe.push(adjacentNode);
+        this.addNewState(cloud,fringe,newCloudNode);
       }
     }
   }
+  
+  // Reset state index so that algorithm can be animated from the beginning
+  this.stateIndex = 0;
 }
 
+// Add a new state to represent the current step of the algorithm
+DijkstraAnimator.prototype.addNewState = function (cloud, fringe, newCloudNode) {
+  var newDijkstraState = new DijkstraState(cloud.slice(0),fringe.slice(0),newCloudNode);
+  this.dijkstraStates.push(newDijkstraState);
+  this.stateIndex++;
+}
+
+// Get the current state of the algorithm
 DijkstraAnimator.prototype.getCurrentState = function () {
   if (this.dijkstraStates.length == 0) {
     alert("No animation has been built.");
@@ -87,7 +128,9 @@ DijkstraAnimator.prototype.getCurrentState = function () {
   return this.dijkstraStates[this.stateIndex];
 }
 
+// Move to the next state of the algorithm and update nodes where appropriate
 DijkstraAnimator.prototype.nextState = function () {
+  // Increment current state index
   if (this.stateIndex < this.dijkstraStates.length - 1) {
     this.stateIndex++;
   }
@@ -95,56 +138,91 @@ DijkstraAnimator.prototype.nextState = function () {
     this.stateIndex = 0;
   }  
   
+  // Update nodes to represent the next state of Djkstra's algorithm
+  this.updateNodes();
+}
+
+// Updates the colour and label of all nodes to represent the next 
+// state of Djkstra's algorithm.
+DijkstraAnimator.prototype.updateNodes = function () {
+  // For each node...
   for (var i = 0; i < this.nodes.length; i++) {
+    // Node's name
     var nodeName = this.nodes[i].getName();
+    // Node's d-value
     var nodeAlgorithmData = this.nodes[i].getAlgorithmSpecificData(this.stateIndex);
+    // Use infinity symbol if d-value is Infinity
     if (nodeAlgorithmData == Infinity) {
       nodeAlgorithmData = String.fromCharCode(8734);
     }
+    // Update node's label
     this.nodes[i].setLabel(nodeName + " [" + nodeAlgorithmData + "]");
-  }
+  }  
 }
 
+// Draws a given node to the canvas
 DijkstraAnimator.prototype.drawNode = function (node, context) {
-  var state = this.dijkstraStates[this.stateIndex];
+  // Current state that the algorithm has reached
+  var state = this.dijkstraStates[this.stateIndex]; 
+  // Radius of node
   var radius = node.getRadius();
+  // Coordinates of node
   var x = node.getX();
   var y = node.getY();
   
-  context.fillStyle = "#000000";
+  // Colour node according to its type
+  this.determineFillStyle(state, node, context);
   
-  if (state.nodeType(node) == "cloud" || state.nodeType(node) == "current") {
-    context.fillStyle = "#ADD8E6";
-  }
-  if (state.nodeType(node) == "tentative") {
-    context.fillStyle = "#FFFF00";
-  }
-  
+  // Draw node
   context.arc(x,y,radius,0,Math.PI*2,false);
   context.fill();
   
+  // If node is starting node, give it a dark blue ring
   if (node == this.startingNode) {
-    context.strokeStyle = "#00008B";
-    for (var i = 0; i < 3; i++) {
-      context.arc(x,y,radius-i,0,Math.PI*2,false);
-    }
-    context.stroke(); 
+    context.strokeStyle = "#00008B"; 
+    this.stroke(radius, context, x, y);
   }
+  
+  // If node is new cloud node, give it a green ring
   if (state.nodeType(node) == "current") {
-    context.strokeStyle = "#008000";
-    for (var i = 0; i < 3; i++) {
-      context.arc(x,y,radius-i,0,Math.PI*2,false);
-    }
-    context.stroke();     
+    context.strokeStyle = "#008000"; 
+    this.stroke(radius, context, x, y);
   }
 }
 
-DijkstraState = function (cloudNodes, tentativeNodes, currentNode) {
+// Set fill style of given canvas context according to current state/node
+DijkstraAnimator.prototype.determineFillStyle = function (state, node, context) {
+  // If node is in cloud or the current node, it is light blue
+  if (state.nodeType(node) == "cloud" || state.nodeType(node) == "current") {
+    context.fillStyle = "#ADD8E6";
+  }
+  
+  // If node is in fringe, it is yellow
+  if (state.nodeType(node) == "fringe") {
+    context.fillStyle = "#FFFF00";
+  }
+}
+
+// Draw ring around node
+DijkstraAnimator.prototype.stroke = function (radius, context, x, y) {
+  for (var i = 0; i < 3; i++) {
+    context.arc(x,y,radius-i,0,Math.PI*2,false);
+  }
+  context.stroke();
+}
+
+/* Creates a DijkstraState, which represents a step of Dijkstra's shortest
+ * path algorithm. Each one keeps track of which nodes are in the cloud,
+ * which ones are in the fringe and which node has just been added to the
+ * cloud. 
+ */
+DijkstraState = function (cloudNodes, fringeNodes, currentNode) {
   this.cloudNodes = cloudNodes;  
-  this.tentativeNodes = tentativeNodes;
+  this.fringeNodes = fringeNodes;
   this.currentNode = currentNode;
 }
 
+// Returns the type of a given node when this state was reached
 DijkstraState.prototype.nodeType = function (node) {
   if (this.currentNode != null && node == this.currentNode) {
     return "current";
@@ -152,8 +230,8 @@ DijkstraState.prototype.nodeType = function (node) {
   if (this.cloudNodes != null && $.inArray(node, this.cloudNodes) != -1) {
     return "cloud";
   }
-  if (this.tentativeNodes != null && $.inArray(node, this.tentativeNodes) != -1) {
-    return "tentative";
+  if (this.fringeNodes != null && $.inArray(node, this.fringeNodes) != -1) {
+    return "fringe";
   }
   return "unvisited";  
 }
