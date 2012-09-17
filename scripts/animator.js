@@ -38,6 +38,9 @@ $(document).bind('pagecreate',function () {
       alert('Error: failed to getContext!');
       return;
     }
+    
+    // Set canvas width
+    canvas.width = window.innerWidth - 14;
         
     // Initialise variables
     nodeRadius = 20;
@@ -58,10 +61,14 @@ $(document).bind('pagecreate',function () {
     // Hide all buttons related to item modification
     $('#mod-buttons').hide();
     
+    // Hide algorithm feed text area and make it read-only
+    $('#algorithm-feed-container').hide();
+    $('#feed').prop("readonly", true);
+    
     // Begin drawing on the canvas
     setInterval(function () { draw() }, 25);
   }
-  
+    
   // Virtual mouse-down event handler
   $('#canvas').bind('vmousedown', function (ev) {   
     // Prevent text from being highlighted
@@ -202,6 +209,7 @@ $(document).bind('pagecreate',function () {
     
     // If the user left Run Mode, remove the algorithm data from the nodes
     if (oldGraphMode == "run" && graphMode != "run") {
+      $('#currentStep').html("");
       for (var i = 0; i < nodes.length; i++) {
         nodes[i].setLabel(nodes[i].getName());
         nodes[i].resetAlgorithmSpecificData();
@@ -213,17 +221,43 @@ $(document).bind('pagecreate',function () {
       $('#mod-buttons').hide();
     }
     
+    // Clear algorithm feed if user has left Run Mode
+    if (graphMode != "run") {
+      $('#feed').val('');
+    }
+    
     // Ensure there is no selected item after mode has been changed
     if (selectedItem != null) { 
       selectedItem = null;
     }
     
+    // Hide algorithm feed - only Run Mode will show it
+    $('#algorithm-feed-container').hide();
+    
     // If in Run Mode, set up algorithm animator and being animation
-    if (graphMode == "run") {      
+    if (graphMode == "run") {  
+      $('#mod-buttons').hide();
+      $('#algorithm-feed-container').show();
+      
       algorithmAnimator = new DijkstraAnimator(nodes,edges,nodes[0]);
       algorithmAnimator.buildAnimation();
-      animationTimer = setInterval(function () { algorithmAnimator.nextState() }, 1000);
+      setTimeout(function () { updateAlgorithm() }, 1);
+      animationTimer = setInterval(function () { updateAlgorithm() }, 5000);
     }
+  });
+  
+  function updateAlgorithm() {
+    algorithmAnimator.nextState();
+    if (!algorithmAnimator.atEnd()) {
+      var nextFeedLine = algorithmAnimator.getCurrentState().getFeedData();
+      $('#currentStep').html(nextFeedLine);
+      $('#feed').val($('#feed').val() + nextFeedLine);
+      $('#feed').scrollTop($('#feed')[0].scrollHeight);
+    }
+  }
+  
+  $('#currentStep').click(function () {
+    $('#feed').slideToggle();
   });
    
   // Updates the node or edge that is currently selected
@@ -436,7 +470,6 @@ $(document).bind('pagecreate',function () {
       currentItem = newNode;
       currentItem.highlight();
       highlightMode = true;
-      $('p#numberOfNodes').html(nodes.length);
       nodeJustBeenPlaced = true;  
       return true;
     }
@@ -449,7 +482,6 @@ $(document).bind('pagecreate',function () {
     if (edgeCanBePlaced()) {
       var newEdge = new Edge(selectedItem, currentItem);
       edges.push(newEdge);
-      $('p#numberOfEdges').html(edges.length);
     }
   }
   
