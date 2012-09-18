@@ -14,6 +14,7 @@ $(document).bind('pagecreate',function () {
   var nodeNumber; // Current node number
   var algorithmAnimator; // Object that controls animation
   var animationTimer; // Timer that controls speed of animation
+  var animationReady; // Animation has finished being initialised
 
   // Begin running the app
   init(); 
@@ -57,6 +58,7 @@ $(document).bind('pagecreate',function () {
     nodeNumber = 1;
     algorithmAnimator = null;
     animationTimer = null;
+    animationReady = false;
     
     // Hide all buttons related to item modification
     $('#mod-buttons').hide();
@@ -87,6 +89,14 @@ $(document).bind('pagecreate',function () {
     if (graphMode == "build" || graphMode == "modify") {
       // Attempt to initiate a dragging action
       initiateDrag();    
+    }
+    
+    if (graphMode == "run" && !animationReady) { 
+      if (currentItem != null && currentItem instanceof Node) {
+        currentItem.highlight();
+        beginAnimation(currentItem);
+        animationReady = true;
+      }
     }
   });
 
@@ -130,26 +140,36 @@ $(document).bind('pagecreate',function () {
   // Virtual mouse-move event handler
   $('#canvas').bind('vmousemove', function (ev) {
     // If in Build Mode or Modify Mode...
-    if (graphMode == "build" || graphMode == "modify") {
+    if (graphMode == "build" || graphMode == "modify" || (graphMode == "run" && !animationReady)) {
       // Get the mouse position relative to the canvas element
       cursorX = ev.pageX - this.offsetLeft - 2; // Accommodates border of 2px
       cursorY = ev.pageY - this.offsetTop - 2; // Accommodates border of 2px
     }
     
+    var containingItem;
+    
     // If in Build Mode...
     if (graphMode == "build") {
       // Get the node that the cursor is currently on, if there is one
-      var containingNode = getNearbyNode(cursorX, cursorY, false, 1);
+      containingItem = getNearbyNode(cursorX, cursorY, false, 1);
       
       // Update the current item that the cursor is on
-      updateCurrentItem(containingNode);
+      updateCurrentItem(containingItem);
     }
     
     // If in Build Mode
     if (graphMode == "modify") {
       // Get the node or edge that the cursor is currently on, if there is one
-      var containingItem = determineSelectedItem();
+      containingItem = determineSelectedItem();
       
+      // Update the current item that the cursor is on
+      updateCurrentItem(containingItem);
+    }
+    
+    if (graphMode == "run" && !animationReady) {
+      // Get the node that the cursor is currently on, if there is one
+      containingItem = getNearbyNode(cursorX, cursorY, false, 1);     
+     
       // Update the current item that the cursor is on
       updateCurrentItem(containingItem);
     }
@@ -209,6 +229,7 @@ $(document).bind('pagecreate',function () {
     
     // If the user left Run Mode, remove the algorithm data from the nodes
     if (oldGraphMode == "run" && graphMode != "run") {
+      animationReady = false;
       $('#currentStep').html("");
       for (var i = 0; i < nodes.length; i++) {
         nodes[i].setLabel(nodes[i].getName());
@@ -234,17 +255,21 @@ $(document).bind('pagecreate',function () {
     // Hide algorithm feed - only Run Mode will show it
     $('#algorithm-feed-container').hide();
     
-    // If in Run Mode, set up algorithm animator and being animation
+    // If in Run Mode, hide mod buttons 
     if (graphMode == "run") {  
-      $('#mod-buttons').hide();
+      $('#mod-buttons').hide();  
       $('#algorithm-feed-container').show();
-      
-      algorithmAnimator = new DijkstraAnimator(nodes,edges,nodes[0]);
-      algorithmAnimator.buildAnimation();
-      setTimeout(function () { updateAlgorithm() }, 1);
-      animationTimer = setInterval(function () { updateAlgorithm() }, 5000);
+      $('#currentStep').html("SELECT STARTING NODE.");
+      algorithmAnimator = null;
     }
   });
+  
+  function beginAnimation(startingNode) {
+    algorithmAnimator = new DijkstraAnimator(nodes,edges,startingNode);
+    algorithmAnimator.buildAnimation();
+    setTimeout(function () { updateAlgorithm() }, 1);
+    animationTimer = setInterval(function () { updateAlgorithm() }, 5000);
+  }
   
   function updateAlgorithm() {
     algorithmAnimator.nextState();
@@ -299,11 +324,11 @@ $(document).bind('pagecreate',function () {
   // parameter determines whether a given node is overlapping any 
   // other node (value: 2) or has its centre inside another node 
   // (value: 1).
-  function getNearbyNode (x,y,ignoreCurrentNode, checkLengthMultiplier) {  
+  function getNearbyNode (x,y,ignoreCurrentItem, checkLengthMultiplier) {  
     // For each node...
     for (var i = 0; i < nodes.length; i++) {
       // If current node isn't being ignored or this node isn't the current node...
-      if (!ignoreCurrentNode || nodes[i] != currentItem) {
+      if (!ignoreCurrentItem || nodes[i] != currentItem) {
         // Coordinates of this node
         var nodeX = nodes[i].getX();
         var nodeY = nodes[i].getY();
@@ -443,7 +468,7 @@ $(document).bind('pagecreate',function () {
     else {       
       // If the current item is highlighted and no node is being dragged,
       // unhighlight it and deactivate highlight mode.
-      if (currentItem.isHighlighted() && !isDragged) {
+      if (currentItem != null && currentItem.isHighlighted() && !isDragged) {
         currentItem.highlight();
         highlightMode = false;
       }
@@ -546,7 +571,7 @@ $(document).bind('pagecreate',function () {
     }
     
     // If nothing is being highlighted while building, draw an appropriate cursor
-    if (!highlightMode && graphMode == "build") {
+    if (!highlightMode && (graphMode == "build" || (graphMode == "run" && !animationReady))) {
       drawCursor();
     }
     

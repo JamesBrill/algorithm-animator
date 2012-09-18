@@ -128,8 +128,9 @@ DijkstraAnimator.prototype.buildAnimation = function () {
       if (cloudNodeDValue + weight < adjacentNodeDValue) {
         adjacentNode.setAlgorithmSpecificData(this.stateIndex,cloudNodeDValue + weight);
         queue.updateItem(adjacentNode);
-        feedString += "      Yes.\n      Update the value of d[" + adjacentName + "] to equal " +
-          "d[" + name + "] + weight(" + name + "," + adjacentName + ").\n";
+        feedString += "      Yes. Update the value of d[" + adjacentName + "] to equal " +
+          "d[" + name + "] + weight(" + name + "," + adjacentName + ").\n      Change d[" +
+          adjacentName + "] from " + adjacentNodeDValue + " to " + (cloudNodeDValue + weight) + ".\n";
       }
       else {
         feedString += "      No.\n";
