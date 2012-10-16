@@ -13,21 +13,24 @@
     <script type="text/javascript" src="scripts/edge.js"></script>
     <script type="text/javascript" src="scripts/distance-calculator.js"></script>
     <script type="text/javascript" charset="utf-8" src="scripts/dijkstra.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/animation-controller.js"></script>
   </head>
   <body> 
     <div style="padding: 5px;" id="container" data-role="page" data-theme="c" data-content-theme="c">
       <div style="padding: 0;" data-role="content">    
         
-        <form action="#" method="get">
-          <fieldset data-role="controlgroup" data-type="horizontal">
-                <input type="radio" name="graph-mode" id="build" value="build" checked="checked" />
-                <label for="build">Build</label>
-                <input type="radio" name="graph-mode" id="modify" value="modify"  />
-                <label for="modify">Modify</label>
-                <input type="radio" name="graph-mode" id="run" value="run"  />
-                <label for="run">Run</label>
-          </fieldset>        
-        </form> 
+        <div id="mode">
+          <form action="#" method="get">
+            <fieldset data-role="controlgroup" data-type="horizontal">
+                  <input type="radio" name="graph-mode" id="build" value="build" checked="checked" />
+                  <label for="build">Build</label>
+                  <input type="radio" name="graph-mode" id="modify" value="modify"  />
+                  <label for="modify">Modify</label>
+                  <input type="radio" name="graph-mode" id="run" value="run"  />
+                  <label for="run">Run</label>
+            </fieldset>        
+          </form> 
+        </div>  
         
         <canvas id="canvas" width="750" height="400" style="border-style:solid; border-width:2px;">
           <p>Unfortunately, your browser is currently unsupported by our web 
@@ -40,18 +43,29 @@
             href="http://www.konqueror.org">Konqueror</a>.</p>
         </canvas>  
         
-        <div id="algorithm-feed-container">
-          <div class="ui-bar ui-bar-b" id="currentStep" style="white-space: pre;"></div>
-          <textarea id="feed" style="height:115px; max-height:115px;"></textarea>          
-        </div>
-        
-        <div id="mod-buttons">
-          <button id="delete" data-inline="true">Delete</button> 
-          <input type="text" id="rename-item" maxlength="30" value=""  />
-        </div>
-        <div>
-          <p id="logdiv"></p>
-        </div>  
+        <div id="button-box">
+          <div id="algorithm-feed-container" style="float:left; width:1000px">
+            <div class="ui-bar ui-bar-b" id="currentStep" style="white-space: pre;"></div>
+            <textarea id="feed"></textarea>          
+          </div>
+          
+          <div id="animation-control-buttons" style="margin-left:1010px">
+            <button id="play" data-inline="true">Play</button>
+            <button id="pause" data-inline="true">Pause</button>
+            <button id="next" data-inline="true">Next</button>
+            <button id="prev" data-inline="true">Prev</button>
+            <button id="start" data-inline="true">Start</button>
+            <button id="end" data-inline="true">End</button>
+          </div>
+
+          <div id="mod-buttons">
+            <button id="delete" data-inline="true">Delete</button> 
+            <input type="text" id="rename-item" maxlength="30" value=""  />
+          </div>
+          <div>
+            <p id="logdiv"></p>
+          </div>  
+        </div> 
       </div>
     </div>  
   </body>

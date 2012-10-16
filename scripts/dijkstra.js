@@ -169,7 +169,7 @@ DijkstraAnimator.prototype.getCurrentState = function () {
 // Move to the next state of the algorithm and update nodes where appropriate
 DijkstraAnimator.prototype.nextState = function () {
   if (this.stateIndex == this.dijkstraStates.length - 1) {
-    this.atEnd = true;
+    this.ended = true;
   }
 
   // Increment current state index
@@ -180,6 +180,31 @@ DijkstraAnimator.prototype.nextState = function () {
       this.updateNodes();
     }
   }
+}
+
+// Move to the previous state of the algorithm and update nodes where appropriate
+DijkstraAnimator.prototype.prevState = function () {
+  // Decrement current state index
+  if (this.stateIndex > 0) {
+    this.stateIndex--;
+    // Update nodes to represent the next state of Djkstra's algorithm
+    if (this.stateIndex != -1) {
+      this.updateNodes();
+    }
+  }
+  
+  this.ended = false;
+}
+
+DijkstraAnimator.prototype.goToBeginning = function () {
+  this.stateIndex = 0;
+  this.ended = false;
+  this.updateNodes();
+}
+
+DijkstraAnimator.prototype.goToEnd = function () {
+  this.stateIndex = this.dijkstraStates.length - 1;
+  this.updateNodes();
 }
 
 DijkstraAnimator.prototype.atEnd = function () {

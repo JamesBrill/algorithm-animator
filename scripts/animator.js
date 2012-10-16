@@ -12,9 +12,10 @@ $(document).bind('pagecreate',function () {
   var nodeJustBeenPlaced; // Has a node just been placed?
   var graphMode; // The editing mode for the graph editor (build/modify/run)
   var nodeNumber; // Current node number
-  var algorithmAnimator; // Object that controls animation
-  var animationTimer; // Timer that controls speed of animation
-  var animationReady; // Animation has finished being initialised
+  //var algorithmAnimator; // Object that controls animation
+  //var animationTimer; // Timer that controls speed of animation
+  //var animationReady; // Animation has finished being initialised
+  var animationController;
 
   // Begin running the app
   init(); 
@@ -41,7 +42,7 @@ $(document).bind('pagecreate',function () {
     }
     
     // Set canvas width
-    canvas.width = window.innerWidth - 14;
+    //canvas.width = window.innerWidth - 14;
         
     // Initialise variables
     nodeRadius = 20;
@@ -56,9 +57,7 @@ $(document).bind('pagecreate',function () {
     nodeJustBeenPlaced = false;
     graphMode = "build";
     nodeNumber = 1;
-    algorithmAnimator = null;
-    animationTimer = null;
-    animationReady = false;
+    animationController = new AnimationController();
     
     // Hide all buttons related to item modification
     $('#mod-buttons').hide();
@@ -66,9 +65,26 @@ $(document).bind('pagecreate',function () {
     // Hide algorithm feed text area and make it read-only
     $('#algorithm-feed-container').hide();
     $('#feed').prop("readonly", true);
+    $('#feed').hide();
+    
+    resizeDivs();
+    $('#animation-control-buttons').hide();
+    
     
     // Begin drawing on the canvas
     setInterval(function () { draw() }, 25);
+  }
+  
+  function resizeDivs() {
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.height = 0.7 * height;
+    canvas.width = width - 14;
+    $('#button-box').height(0.2 * height);
+    $('#currentStep').height(0.19 * height);
+    $('#feed').height(0.19 * height);
+    $('#currentStep').css("max-height", (0.19 * height) + 'px');
+    $('#feed').css("max-height", (0.19 * height) + 'px'); 
   }
     
   // Virtual mouse-down event handler
@@ -91,11 +107,11 @@ $(document).bind('pagecreate',function () {
       initiateDrag();    
     }
     
-    if (graphMode == "run" && !animationReady) { 
+    if (graphMode == "run" && !animationController.isReady()) { 
       if (currentItem != null && currentItem instanceof Node) {
         currentItem.highlight();
-        beginAnimation(currentItem);
-        animationReady = true;
+        animationController.init(nodes, edges, currentItem);
+        animationController.setReady();
       }
     }
   });
@@ -140,7 +156,7 @@ $(document).bind('pagecreate',function () {
   // Virtual mouse-move event handler
   $('#canvas').bind('vmousemove', function (ev) {
     // If in Build Mode or Modify Mode...
-    if (graphMode == "build" || graphMode == "modify" || (graphMode == "run" && !animationReady)) {
+    if (graphMode == "build" || graphMode == "modify" || (graphMode == "run" && !animationController.isReady())) {
       // Get the mouse position relative to the canvas element
       cursorX = ev.pageX - this.offsetLeft - 2; // Accommodates border of 2px
       cursorY = ev.pageY - this.offsetTop - 2; // Accommodates border of 2px
@@ -166,7 +182,7 @@ $(document).bind('pagecreate',function () {
       updateCurrentItem(containingItem);
     }
     
-    if (graphMode == "run" && !animationReady) {
+    if (graphMode == "run" && !animationController.isReady()) {
       // Get the node that the cursor is currently on, if there is one
       containingItem = getNearbyNode(cursorX, cursorY, false, 1);     
      
@@ -219,7 +235,7 @@ $(document).bind('pagecreate',function () {
   // 'Change' event handler for the graph mode selector
   $('input[name=graph-mode]').change(function() {
     // Ensure there are no timer duplicates
-    clearInterval(animationTimer);
+    animationController.clearTimer();
     
     // Record the previous graph mode
     var oldGraphMode = graphMode;
@@ -229,7 +245,8 @@ $(document).bind('pagecreate',function () {
     
     // If the user left Run Mode, remove the algorithm data from the nodes
     if (oldGraphMode == "run" && graphMode != "run") {
-      animationReady = false;
+      animationController.setNotReady();
+      $('#animation-control-buttons').hide();
       $('#currentStep').html("");
       for (var i = 0; i < nodes.length; i++) {
         nodes[i].setLabel(nodes[i].getName());
@@ -256,34 +273,54 @@ $(document).bind('pagecreate',function () {
     $('#algorithm-feed-container').hide();
     
     // If in Run Mode, hide mod buttons 
-    if (graphMode == "run") {  
+    if (graphMode == "run") { // *********************************************** CLEAN UP
+      $('#animation-control-buttons').show();
+      animationController.setNotReady();
+      highlightMode = false;
+      $('#feed').hide();
+      $('#currentStep').show();
+      $('#feed').val('');
       $('#mod-buttons').hide();  
       $('#algorithm-feed-container').show();
       $('#currentStep').html("SELECT STARTING NODE.");
-      algorithmAnimator = null;
+      animationController.reset();
     }
   });
-  
-  function beginAnimation(startingNode) {
-    algorithmAnimator = new DijkstraAnimator(nodes,edges,startingNode);
-    algorithmAnimator.buildAnimation();
-    setTimeout(function () { updateAlgorithm() }, 1);
-    animationTimer = setInterval(function () { updateAlgorithm() }, 5000);
-  }
-  
-  function updateAlgorithm() {
-    algorithmAnimator.nextState();
-    if (!algorithmAnimator.atEnd()) {
-      var nextFeedLine = algorithmAnimator.getCurrentState().getFeedData();
-      $('#currentStep').html(nextFeedLine);
-      $('#feed').val($('#feed').val() + nextFeedLine);
-      $('#feed').scrollTop($('#feed')[0].scrollHeight);
-    }
-  }
-  
+    
   $('#currentStep').click(function () {
     $('#feed').slideToggle();
+    $('#currentStep').slideToggle();
   });
+  
+  $('#feed').click(function () {
+    $('#feed').slideToggle();
+    $('#currentStep').slideToggle();
+  });
+  
+  $('#play').click(function () {
+    animationController.play();
+  });
+  
+  $('#pause').click(function () {
+    animationController.pause();
+  });
+  
+  $('#next').click(function () {
+    animationController.next();
+  });
+  
+  $('#prev').click(function () {
+    animationController.prev();
+  });
+  
+  $('#start').click(function () {
+    animationController.beginning();
+  });
+  
+  $('#end').click(function () {
+    animationController.end();
+  });
+
    
   // Updates the node or edge that is currently selected
   function updateSelectedItem() {
@@ -571,7 +608,7 @@ $(document).bind('pagecreate',function () {
     }
     
     // If nothing is being highlighted while building, draw an appropriate cursor
-    if (!highlightMode && (graphMode == "build" || (graphMode == "run" && !animationReady))) {
+    if (!highlightMode && (graphMode == "build" || (graphMode == "run" && !animationController.isReady()))) {
       drawCursor();
     }
     
@@ -622,8 +659,8 @@ $(document).bind('pagecreate',function () {
     context.fillText(node.getLabel(), x + nodeRadius, y - nodeRadius);
     
     // Use the algorithm animator to draw the node if in Run Mode
-    if (graphMode == "run" && algorithmAnimator != null) {
-      algorithmAnimator.drawNode(node, context);
+    if (graphMode == "run" && !animationController.isActive()) {
+      animationController.draw(node, context);
     }
     else {
       // If the node is selected, set it's colour to blue
