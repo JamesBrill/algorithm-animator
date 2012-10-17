@@ -82,22 +82,22 @@ $(document).bind('pagecreate',function () {
     $('#modify').height(0.06 * height);
     $('#run').height(0.06 * height);    
     $('#button-box').height(0.2 * height - 10);
-    $('#currentStep').height(0.18 * height);
-    $('#feed').height(0.18 * height);
-    $('#currentStep').css("max-height", (0.16 * height) + 'px');
+    $('#currentStep').height($('#button-box').height());
+    $('#feed').height($('#button-box').height());
+    $('#currentStep').css("max-height", ($('#button-box').height()) + 'px');
     $('#currentStep').css("max-width", (0.7 * width) + 'px');
-    $('#feed').css("max-height", (0.16 * height) + 'px');
+    $('#feed').css("max-height", ($('#button-box').height()) + 'px');
     $('#feed').css("max-width", (0.7 * width) + 'px');
     $('#algorithm-feed-container').width(0.7 * width);
     $('#animation-control-buttons').height(0.18 * height);
     $('#animation-control-buttons').width(0.3 * width);
     $('#animation-control-buttons').css("margin-left", (0.7 * width) + 'px');
-    $('#play').height(0.04 * height);
-    $('#pause').height(0.04 * height);
-    $('#next').height(0.04 * height);
-    $('#prev').height(0.04 * height);
-    $('#start').height(0.04 * height);
-    $('#end').height(0.04 * height);
+    $('#play').height(0.05 * height);
+    $('#pause').height(0.05 * height);
+    $('#next').height(0.05 * height);
+    $('#prev').height(0.05 * height);
+    $('#start').height(0.05 * height);
+    $('#end').height(0.05 * height);
     $('#play').width(0.09 * width);
     $('#pause').width(0.09 * width);
     $('#next').width(0.09 * width);
@@ -276,8 +276,8 @@ $(document).bind('pagecreate',function () {
     // If the user left Run Mode, remove the algorithm data from the nodes
     if (oldGraphMode == "run" && graphMode != "run") {
       animationController.setNotReady();
+      animationController.reset();
       $('#animation-control-buttons').hide();
-      $('#currentStep').html("");
       for (var i = 0; i < nodes.length; i++) {
         nodes[i].setLabel(nodes[i].getName());
         nodes[i].resetAlgorithmSpecificData();
@@ -305,15 +305,16 @@ $(document).bind('pagecreate',function () {
     // If in Run Mode, hide mod buttons 
     if (graphMode == "run") { // *********************************************** CLEAN UP
       $('#animation-control-buttons').show();
-      animationController.setNotReady();
       highlightMode = false;
+      $('#pause').prop('disabled', false);
       $('#feed').hide();
       $('#currentStep').show();
       $('#feed').val('');
+      $('#currentStep').html('');
+      $("#slider-3").val(5).slider('refresh');
       $('#mod-buttons').hide();  
       $('#algorithm-feed-container').show();
       $('#currentStep').html("SELECT STARTING NODE.");
-      animationController.reset();
     }
   }
     
@@ -329,10 +330,14 @@ $(document).bind('pagecreate',function () {
   
   $('#play').click(function () {
     animationController.play();
+    $('#pause').prop('disabled', false);
+    $('#pause').html('Pause');
   });
   
   $('#pause').click(function () {
     animationController.pause();
+    $('#pause').prop('disabled', true);
+    $('#pause').html('Paused');
   });
   
   $('#next').click(function () {
@@ -350,7 +355,11 @@ $(document).bind('pagecreate',function () {
   $('#end').click(function () {
     animationController.end();
   });
-
+  
+  $('#slider-3').change(function(){
+    var stepDelay = $(this).val();
+    animationController.changeSpeed(stepDelay*1000);
+ })
    
   // Updates the node or edge that is currently selected
   function updateSelectedItem() {

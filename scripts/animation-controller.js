@@ -1,5 +1,5 @@
 AnimationController = function() {
-  this.reset();
+  this.reset();  
 }
   
 AnimationController.prototype.init = function (nodes, edges, startingNode) {  
@@ -7,8 +7,7 @@ AnimationController.prototype.init = function (nodes, edges, startingNode) {
   this.algorithmAnimator.buildAnimation();
   this.feedLines = this.algorithmAnimator.getFeedLines();
   this.update(this);
-  var objectRef = this; // "this" would refer to the window otherwise  
-  this.animationTimer = setInterval(function() { objectRef.update(objectRef) }, 5000);
+  this.play();
 }
 
 AnimationController.prototype.update = function(objectRef) {
@@ -38,14 +37,16 @@ AnimationController.prototype.buildFeed = function() {
 
 AnimationController.prototype.play = function() {
   if (this.algorithmAnimator != null) {
+    this.paused = false;
     this.clearTimer();
     var objectRef = this;
-    this.animationTimer = setInterval(function() { objectRef.update(objectRef) }, 5000);
+    this.animationTimer = setInterval(function() { objectRef.update(objectRef) }, this.speed);
   }
 }
 
 AnimationController.prototype.pause = function() {
   this.clearTimer();
+  this.paused = true;
 }
 
 AnimationController.prototype.next = function() {
@@ -86,10 +87,19 @@ AnimationController.prototype.reset = function() {
   this.animationReady = false;
   this.currentFeedLine = -1;
   this.feedLines = new Array();
+  this.speed = 5000;
+  this.paused = false;
 }
 
 AnimationController.prototype.clearTimer = function() {
   clearInterval(this.animationTimer);
+}
+
+AnimationController.prototype.changeSpeed = function(newSpeed) {
+  this.speed = newSpeed;
+  if (!this.paused) {
+    this.play();
+  }
 }
 
 AnimationController.prototype.isActive = function() {
