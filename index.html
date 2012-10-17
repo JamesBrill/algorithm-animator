@@ -16,23 +16,18 @@
     <script type="text/javascript" charset="utf-8" src="scripts/animation-controller.js"></script>
   </head>
   <body> 
-    <div style="padding: 5px;" id="container" data-role="page" data-theme="c" data-content-theme="c">
+    <div style="padding: 0;" id="container" data-role="page" data-theme="c" data-content-theme="c">
       <div style="padding: 0;" data-role="content">    
         
-        <div id="mode">
-          <form action="#" method="get">
-            <fieldset data-role="controlgroup" data-type="horizontal">
-                  <input type="radio" name="graph-mode" id="build" value="build" checked="checked" />
-                  <label for="build">Build</label>
-                  <input type="radio" name="graph-mode" id="modify" value="modify"  />
-                  <label for="modify">Modify</label>
-                  <input type="radio" name="graph-mode" id="run" value="run"  />
-                  <label for="run">Run</label>
-            </fieldset>        
-          </form> 
+        <div id="mode" data-role="navbar">
+          <ul>
+            <li><a id="build" href="#" class="ui-btn-active">Build</a></li>
+            <li><a id="modify" href="#">Modify</a></li>
+            <li><a id="run" href="#">Run</a></li>
+          </ul>
         </div>  
         
-        <canvas id="canvas" width="750" height="400" style="border-style:solid; border-width:2px;">
+        <canvas id="canvas" style="border-style:solid; border-width:2px; display: block;">
           <p>Unfortunately, your browser is currently unsupported by our web 
           application.  We are sorry for the inconvenience. Please use one of the 
           supported browsers listed below, or draw the image you want using an 
@@ -43,19 +38,22 @@
             href="http://www.konqueror.org">Konqueror</a>.</p>
         </canvas>  
         
-        <div id="button-box">
-          <div id="algorithm-feed-container" style="float:left; width:1000px">
-            <div class="ui-bar ui-bar-b" id="currentStep" style="white-space: pre;"></div>
+        <div id="button-box" style="border-style:solid; border-width:5px;">
+          <div id="algorithm-feed-container" style="float:left;">
+            <textarea id="currentStep"></textarea>
             <textarea id="feed"></textarea>          
           </div>
           
-          <div id="animation-control-buttons" style="margin-left:1010px">
-            <button id="play" data-inline="true">Play</button>
-            <button id="pause" data-inline="true">Pause</button>
-            <button id="next" data-inline="true">Next</button>
-            <button id="prev" data-inline="true">Prev</button>
-            <button id="start" data-inline="true">Start</button>
-            <button id="end" data-inline="true">End</button>
+          <div id="animation-control-buttons">
+            <button id="play"  data-role="none">Play</button>
+            <button id="pause"  data-role="none">Pause</button>
+            <button id="next"  data-role="none">Next</button>
+            <button id="prev"  data-role="none">Prev</button>
+            <button id="start"  data-role="none">Start</button>
+            <button id="end"  data-role="none">End</button>
+            <label for="slider-2">Step delay:</label>
+            <input type="range" name="slider-2" id="slider-2" value="5" min="0.5" max="10" step="0.5" 
+                     data-highlight="true" data-mini="true" style="display:none;"/>            
           </div>
 
           <div id="mod-buttons">

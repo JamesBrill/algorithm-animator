@@ -166,6 +166,23 @@ DijkstraAnimator.prototype.getCurrentState = function () {
   return this.dijkstraStates[Math.max(this.stateIndex,0)];
 }
 
+// Get all of the steps to be shown in the text feed
+DijkstraAnimator.prototype.getFeedLines = function () {
+  var feedLines = new Array();
+  this.stateIndex = -1;
+  while (!this.ended) {
+    this.stateIndex++;
+    var feedLine = this.getCurrentState().getFeedData();
+    feedLines.push(feedLine);
+    if (this.stateIndex == this.dijkstraStates.length - 1) {
+      this.ended = true;
+    }
+  }
+  this.stateIndex = -1;
+  this.ended = false;
+  return feedLines;
+}
+
 // Move to the next state of the algorithm and update nodes where appropriate
 DijkstraAnimator.prototype.nextState = function () {
   if (this.stateIndex == this.dijkstraStates.length - 1) {

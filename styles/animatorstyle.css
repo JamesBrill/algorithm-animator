@@ -4,4 +4,12 @@
     Author     : jebby457
 */
 
+button { 
+    position: relative;
+    padding: 0;
+    cursor: pointer;
+    outline: none; /* for good measure */
+    overflow: visible; /* removes extra side padding in IE */
+}
+
 

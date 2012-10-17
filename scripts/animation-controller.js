@@ -1,28 +1,38 @@
 AnimationController = function() {
-  this.animationTimer = null;
-  this.algorithmAnimator = null;
-  this.animationReady = false;
+  this.reset();
 }
   
 AnimationController.prototype.init = function (nodes, edges, startingNode) {  
   this.algorithmAnimator = new DijkstraAnimator(nodes,edges,startingNode);
   this.algorithmAnimator.buildAnimation();
-  var objectRef = this; // "this" would refer to the window otherwise
-  setTimeout(function() { objectRef.update(objectRef) } , 1);
+  this.feedLines = this.algorithmAnimator.getFeedLines();
+  this.update(this);
+  var objectRef = this; // "this" would refer to the window otherwise  
   this.animationTimer = setInterval(function() { objectRef.update(objectRef) }, 5000);
 }
 
 AnimationController.prototype.update = function(objectRef) {
-  objectRef.algorithmAnimator.nextState();
-  objectRef.updateFeed(objectRef);
+  if (!objectRef.algorithmAnimator.atEnd()) {
+    objectRef.algorithmAnimator.nextState();
+    if (this.currentFeedLine < this.feedLines.length - 1) {
+      this.currentFeedLine++;
+    }
+    objectRef.updateFeed(objectRef);
+  }
 }
 
 AnimationController.prototype.updateFeed = function(objectRef) {
-  if (!objectRef.algorithmAnimator.atEnd()) {
-    var nextFeedLine = objectRef.algorithmAnimator.getCurrentState().getFeedData();
-    $('#currentStep').html(nextFeedLine);
+  var nextFeedLine = this.feedLines[this.currentFeedLine];
+  $('#currentStep').html(nextFeedLine);
+  objectRef.buildFeed();
+  $('#feed').scrollTop($('#feed')[0].scrollHeight);
+}
+
+AnimationController.prototype.buildFeed = function() {
+  $('#feed').val('');
+  for (var i = 0; i <= this.currentFeedLine; i++) {
+    var nextFeedLine = this.feedLines[i];
     $('#feed').val($('#feed').val() + nextFeedLine);
-    $('#feed').scrollTop($('#feed')[0].scrollHeight);
   }
 }
 
@@ -47,6 +57,9 @@ AnimationController.prototype.next = function() {
 AnimationController.prototype.prev = function() {
   if (this.algorithmAnimator != null) {
     this.algorithmAnimator.prevState();
+    if (this.currentFeedLine > 0) {
+      this.currentFeedLine--;
+    }
     this.updateFeed(this);
   }
 }
@@ -54,6 +67,7 @@ AnimationController.prototype.prev = function() {
 AnimationController.prototype.beginning = function() {
   if (this.algorithmAnimator != null) {
     this.algorithmAnimator.goToBeginning();
+    this.currentFeedLine = 0;
     this.updateFeed(this);
   }
 }
@@ -61,6 +75,7 @@ AnimationController.prototype.beginning = function() {
 AnimationController.prototype.end = function() {
   if (this.algorithmAnimator != null) {
     this.algorithmAnimator.goToEnd();
+    this.currentFeedLine = this.feedLines.length - 1;
     this.updateFeed(this);
   }
 }
@@ -68,6 +83,9 @@ AnimationController.prototype.end = function() {
 AnimationController.prototype.reset = function() {
   this.algorithmAnimator = null;
   this.animationTimer = null;
+  this.animationReady = false;
+  this.currentFeedLine = -1;
+  this.feedLines = new Array();
 }
 
 AnimationController.prototype.clearTimer = function() {

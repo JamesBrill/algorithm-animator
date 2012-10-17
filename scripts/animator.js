@@ -40,10 +40,7 @@ $(document).bind('pagecreate',function () {
       alert('Error: failed to getContext!');
       return;
     }
-    
-    // Set canvas width
-    //canvas.width = window.innerWidth - 14;
-        
+            
     // Initialise variables
     nodeRadius = 20;
     cursorX = -1;
@@ -65,7 +62,7 @@ $(document).bind('pagecreate',function () {
     // Hide algorithm feed text area and make it read-only
     $('#algorithm-feed-container').hide();
     $('#feed').prop("readonly", true);
-    $('#feed').hide();
+    $('#currentStep').prop("readonly", true);
     
     resizeDivs();
     $('#animation-control-buttons').hide();
@@ -76,15 +73,37 @@ $(document).bind('pagecreate',function () {
   }
   
   function resizeDivs() {
-    var width = window.innerWidth;
-    var height = window.innerHeight;
-    canvas.height = 0.7 * height;
-    canvas.width = width - 14;
-    $('#button-box').height(0.2 * height);
-    $('#currentStep').height(0.19 * height);
-    $('#feed').height(0.19 * height);
-    $('#currentStep').css("max-height", (0.19 * height) + 'px');
-    $('#feed').css("max-height", (0.19 * height) + 'px'); 
+    var width = $(window).width();
+    var height = $(window).height();
+    canvas.height = 0.74 * height - 4;
+    canvas.width = width - 4;
+    $('#mode').height(0.06 * height);
+    $('#build').height(0.06 * height);
+    $('#modify').height(0.06 * height);
+    $('#run').height(0.06 * height);    
+    $('#button-box').height(0.2 * height - 10);
+    $('#currentStep').height(0.18 * height);
+    $('#feed').height(0.18 * height);
+    $('#currentStep').css("max-height", (0.16 * height) + 'px');
+    $('#currentStep').css("max-width", (0.7 * width) + 'px');
+    $('#feed').css("max-height", (0.16 * height) + 'px');
+    $('#feed').css("max-width", (0.7 * width) + 'px');
+    $('#algorithm-feed-container').width(0.7 * width);
+    $('#animation-control-buttons').height(0.18 * height);
+    $('#animation-control-buttons').width(0.3 * width);
+    $('#animation-control-buttons').css("margin-left", (0.7 * width) + 'px');
+    $('#play').height(0.04 * height);
+    $('#pause').height(0.04 * height);
+    $('#next').height(0.04 * height);
+    $('#prev').height(0.04 * height);
+    $('#start').height(0.04 * height);
+    $('#end').height(0.04 * height);
+    $('#play').width(0.09 * width);
+    $('#pause').width(0.09 * width);
+    $('#next').width(0.09 * width);
+    $('#prev').width(0.09 * width);
+    $('#start').width(0.09 * width);
+    $('#end').width(0.09 * width);
   }
     
   // Virtual mouse-down event handler
@@ -232,17 +251,28 @@ $(document).bind('pagecreate',function () {
     }
   })
   
+  $('#build').click(function() {
+    changeMode('build');
+  })
+  
+  $('#modify').click(function() {
+    changeMode('modify');
+  })
+  
+  $('#run').click(function() {
+    changeMode('run');
+  })
+  
   // 'Change' event handler for the graph mode selector
-  $('input[name=graph-mode]').change(function() {
+  function changeMode(newGraphMode) {
     // Ensure there are no timer duplicates
     animationController.clearTimer();
     
     // Record the previous graph mode
-    var oldGraphMode = graphMode;
+    var oldGraphMode = graphMode;   
     
-    // Get current value of the selector
-    graphMode = $('input[name=graph-mode]:checked').val();
-    
+    graphMode = newGraphMode;
+       
     // If the user left Run Mode, remove the algorithm data from the nodes
     if (oldGraphMode == "run" && graphMode != "run") {
       animationController.setNotReady();
@@ -285,16 +315,16 @@ $(document).bind('pagecreate',function () {
       $('#currentStep').html("SELECT STARTING NODE.");
       animationController.reset();
     }
-  });
+  }
     
   $('#currentStep').click(function () {
-    $('#feed').slideToggle();
-    $('#currentStep').slideToggle();
+    $('#currentStep').slideToggle('fast');
+    setTimeout(function() { $('#feed').slideToggle('fast') }, 400);
   });
   
   $('#feed').click(function () {
-    $('#feed').slideToggle();
-    $('#currentStep').slideToggle();
+    $('#feed').slideToggle('fast');
+    setTimeout(function() { $('#currentStep').slideToggle('fast') }, 400);
   });
   
   $('#play').click(function () {
