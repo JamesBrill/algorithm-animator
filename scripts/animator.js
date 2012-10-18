@@ -16,6 +16,7 @@ $(document).bind('pagecreate',function () {
   //var animationTimer; // Timer that controls speed of animation
   //var animationReady; // Animation has finished being initialised
   var animationController;
+  var alertTimer;
 
   // Begin running the app
   init(); 
@@ -66,6 +67,7 @@ $(document).bind('pagecreate',function () {
     
     resizeDivs();
     $('#animation-control-buttons').hide();
+    $('#feed-title').hide();
     
     
     // Begin drawing on the canvas
@@ -75,15 +77,17 @@ $(document).bind('pagecreate',function () {
   function resizeDivs() {
     var width = $(window).width();
     var height = $(window).height();
-    canvas.height = 0.74 * height - 4;
+    canvas.height = 0.72 * height - 4;
     canvas.width = width - 4;
     $('#mode').height(0.06 * height);
     $('#build').height(0.06 * height);
     $('#modify').height(0.06 * height);
     $('#run').height(0.06 * height);    
-    $('#button-box').height(0.2 * height - 10);
-    $('#currentStep').height($('#button-box').height());
-    $('#feed').height($('#button-box').height());
+    $('#button-box').height(0.22 * height - 10);
+    $('#feed-title').height(0.15 * $('#button-box').height());
+    $('#feed-title').width(0.7 * width);
+    $('#currentStep').height($('#button-box').height() - $('#feed-title').height());
+    $('#feed').height($('#button-box').height() - $('#feed-title').height());
     $('#currentStep').css("max-height", ($('#button-box').height()) + 'px');
     $('#currentStep').css("max-width", (0.7 * width) + 'px');
     $('#feed').css("max-height", ($('#button-box').height()) + 'px');
@@ -129,6 +133,10 @@ $(document).bind('pagecreate',function () {
     if (graphMode == "run" && !animationController.isReady()) { 
       if (currentItem != null && currentItem instanceof Node) {
         currentItem.highlight();
+        clearInterval(alertTimer);
+        $('#currentStep').css('color', 'black');
+        $('#currentStep').css('font-size', '100%');
+        highlightMode = false;
         animationController.init(nodes, edges, currentItem);
         animationController.setReady();
       }
@@ -275,6 +283,7 @@ $(document).bind('pagecreate',function () {
        
     // If the user left Run Mode, remove the algorithm data from the nodes
     if (oldGraphMode == "run" && graphMode != "run") {
+      $('#feed-title').hide();
       animationController.setNotReady();
       animationController.reset();
       $('#animation-control-buttons').hide();
@@ -305,13 +314,27 @@ $(document).bind('pagecreate',function () {
     // If in Run Mode, hide mod buttons 
     if (graphMode == "run") { // *********************************************** CLEAN UP
       $('#animation-control-buttons').show();
+      $('#feed-title').show();
+      $('#feed-title').html("Current Line Of Algorithm (click box to see all lines so far)");
       highlightMode = false;
       $('#pause').prop('disabled', false);
       $('#feed').hide();
       $('#currentStep').show();
+      $('#currentStep').css('font-size', '300%');
+      var black = false;
+      alertTimer = setInterval(function() {        
+        if(black) {
+          $('#currentStep').css('color', 'red');
+          black = false;
+        }
+        else {
+          $('#currentStep').css('color', 'black');
+          black = true;
+        }
+      }, 300);
       $('#feed').val('');
       $('#currentStep').html('');
-      $("#slider-3").val(5).slider('refresh');
+      $('#slider-3').val(5).slider('refresh');
       $('#mod-buttons').hide();  
       $('#algorithm-feed-container').show();
       $('#currentStep').html("SELECT STARTING NODE.");
@@ -319,11 +342,13 @@ $(document).bind('pagecreate',function () {
   }
     
   $('#currentStep').click(function () {
+    $('#feed-title').html("All Lines Of Algorithm Run So Far (click box to see current line)");
     $('#currentStep').slideToggle('fast');
     setTimeout(function() { $('#feed').slideToggle('fast') }, 400);
   });
   
   $('#feed').click(function () {
+    $('#feed-title').html("Current Line Of Algorithm (click box to see all lines so far)");
     $('#feed').slideToggle('fast');
     setTimeout(function() { $('#currentStep').slideToggle('fast') }, 400);
   });
