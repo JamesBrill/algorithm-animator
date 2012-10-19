@@ -19,11 +19,11 @@
     <div style="padding: 0;" id="container" data-role="page" data-theme="c" data-content-theme="c">
       <div style="padding: 0;" data-role="content">    
         
-        <div id="mode" data-role="navbar">
+        <div class="mode" id="mode" data-role="navbar">
           <ul>
-            <li><a id="build" href="#" class="ui-btn-active">Build</a></li>
-            <li><a id="modify" href="#">Modify</a></li>
-            <li><a id="run" href="#">Run</a></li>
+            <li><a class="mode ui-btn-active" id="build" href="#">Build</a></li>
+            <li><a class="mode" id="modify" href="#">Modify</a></li>
+            <li><a class="mode" id="run" href="#">Run</a></li>
           </ul>
         </div>  
         
@@ -39,20 +39,20 @@
         </canvas>  
         
         <div id="button-box" style="border-style:solid; border-width:5px;">
-          <div id="feed-title" style="text-align: center; float:left;">
+          <div class="bottom-left" id="feed-title" style="text-align: center; float:left;">
             Current Line Of Algorithm (click box to see all lines so far)</div>
-          <div id="algorithm-feed-container" style="float:left;">
-            <textarea id="currentStep" style="margin: 0;"></textarea>
-            <textarea id="feed" style="margin: 0;"></textarea>          
+          <div class="bottom-left" id="algorithm-feed-container" style="float:left;">
+            <textarea class="feed-box" id="currentStep" style="margin: 0;"></textarea>
+            <textarea class="feed-box" id="feed" style="margin: 0;"></textarea>          
           </div>
           
           <div id="animation-control-buttons">
-            <button id="play"  data-role="none">Play</button>
-            <button id="pause"  data-role="none">Pause</button>
-            <button id="end"  data-role="none">End</button>
-            <button id="start"  data-role="none">Start</button>
-            <button id="next"  data-role="none">Next</button>
-            <button id="prev"  data-role="none">Prev</button>           
+            <button class="control" id="play"  data-role="none">Play</button>
+            <button class="control" id="pause"  data-role="none">Pause</button>
+            <button class="control" id="end"  data-role="none">End</button>
+            <button class="control" id="start"  data-role="none">Start</button>
+            <button class="control" id="next"  data-role="none">Next</button>
+            <button class="control" id="prev"  data-role="none">Prev</button>           
             <label for="slider-3">Step delay:</label>
             <input type="range" name="slider-3" id="slider-3" value="5" min="0.1" max="10" step="0.1" 
                      data-highlight="true" data-mini="true" style="display:none;"/>            

@@ -1,4 +1,4 @@
-function Node (initX, initY, initRadius, nodeNumber) {
+function Node (initX, initY, initRadius, nodeNumber, depth) {
   var x = initX;
   var y = initY;
   var highlighted = false;
@@ -6,6 +6,7 @@ function Node (initX, initY, initRadius, nodeNumber) {
   var name = "N" + nodeNumber;
   var label = name;
   var algorithmSpecificData = new Array();
+  var yDepth = depth;
   
   this.resetAlgorithmSpecificData = function () {
     algorithmSpecificData = new Array();
@@ -83,6 +84,14 @@ function Node (initX, initY, initRadius, nodeNumber) {
 
   this.isHighlighted = function () {
     return highlighted; 
+  }
+  
+  this.getDepth = function () {
+    return yDepth;
+  }
+  
+  this.setDepth = function (newDepth) {
+    yDepth = newDepth;
   }
 }  
 

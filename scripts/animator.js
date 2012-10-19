@@ -17,6 +17,8 @@ $(document).bind('pagecreate',function () {
   //var animationReady; // Animation has finished being initialised
   var animationController;
   var alertTimer;
+  var width;
+  var height;
 
   // Begin running the app
   init(); 
@@ -69,45 +71,43 @@ $(document).bind('pagecreate',function () {
     $('#animation-control-buttons').hide();
     $('#feed-title').hide();
     
-    
     // Begin drawing on the canvas
     setInterval(function () { draw() }, 25);
   }
   
+  $(window).resize(function() {
+    width = $(window).width();    
+    if (width > 500) {
+      resizeDivs();
+    }
+  })
+  
   function resizeDivs() {
-    var width = $(window).width();
-    var height = $(window).height();
+    width = $(window).width();
+    height = $(window).height();
+    // Resizing seems to work, but needs testing. Nodes can overlap when squashed.
+    // PROBLEM: can go off-screen when squashed a lot then expanded.
+    // Need min-height
+    // PROBLEM ALL KINDS OF RESIZING TENDS TO PUSH NODES DOWNWARDS...
+    for (var i = 0; i < nodes.length; i++) {
+      var canvasXRatio = nodes[i].getX()/canvas.width;
+      nodes[i].setX(Math.round(canvasXRatio * (width - 4)));
+      nodes[i].setY(nodes[i].getDepth() * (0.72 * height - 4));
+    }    
     canvas.height = 0.72 * height - 4;
     canvas.width = width - 4;
-    $('#mode').height(0.06 * height);
-    $('#build').height(0.06 * height);
-    $('#modify').height(0.06 * height);
-    $('#run').height(0.06 * height);    
+    $('.mode').css('height', 0.06 * height);
     $('#button-box').height(0.22 * height - 10);
     $('#feed-title').height(0.15 * $('#button-box').height());
-    $('#feed-title').width(0.7 * width);
-    $('#currentStep').height($('#button-box').height() - $('#feed-title').height());
-    $('#feed').height($('#button-box').height() - $('#feed-title').height());
-    $('#currentStep').css("max-height", ($('#button-box').height()) + 'px');
-    $('#currentStep').css("max-width", (0.7 * width) + 'px');
-    $('#feed').css("max-height", ($('#button-box').height()) + 'px');
-    $('#feed').css("max-width", (0.7 * width) + 'px');
-    $('#algorithm-feed-container').width(0.7 * width);
+    $('.bottom-left').css('width', 0.7 * width);
+    $('.feed-box').css('height', $('#button-box').height() - $('#feed-title').height());
+    $('.feed-box').css('max-height', ($('#button-box').height()) + 'px');
+    $('.feed-box').css('max-width', (0.7 * width) + 'px');
     $('#animation-control-buttons').height(0.18 * height);
     $('#animation-control-buttons').width(0.3 * width);
     $('#animation-control-buttons').css("margin-left", (0.7 * width) + 'px');
-    $('#play').height(0.05 * height);
-    $('#pause').height(0.05 * height);
-    $('#next').height(0.05 * height);
-    $('#prev').height(0.05 * height);
-    $('#start').height(0.05 * height);
-    $('#end').height(0.05 * height);
-    $('#play').width(0.09 * width);
-    $('#pause').width(0.09 * width);
-    $('#next').width(0.09 * width);
-    $('#prev').width(0.09 * width);
-    $('#start').width(0.09 * width);
-    $('#end').width(0.09 * width);
+    $('.control').css("height", (0.05 * height));
+    $('.control').css("width", (0.09 * width));
   }
     
   // Virtual mouse-down event handler
@@ -283,6 +283,7 @@ $(document).bind('pagecreate',function () {
        
     // If the user left Run Mode, remove the algorithm data from the nodes
     if (oldGraphMode == "run" && graphMode != "run") {
+      clearInterval(alertTimer); // Keep this here
       $('#feed-title').hide();
       animationController.setNotReady();
       animationController.reset();
@@ -524,6 +525,8 @@ $(document).bind('pagecreate',function () {
         getNearbyNode(cursorX, cursorY, true, 2) == null) {
       currentItem.setX(cursorX);
       currentItem.setY(cursorY); 
+      var depth = cursorY/canvas.height;
+      currentItem.setDepth(depth);
     }
   }
   
@@ -590,7 +593,8 @@ $(document).bind('pagecreate',function () {
     // If there is space for a node to be placed at the cursor's position,
     // create a new node there
     if (nodeCanBePlaced()) {      
-      var newNode = new Node(cursorX,cursorY,nodeRadius,nodeNumber);
+      var depth = cursorY/canvas.height;
+      var newNode = new Node(cursorX,cursorY,nodeRadius,nodeNumber,depth);
       nodes.push(newNode);  
       nodeNumber++;
       currentItem = newNode;
