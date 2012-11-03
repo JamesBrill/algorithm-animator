@@ -1,24 +1,23 @@
 $(document).bind('pagecreate',function () {
   var canvas, context; // Canvas variables
   var nodeRadius; // Radius of all nodes on the canvas
-  var cursorX, cursorY; // Coordinates of cursor
+  var cursorX = -1; // X coordinate of cursor
+  var cursorY = -1; // Y coordinate of cursor
   var nodes = new Array(); // Collection of nodes
   var edges = new Array(); // Collection of edges
-  var currentItem; // Item that cursor is currently on
-  var highlightMode; // Is an item being highlighted?
-  var selectedItem; // The item currently selected
-  var startX, startY; // Starting coordinates of a drag
-  var isMouseDown; // Is the left mouse button held down?
-  var nodeJustBeenPlaced; // Has a node just been placed?
-  var graphMode; // The editing mode for the graph editor (build/modify/run)
-  var nodeNumber; // Current node number
-  //var algorithmAnimator; // Object that controls animation
-  //var animationTimer; // Timer that controls speed of animation
-  //var animationReady; // Animation has finished being initialised
-  var animationController;
-  var alertTimer;
-  var width;
-  var height;
+  var currentItem = null; // Item that cursor is currently on
+  var highlightMode = false; // Is an item being highlighted?
+  var selectedItem = null; // The item currently selected
+  var startX = 0; // Starting X coordinate of a drag
+  var startY = 0; // Starting Y coordinate of a drag
+  var isMouseDown = false; // Is the left mouse button held down?
+  var nodeJustBeenPlaced = false; // Has a node just been placed?
+  var graphMode = "build"; // The editing mode for the graph editor (build/modify/run)
+  var nodeNumber = 1; // Current node number
+  var animationController = new AnimationController(); // Object that controls animation
+  var alertTimer; // Timer that enables flashing alert message
+  var width = $(window).width(); // Width of window
+  var height = $(window).height(); // Height of window
 
   // Begin running the app
   init(); 
@@ -27,87 +26,86 @@ $(document).bind('pagecreate',function () {
   function init () {
     // Find the canvas element
     canvas = $('#canvas')[0];
-    if (!canvas) {
-      alert('Error: I cannot find the canvas element!');
-      return;
-    }
-
-    if (!canvas.getContext) {
-      alert('Error: no canvas.getContext!');
+    if (!canvas || !canvas.getContext) {
+      alert('Error: browser does not support HTML5 canvas.');
       return;
     }
 
     // Get the 2D canvas context
     context = canvas.getContext('2d');
-    if (!context) {
-      alert('Error: failed to getContext!');
-      return;
-    }
-            
-    // Initialise variables
-    nodeRadius = 20;
-    cursorX = -1;
-    cursorY = -1;
-    currentItem = null;
-    highlightMode = false;
-    selectedItem = null; 
-    startX = 0;
-    startY = 0;
-    isMouseDown = false;
-    nodeJustBeenPlaced = false;
-    graphMode = "build";
-    nodeNumber = 1;
-    animationController = new AnimationController();
+                
+    // Hide all unneeded elements
+    $('.hide-at-init').hide();
     
-    // Hide all buttons related to item modification
-    $('#mod-buttons').hide();
+    // Set feed box to read-only
+    $('.feed-box').prop("readonly", true);
     
-    // Hide algorithm feed text area and make it read-only
-    $('#algorithm-feed-container').hide();
-    $('#feed').prop("readonly", true);
-    $('#currentStep').prop("readonly", true);
+    // Set proportional node radius
+    nodeRadius = (width / 60);
     
+    // Resize all elements on screen
     resizeDivs();
-    $('#animation-control-buttons').hide();
-    $('#feed-title').hide();
     
     // Begin drawing on the canvas
     setInterval(function () { draw() }, 25);
   }
   
+  // When the window is resized, resize all elements
   $(window).resize(function() {
-    width = $(window).width();    
-    if (width > 500) {
-      resizeDivs();
-    }
-  })
-  
-  function resizeDivs() {
+    // Update window size
     width = $(window).width();
     height = $(window).height();
-    // Resizing seems to work, but needs testing. Nodes can overlap when squashed.
-    // PROBLEM: can go off-screen when squashed a lot then expanded.
-    // Need min-height
-    // PROBLEM ALL KINDS OF RESIZING TENDS TO PUSH NODES DOWNWARDS...
+    resizeDivs();
+  })
+  
+  // Resize all elements, unless width is too small
+  function resizeDivs() {
+    if (width > 500 && height > 500) {
+      // Reposition nodes
+      repositionNodes();
+  
+      // Update canvas size
+      canvas.height = 0.72 * height - 4;
+      canvas.width = width - 4;
+      
+      // Update size of other elements
+      $('.mode').css('height', 0.06 * height);
+      $('#button-box').height(0.22 * height - 10);
+      $('#feed-title').height(0.15 * $('#button-box').height());
+      $('.bottom-left').css('width', 0.7 * width);
+      $('.feed-box').css('height', $('#button-box').height() - $('#feed-title').height());
+      $('.feed-box').css('max-height', ($('#button-box').height()) + 'px');
+      $('.feed-box').css('max-width', (0.7 * width) + 'px');
+      $('#animation-control-buttons').height(0.18 * height);
+      $('#animation-control-buttons').width(0.3 * width);
+      $('#animation-control-buttons').css("margin-left", (0.7 * width) + 'px');
+      $('.control').css("height", 0.4 * ($('#animation-control-buttons').height()-2));
+      $('.control').css("width", (1/6) * ($('#animation-control-buttons').width()-30));
+      $('#slider-container').css('margin-top', '2px');
+      $('#slider-container').css('width', $('#animation-control-buttons').width()-14);
+      $('#slider-container').css('height', 0.4 * ($('#animation-control-buttons').height()-2));
+      $('#slider-label').css('height', 0.5 * ($('#slider-container').height()-2));
+      $('.ownslider + div.ui-slider').css("margin-left", '0px');
+      $('.ownslider + div.ui-slider').css("margin-right", '0px');
+      $('.ownslider + div.ui-slider').css("margin-top", '0px');
+      $('.ownslider + div.ui-slider').css("margin-bottom", '0px');
+      $('.ownslider + div.ui-slider').css("width", $('#slider-container').width()-2);
+      $('.ownslider + div.ui-slider').css("height", 0.5 * ($('#slider-container').height()-2));
+      $('#feed-mode-container').css('width', $('#animation-control-buttons').width()-12);
+      $('#feed-mode-container').css('height', 0.3 * ($('#animation-control-buttons').height()-2));
+      $('.feed-mode').css('height', 0.95 * $('#feed-mode-container').height()); 
+
+      // Set proportional node radius
+      nodeRadius = (width / 60);
+    }
+  }
+  
+  // Reposition nodes so that they remain in correct position on canvas
+  function repositionNodes() {
     for (var i = 0; i < nodes.length; i++) {
-      var canvasXRatio = nodes[i].getX()/canvas.width;
-      nodes[i].setX(Math.round(canvasXRatio * (width - 4)));
-      nodes[i].setY(nodes[i].getDepth() * (0.72 * height - 4));
-    }    
-    canvas.height = 0.72 * height - 4;
-    canvas.width = width - 4;
-    $('.mode').css('height', 0.06 * height);
-    $('#button-box').height(0.22 * height - 10);
-    $('#feed-title').height(0.15 * $('#button-box').height());
-    $('.bottom-left').css('width', 0.7 * width);
-    $('.feed-box').css('height', $('#button-box').height() - $('#feed-title').height());
-    $('.feed-box').css('max-height', ($('#button-box').height()) + 'px');
-    $('.feed-box').css('max-width', (0.7 * width) + 'px');
-    $('#animation-control-buttons').height(0.18 * height);
-    $('#animation-control-buttons').width(0.3 * width);
-    $('#animation-control-buttons').css("margin-left", (0.7 * width) + 'px');
-    $('.control').css("height", (0.05 * height));
-    $('.control').css("width", (0.09 * width));
+      nodes[i].setX(nodes[i].getXDepth() * (width - 4));
+      nodes[i].setY(nodes[i].getYDepth() * (0.72 * height - 4));
+    }  
   }
     
   // Virtual mouse-down event handler
@@ -130,13 +128,20 @@ $(document).bind('pagecreate',function () {
       initiateDrag();    
     }
     
+    // If in Run Mode and starting node hasn't been selected yet...
     if (graphMode == "run" && !animationController.isReady()) { 
+      // If user has clicked on a node...
       if (currentItem != null && currentItem instanceof Node) {
+        // Unhighlight that node and turn off highlight mode
         currentItem.highlight();
+        highlightMode = false;
+        
+        // Turn off the flashing alert and return feed font to normal
         clearInterval(alertTimer);
         $('#currentStep').css('color', 'black');
         $('#currentStep').css('font-size', '100%');
-        highlightMode = false;
+
+        // Initialise animation controller
         animationController.init(nodes, edges, currentItem);
         animationController.setReady();
       }
@@ -189,6 +194,7 @@ $(document).bind('pagecreate',function () {
       cursorY = ev.pageY - this.offsetTop - 2; // Accommodates border of 2px
     }
     
+    // Variable that will contain the item the user has their mouse over
     var containingItem;
     
     // If in Build Mode...
@@ -259,17 +265,32 @@ $(document).bind('pagecreate',function () {
     }
   })
   
+  // Change mode to Build when the "Build" button is clicked
   $('#build').click(function() {
     changeMode('build');
   })
   
+  // Change mode to Modify when the "Modify" button is clicked
   $('#modify').click(function() {
     changeMode('modify');
   })
   
+  // Change mode to Run when the "Run" button is clicked
   $('#run').click(function() {
-    changeMode('run');
+    if (graphMode != 'run') {
+      changeMode('run');
+    }
   })
+  
+  $('#high-level').click(function() {
+    animationController.toggleFeedMode();
+    animationController.updateFeed(animationController);
+  });
+
+  $('#pseudocode').click(function() {
+    animationController.toggleFeedMode();
+    animationController.updateFeed(animationController);
+  });
   
   // 'Change' event handler for the graph mode selector
   function changeMode(newGraphMode) {
@@ -283,11 +304,15 @@ $(document).bind('pagecreate',function () {
        
     // If the user left Run Mode, remove the algorithm data from the nodes
     if (oldGraphMode == "run" && graphMode != "run") {
-      clearInterval(alertTimer); // Keep this here
-      $('#feed-title').hide();
-      animationController.setNotReady();
+      // Ensure alert timer is still not running
+      clearInterval(alertTimer); 
+      // Hide animation elements
+      $('.hide-at-init').hide();
+      // Ensure text on pause button is correct
+      $('#pause').html('Pause');
+      // Reset animation controller
       animationController.reset();
-      $('#animation-control-buttons').hide();
+      // Remove all animation-related data from nodes
       for (var i = 0; i < nodes.length; i++) {
         nodes[i].setLabel(nodes[i].getName());
         nodes[i].resetAlgorithmSpecificData();
@@ -312,76 +337,101 @@ $(document).bind('pagecreate',function () {
     // Hide algorithm feed - only Run Mode will show it
     $('#algorithm-feed-container').hide();
     
-    // If in Run Mode, hide mod buttons 
-    if (graphMode == "run") { // *********************************************** CLEAN UP
-      $('#animation-control-buttons').show();
-      $('#feed-title').show();
+    // If in Run Mode...
+    if (graphMode == "run") { 
+      // Show animation elements and hide mod buttons
+      $('.hide-at-init').show();
+      $('#mod-buttons').hide(); 
+      
+      // Initialise feed
       $('#feed-title').html("Current Line Of Algorithm (click box to see all lines so far)");
-      highlightMode = false;
-      $('#pause').prop('disabled', false);
       $('#feed').hide();
+      $('#feed').val('');
       $('#currentStep').show();
       $('#currentStep').css('font-size', '300%');
-      var black = false;
-      alertTimer = setInterval(function() {        
-        if(black) {
-          $('#currentStep').css('color', 'red');
-          black = false;
-        }
-        else {
-          $('#currentStep').css('color', 'black');
-          black = true;
-        }
-      }, 300);
-      $('#feed').val('');
-      $('#currentStep').html('');
-      $('#slider-3').val(5).slider('refresh');
-      $('#mod-buttons').hide();  
-      $('#algorithm-feed-container').show();
       $('#currentStep').html("SELECT STARTING NODE.");
+      
+      // Turn off highlight mode to enable cursor after mode change
+      highlightMode = false;
+      
+      // Enable the 'pause' button and set the slider to 5
+      $('#pause').prop('disabled', false);
+      $('#slider-3').val(5).slider('refresh');
+
+      // Start the flashing alert
+      activateAlertTimer();
     }
   }
+  
+  // Show flashing alert asking the user to select a starting node for animation
+  function activateAlertTimer() {
+    // Variable representing whether alert message is black. Its value is passed 
+    // to an anonymous function via a closure.
+    var black = false;
+    // Change colour of alert message every 300 milliseconds
+    alertTimer = setInterval(function() {        
+      if(black) {
+        $('#currentStep').css('color', 'red');
+        black = false;
+      }
+      else {
+        $('#currentStep').css('color', 'black');
+        black = true;
+      }
+    }, 300);    
+  }  
     
+  // When 'current step' box is clicked, show 'feed' box
   $('#currentStep').click(function () {
     $('#feed-title').html("All Lines Of Algorithm Run So Far (click box to see current line)");
     $('#currentStep').slideToggle('fast');
+    // Pause to let 'current step' box disappear (prevents scroll bar from appearing)
     setTimeout(function() { $('#feed').slideToggle('fast') }, 400);
   });
   
+  // When 'feed' box is clicked, show 'current step' box
   $('#feed').click(function () {
     $('#feed-title').html("Current Line Of Algorithm (click box to see all lines so far)");
     $('#feed').slideToggle('fast');
+    // Pause to let 'feed' box disappear (prevents scroll bar from appearing)
     setTimeout(function() { $('#currentStep').slideToggle('fast') }, 400);
   });
   
+  // When 'play' button is clicked, play algorithm and enable 'pause' button
   $('#play').click(function () {
     animationController.play();
     $('#pause').prop('disabled', false);
     $('#pause').html('Pause');
   });
   
+  // When 'pause' button is clicked, pause algortihm and disable 'pause' button
   $('#pause').click(function () {
     animationController.pause();
     $('#pause').prop('disabled', true);
     $('#pause').html('Paused');
   });
   
+  // When 'next' button is clicked, go to next step of algorithm
   $('#next').click(function () {
     animationController.next();
   });
   
+  // When 'prev' button is clicked, go to previous step of algorithm
   $('#prev').click(function () {
     animationController.prev();
   });
   
+  // When 'start' button is clicked, go to first step of algorithm
   $('#start').click(function () {
     animationController.beginning();
   });
   
+  // When 'end' button is clicked, go to end of algorithm
   $('#end').click(function () {
     animationController.end();
   });
   
+  // 'Change' event handler for slider. Updates step delay value
   $('#slider-3').change(function(){
     var stepDelay = $(this).val();
     animationController.changeSpeed(stepDelay*1000);
@@ -525,8 +575,10 @@ $(document).bind('pagecreate',function () {
         getNearbyNode(cursorX, cursorY, true, 2) == null) {
       currentItem.setX(cursorX);
       currentItem.setY(cursorY); 
-      var depth = cursorY/canvas.height;
-      currentItem.setDepth(depth);
+      // Update node's relative position on canvas
+      var xDepth = cursorX/canvas.width;
+      var yDepth = cursorY/canvas.height;
+      currentItem.setDepth(xDepth,yDepth);
     }
   }
   
@@ -592,9 +644,11 @@ $(document).bind('pagecreate',function () {
   function placeNode () {
     // If there is space for a node to be placed at the cursor's position,
     // create a new node there
-    if (nodeCanBePlaced()) {      
-      var depth = cursorY/canvas.height;
-      var newNode = new Node(cursorX,cursorY,nodeRadius,nodeNumber,depth);
+    if (nodeCanBePlaced()) { 
+      // These depth coordinates record node's relative position on canvas
+      var xDepth = cursorX/canvas.width;
+      var yDepth = cursorY/canvas.height;
+      var newNode = new Node(cursorX,cursorY,nodeNumber,xDepth,yDepth);
       nodes.push(newNode);  
       nodeNumber++;
       currentItem = newNode;
@@ -728,7 +782,7 @@ $(document).bind('pagecreate',function () {
     
     // Use the algorithm animator to draw the node if in Run Mode
     if (graphMode == "run" && !animationController.isActive()) {
-      animationController.draw(node, context);
+      animationController.draw(node, context, nodeRadius);
     }
     else {
       // If the node is selected, set it's colour to blue

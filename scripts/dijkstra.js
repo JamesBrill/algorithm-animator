@@ -10,6 +10,11 @@ DijkstraAnimator = function (nodes,edges,startingNode) {
   this.dijkstraStates = new Array(); // Array of all states reached during the algorithm
   this.stateIndex = 0; // Index of current state
   this.ended = false; // Has algorithm finished its last step?
+  this.INFINITY = String.fromCharCode(8734);
+  this.ASSIGNMENT = String.fromCharCode(8592);
+  this.NOTEQUALS = String.fromCharCode(8800);
+  this.TICK = String.fromCharCode(10003);
+  this.CROSS = String.fromCharCode(10007);
 }
 
 // Comparator function to pass to Buckets priority queue implementation. 
@@ -22,6 +27,29 @@ var compareDijkstraNodes = function (a,b) {
     return 1;
   }
   return 0;
+}
+
+// Returns pseudo-code version of algorithm
+DijkstraAnimator.prototype.getPseudoCode = function () {
+  var startingName = this.startingNode.getName();
+  return "d[" + startingName + "] " + this.ASSIGNMENT + " 0\nd[u] " + 
+    this.ASSIGNMENT + " +" + this.INFINITY + " for each node u " + 
+    this.NOTEQUALS + " v.\nPriority queue Q contains all nodes in graph G " +
+    "using d-labels as keys.\nwhile Q is not empty, do\n" + this.tab(1) + "u " + 
+    this.ASSIGNMENT + " Q.removeMin()\n" + this.tab(1) + "for each node z adjacent to u such that " +
+    "z is in Q, do\n" + this.tab(2) + "if D[u] + w((u,z)) < D[z], then\n" + this.tab(3) + 
+    "D[z] " + this.ASSIGNMENT + " D[u] + w((u,z))\n" + this.tab(3) + "Change the key of " +
+    "node z in Q to D[z]\n" + this.tab(2) + "else\n" + this.tab(3) + "Do nothing.\n" + 
+    "return the label D[u] of each vertex u";
+}
+
+// Output a given number of tabs
+DijkstraAnimator.prototype.tab = function (numberOfTabs) {
+  var whitespace = "";
+  for (var i = 0; i < numberOfTabs; i++) {
+    whitespace += "   ";
+  }
+  return whitespace;
 }
 
 // Run Dijkstra's shortest path algorithm to build an array of states, each state
@@ -48,14 +76,20 @@ DijkstraAnimator.prototype.buildAnimation = function () {
     queue.enqueue(this.nodes[i]);
   }
   
-  this.addNewState(cloud,fringe,null,"BEGIN\n");
+  // Add begin state
+  this.addNewState(cloud,fringe,null,new FeedData("BEGIN\n","BEGIN\n"));
   
+  // Add state describing choice of starting node
   var name = this.startingNode.getName();
-  var feedString = "Your starting node is " + name + ".\nInitialising d[" + name +
-                   "] to 0.\nInitialising d[u] to " + String.fromCharCode(8734) +
-                   " for all other nodes u.\n";
-  this.addNewState(cloud,fringe,null, feedString);               
-                 
+  var feedString = new FeedData();
+  feedString.setHighLevel("Your starting node is " + name + ".\nInitialising d[" + name +
+                   "] to 0.\nInitialising d[u] to " + this.INFINITY +
+                   " for all other nodes u.\n");
+  feedString.setPseudoCode("d[" + name + "] " + this.ASSIGNMENT + " 0\nd[u] " + 
+    this.ASSIGNMENT + " +" + this.INFINITY + " for each node u " + 
+    this.NOTEQUALS + " v.\nPriority queue Q contains all nodes in graph G " +
+    "using d-labels as keys.\n");               
+  this.addNewState(cloud,fringe,null, feedString); 
   
   // While the priority queue still contains nodes...
   while (!queue.isEmpty()) {
@@ -72,8 +106,10 @@ DijkstraAnimator.prototype.buildAnimation = function () {
     
     // Add a new state that represents the current step of the algorithm
     name = newCloudNode.getName();
-    feedString = "  Remove " + name + " from Q.\n  " + name + " was the node outside " +
-                 "the cloud with the lowest d-label.\n"
+    feedString.setHighLevel(this.tab(1) + "Remove " + name + " from Q.\n" + this.tab(1) + name + 
+                 " was the node outside the cloud with the lowest d-label.\n");
+    feedString.setPseudoCode("while Q is not empty, do\n" + this.tab(1) + "u " + 
+                 this.ASSIGNMENT + " Q.removeMin()\n");           
     this.addNewState(cloud,fringe,newCloudNode, feedString);
     
     // Build an array of all nodes that are adjacent to the new cloud node and 
@@ -93,9 +129,7 @@ DijkstraAnimator.prototype.buildAnimation = function () {
                                         weight: this.edges[i].getWeight()});
       }
     }
-    
-    var noAdjacentNodes = true;
-    
+        
     // For each unvisited node adjacent to the new cloud node... 
     for (i = 0; i < adjacentUnvisitedNodes.length; i++) {
       // Adjacent node
@@ -106,9 +140,7 @@ DijkstraAnimator.prototype.buildAnimation = function () {
       var adjacentNodeDValue = adjacentNode.getAlgorithmSpecificData(this.stateIndex);
       // Weight of the edge connecting them
       var weight = adjacentUnvisitedNodes[i].weight;
-      
-      noAdjacentNodes = false;
-      
+      // Name of adjacent node      
       var adjacentName = adjacentNode.getName();
       
       // If adjacent node is not yet in the fringe, add it to the fringe
@@ -117,34 +149,34 @@ DijkstraAnimator.prototype.buildAnimation = function () {
         fringe.push(adjacentNode);
       }
       
-      feedString = "    " + adjacentName + " is adjacent to " + name + " and outside the cloud.\n"
-      this.addNewState(cloud,fringe,newCloudNode, feedString);
-      
-      feedString = "    Is d[" + name + "] + weight(" + name + "," + adjacentName + ") < d[" +
-                     adjacentName + "]?\n";             
+      feedString.setHighLevel(this.tab(2) + adjacentName + " is adjacent to " + name + " and outside the cloud.\n" +
+                   this.tab(2) + "Is d[" + name + "] + weight(" + name + "," + adjacentName + ") < d[" +
+                   adjacentName + "]?\n");   
+      feedString.setPseudoCode(this.tab(1) + "for each node z adjacent to u such that " +
+                   "z is in Q, do\n" + this.tab(2) + "if D[u] + w((u,z)) < D[z], then ");           
       
       // Perform 'edge relaxation' to update d-value of adjacent node. The node is 
       // also repositioned in the priority queue to accommodate this adjustment.
       if (cloudNodeDValue + weight < adjacentNodeDValue) {
         adjacentNode.setAlgorithmSpecificData(this.stateIndex,cloudNodeDValue + weight);
         queue.updateItem(adjacentNode);
-        feedString += "      Yes. Update the value of d[" + adjacentName + "] to equal " +
-          "d[" + name + "] + weight(" + name + "," + adjacentName + ").\n      Change d[" +
-          adjacentName + "] from " + adjacentNodeDValue + " to " + (cloudNodeDValue + weight) + ".\n";
+        feedString.concatHighLevel(this.tab(3) + "Yes. Update the value of d[" + adjacentName + "] to equal " +
+          "d[" + name + "] + weight(" + name + "," + adjacentName + ").\n" + this.tab(3) + "Change d[" +
+          adjacentName + "] from " + adjacentNodeDValue + " to " + (cloudNodeDValue + weight) + ".\n");
+        feedString.concatPseudoCode(this.TICK + "\n" + this.tab(3) + "D[z] " + this.ASSIGNMENT + " D[u] + w((u,z))\n" + 
+          this.tab(3) + "Change the key of node z in Q to D[z]\n");
       }
       else {
-        feedString += "      No.\n";
+        feedString.concatHighLevel(this.tab(3) + "No.\n");
+        feedString.concatPseudoCode(this.CROSS + "\n" + this.tab(2) + "else\n" + 
+          this.tab(3) + "Do nothing.\n");
       }
       this.addNewState(cloud,fringe,newCloudNode, feedString); 
-    }
-    
-    if (noAdjacentNodes) {
-      feedString = "  " + name + " has no adjacent nodes that are not in the cloud.\n";
-      this.addNewState(cloud,fringe,newCloudNode, feedString); 
-    }
+    }    
   }
   
-  this.addNewState(cloud,fringe,newCloudNode, "END"); 
+  // Add end state
+  this.addNewState(cloud,fringe,newCloudNode,new FeedData("END","return the label D[u] of each vertex u")); 
   
   // Reset state index so that algorithm can be animated from the beginning
   this.stateIndex = -1;
@@ -152,7 +184,8 @@ DijkstraAnimator.prototype.buildAnimation = function () {
 
 // Add a new state to represent the current step of the algorithm
 DijkstraAnimator.prototype.addNewState = function (cloud, fringe, newCloudNode, feedData) {
-  var newDijkstraState = new DijkstraState(cloud.slice(0),fringe.slice(0),newCloudNode,feedData);
+  var feedDataCopy = new FeedData(feedData.getHighLevel(),feedData.getPseudoCode());
+  var newDijkstraState = new DijkstraState(cloud.slice(0),fringe.slice(0),newCloudNode,feedDataCopy);
   this.dijkstraStates.push(newDijkstraState);
   this.stateIndex++;
 }
@@ -213,17 +246,20 @@ DijkstraAnimator.prototype.prevState = function () {
   this.ended = false;
 }
 
+// Got to beginning of algorithm
 DijkstraAnimator.prototype.goToBeginning = function () {
   this.stateIndex = 0;
   this.ended = false;
   this.updateNodes();
 }
 
+// Go to end of algorithm
 DijkstraAnimator.prototype.goToEnd = function () {
   this.stateIndex = this.dijkstraStates.length - 1;
   this.updateNodes();
 }
 
+// Is algorithm at the end?
 DijkstraAnimator.prototype.atEnd = function () {
   return this.ended;
 }
@@ -247,12 +283,10 @@ DijkstraAnimator.prototype.updateNodes = function () {
 }
 
 // Draws a given node to the canvas
-DijkstraAnimator.prototype.drawNode = function (node, context) {
+DijkstraAnimator.prototype.drawNode = function (node, context, radius) {
   // Current state that the algorithm has reached
   var state = this.dijkstraStates[Math.max(this.stateIndex,0)];
   
-  // Radius of node
-  var radius = node.getRadius();
   // Coordinates of node
   var x = node.getX();
   var y = node.getY();
@@ -310,6 +344,7 @@ DijkstraState = function (cloudNodes, fringeNodes, currentNode, feedData) {
   this.feedData = feedData;
 }
 
+// Return the feed data of this state
 DijkstraState.prototype.getFeedData = function () {
   return this.feedData;
 }
@@ -327,8 +362,3 @@ DijkstraState.prototype.nodeType = function (node) {
   }
   return "unvisited";  
 }
-
-
-
-
-
