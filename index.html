@@ -4,51 +4,81 @@
     <meta charset="utf-8">
     <title>Graph-O-Matic</title>
     <link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.min.css" />
+    <link rel="stylesheet" href="styles/animatorstyle.css" />
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.2.js"></script>
     <script type="text/javascript" src="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.js"></script>
-    <script type="text/javascript" src="scripts/animator.js"></script>
+    <script type="text/javascript" src="scripts/buckets.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/animator.js"></script>
     <script type="text/javascript" src="scripts/node.js"></script>
     <script type="text/javascript" src="scripts/edge.js"></script>
     <script type="text/javascript" src="scripts/distance-calculator.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/dijkstra.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/animation-controller.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/feed-data.js"></script>
   </head>
-  <body>    
-    <div id="container" data-role="page">
-      <div data-role="content">    
-        <canvas id="canvas" width="750" height="450" style="border-style:solid; border-width:2px;">
+  <body> 
+    <div style="padding: 0;" id="container" data-role="page" data-theme="c" data-content-theme="c">
+      <div style="padding: 0;" data-role="content">    
+        
+        <div class="mode" id="mode" data-role="navbar">
+          <ul>
+            <li><a class="mode ui-btn-active" id="build" href="#">Build</a></li>
+            <li><a class="mode" id="modify" href="#">Modify</a></li>
+            <li><a class="mode" id="run" href="#">Run</a></li>
+          </ul>
+        </div>  
+        
+        <canvas id="canvas" style="border-style:solid; border-width:2px; display: block;">
           <p>Unfortunately, your browser is currently unsupported by our web 
           application.  We are sorry for the inconvenience. Please use one of the 
           supported browsers listed below, or draw the image you want using an 
           offline tool.</p>
           <p>Supported browsers: <a href="http://www.opera.com">Opera</a>, <a 
             href="http://www.mozilla.com">Firefox</a>, <a 
-            href="http://www.apple.com/safari">Safari</a>, and <a 
+            href="http://www.apple.com/safari">Safari</a> and <a 
             href="http://www.konqueror.org">Konqueror</a>.</p>
-        </canvas>
-        <form action="#" method="get">
-          <fieldset data-role="controlgroup" data-type="horizontal">
-                <input type="radio" name="graph-mode" id="build" value="build" checked="checked" />
-                <label for="build">Build</label>
-                <input type="radio" name="graph-mode" id="modify" value="modify"  />
-                <label for="modify">Modify</label>
-                <input type="radio" name="graph-mode" id="run" value="run"  />
-                <label for="run">Run</label>
-          </fieldset>        
-        </form>   
+        </canvas>  
         
-        <div id="mod-buttons">
-          <button id="delete" data-inline="true">Delete</button> 
-          <input type="text" id="rename-item" maxlength="30" value=""  />
-        </div>
-        
-        <div>
-          <p id="numberOfNodes"></p>
-        </div>
-        <div>
-          <p id="numberOfEdges"></p>
-        </div>  
-        <div>
-          <p id="smeg2"></p>
-        </div>  
+        <div id="button-box" style="border-style:solid; border-width:5px;">
+          <div class="bottom-left hide-at-init" id="feed-title" style="text-align: center; float:left;">
+            Current Line Of Algorithm (click box to see all lines so far)</div>
+          <div class="bottom-left hide-at-init" id="algorithm-feed-container" style="float:left;">
+            <textarea class="feed-box" id="currentStep" style="margin: 0;"></textarea>
+            <textarea class="feed-box" id="feed" style="margin: 0;"></textarea>          
+          </div>
+          
+          <div class="hide-at-init" id="animation-control-buttons">
+            <button class="control" id="play"  data-role="none">Play</button>
+            <button class="control" id="pause"  data-role="none">Pause</button>
+            <button class="control" id="start"  data-role="none">Start</button>
+            <button class="control" id="end"  data-role="none">End</button>
+            <button class="control" id="next"  data-role="none">Next</button>
+            <button class="control" id="prev"  data-role="none">Prev</button>   
+
+            <div id="feed-mode-container" style="margin-left:1px;">
+              <div class="feed-mode" id="feed-mode" data-role="navbar" style="margin-top: 1px">
+                <ul>
+                  <li><a class="feed-mode ui-btn-active" id="high-level" href="#">High-level</a></li>
+                  <li><a class="feed-mode" id="pseudocode" href="#">Pseudocode</a></li>
+                </ul>
+              </div> 
+            </div>
+            
+            <div id="slider-container" style="border-style:solid; border-width:2px; border-radius:10px;">
+              <div id="slider-label" style="text-align: center;">Step delay</div>
+              <input class="ownslider" type="range" name="slider-3" id="slider-3" value="5" min="0.1" max="10" step="0.1"
+                     data-highlight="true" data-mini="true" style="display:none;"/>  
+            </div>
+          </div>
+
+          <div class="hide-at-init" id="mod-buttons">
+            <button id="delete" data-inline="true">Delete</button> 
+            <input type="text" id="rename-item" maxlength="30" value=""  />
+          </div>
+          <div>
+            <p id="logdiv"></p>
+          </div>  
+        </div> 
       </div>
     </div>  
   </body>

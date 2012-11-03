@@ -1,17 +1,23 @@
 $(document).bind('pagecreate',function () {
   var canvas, context; // Canvas variables
   var nodeRadius; // Radius of all nodes on the canvas
-  var cursorX, cursorY; // Coordinates of cursor
+  var cursorX = -1; // X coordinate of cursor
+  var cursorY = -1; // Y coordinate of cursor
   var nodes = new Array(); // Collection of nodes
-  var edges = new Array(); // Coolection of edges
-  var currentItem; // Item that cursor is currently on
-  var highlightMode; // Is an item being highlighted?
-  var selectedItem; // The item currently selected
-  var startX, startY; // Starting coordinates of a drag
-  var isMouseDown; // Is the left mouse button held down?
-  var nodeJustBeenPlaced; // Has a node just been placed?
-  var graphMode; // The editing mode for the graph editor (build/modify/run)
-  var nodeNumber; // Current node number
+  var edges = new Array(); // Collection of edges
+  var currentItem = null; // Item that cursor is currently on
+  var highlightMode = false; // Is an item being highlighted?
+  var selectedItem = null; // The item currently selected
+  var startX = 0; // Starting X coordinate of a drag
+  var startY = 0; // Starting Y coordinate of a drag
+  var isMouseDown = false; // Is the left mouse button held down?
+  var nodeJustBeenPlaced = false; // Has a node just been placed?
+  var graphMode = "build"; // The editing mode for the graph editor (build/modify/run)
+  var nodeNumber = 1; // Current node number
+  var animationController = new AnimationController(); // Object that controls animation
+  var alertTimer; // Timer that enables flashing alert message
+  var width = $(window).width(); // Width of window
+  var height = $(window).height(); // Height of window
 
   // Begin running the app
   init(); 
@@ -20,44 +26,88 @@ $(document).bind('pagecreate',function () {
   function init () {
     // Find the canvas element
     canvas = $('#canvas')[0];
-    if (!canvas) {
-      alert('Error: I cannot find the canvas element!');
-      return;
-    }
-
-    if (!canvas.getContext) {
-      alert('Error: no canvas.getContext!');
+    if (!canvas || !canvas.getContext) {
+      alert('Error: browser does not support HTML5 canvas.');
       return;
     }
 
     // Get the 2D canvas context
     context = canvas.getContext('2d');
-    if (!context) {
-      alert('Error: failed to getContext!');
-      return;
-    }
-        
-    // Initialise variables
-    nodeRadius = 20;
-    cursorX = -1;
-    cursorY = -1;
-    currentItem = null;
-    highlightMode = false;
-    selectedItem = null; 
-    startX = 0;
-    startY = 0;
-    isMouseDown = false;
-    nodeJustBeenPlaced = false;
-    graphMode = "build";
-    nodeNumber = 1;
+                
+    // Hide all unneeded elements
+    $('.hide-at-init').hide();
     
-    // Hide all buttons related to item modification
-    $('#mod-buttons').hide();
+    // Set feed box to read-only
+    $('.feed-box').prop("readonly", true);
+    
+    // Set proportional node radius
+    nodeRadius = (width / 60);
+    
+    // Resize all elements on screen
+    resizeDivs();
     
     // Begin drawing on the canvas
     setInterval(function () { draw() }, 25);
   }
   
+  // When the window is resized, resize all elements
+  $(window).resize(function() {
+    // Update window size
+    width = $(window).width();
+    height = $(window).height();
+    resizeDivs();
+  })
+  
+  // Resize all elements, unless width is too small
+  function resizeDivs() {
+    if (width > 500 && height > 500) {
+      // Reposition nodes
+      repositionNodes();
+  
+      // Update canvas size
+      canvas.height = 0.72 * height - 4;
+      canvas.width = width - 4;
+      
+      // Update size of other elements
+      $('.mode').css('height', 0.06 * height);
+      $('#button-box').height(0.22 * height - 10);
+      $('#feed-title').height(0.15 * $('#button-box').height());
+      $('.bottom-left').css('width', 0.7 * width);
+      $('.feed-box').css('height', $('#button-box').height() - $('#feed-title').height());
+      $('.feed-box').css('max-height', ($('#button-box').height()) + 'px');
+      $('.feed-box').css('max-width', (0.7 * width) + 'px');
+      $('#animation-control-buttons').height(0.18 * height);
+      $('#animation-control-buttons').width(0.3 * width);
+      $('#animation-control-buttons').css("margin-left", (0.7 * width) + 'px');
+      $('.control').css("height", 0.4 * ($('#animation-control-buttons').height()-2));
+      $('.control').css("width", (1/6) * ($('#animation-control-buttons').width()-30));
+      $('#slider-container').css('margin-top', '2px');
+      $('#slider-container').css('width', $('#animation-control-buttons').width()-14);
+      $('#slider-container').css('height', 0.4 * ($('#animation-control-buttons').height()-2));
+      $('#slider-label').css('height', 0.5 * ($('#slider-container').height()-2));
+      $('.ownslider + div.ui-slider').css("margin-left", '0px');
+      $('.ownslider + div.ui-slider').css("margin-right", '0px');
+      $('.ownslider + div.ui-slider').css("margin-top", '0px');
+      $('.ownslider + div.ui-slider').css("margin-bottom", '0px');
+      $('.ownslider + div.ui-slider').css("width", $('#slider-container').width()-2);
+      $('.ownslider + div.ui-slider').css("height", 0.5 * ($('#slider-container').height()-2));
+      $('#feed-mode-container').css('width', $('#animation-control-buttons').width()-12);
+      $('#feed-mode-container').css('height', 0.3 * ($('#animation-control-buttons').height()-2));
+      $('.feed-mode').css('height', 0.95 * $('#feed-mode-container').height()); 
+
+      // Set proportional node radius
+      nodeRadius = (width / 60);
+    }
+  }
+  
+  // Reposition nodes so that they remain in correct position on canvas
+  function repositionNodes() {
+    for (var i = 0; i < nodes.length; i++) {
+      nodes[i].setX(nodes[i].getXDepth() * (width - 4));
+      nodes[i].setY(nodes[i].getYDepth() * (0.72 * height - 4));
+    }  
+  }
+    
   // Virtual mouse-down event handler
   $('#canvas').bind('vmousedown', function (ev) {   
     // Prevent text from being highlighted
@@ -76,6 +126,25 @@ $(document).bind('pagecreate',function () {
     if (graphMode == "build" || graphMode == "modify") {
       // Attempt to initiate a dragging action
       initiateDrag();    
+    }
+    
+    // If in Run Mode and starting node hasn't been selected yet...
+    if (graphMode == "run" && !animationController.isReady()) { 
+      // If user has clicked on a node...
+      if (currentItem != null && currentItem instanceof Node) {
+        // Unhighlight that node and turn off highlight mode
+        currentItem.highlight();
+        highlightMode = false;
+        
+        // Turn off the flashing alert and return feed font to normal
+        clearInterval(alertTimer);
+        $('#currentStep').css('color', 'black');
+        $('#currentStep').css('font-size', '100%');
+
+        // Initialise animation controller
+        animationController.init(nodes, edges, currentItem);
+        animationController.setReady();
+      }
     }
   });
 
@@ -119,26 +188,37 @@ $(document).bind('pagecreate',function () {
   // Virtual mouse-move event handler
   $('#canvas').bind('vmousemove', function (ev) {
     // If in Build Mode or Modify Mode...
-    if (graphMode == "build" || graphMode == "modify") {
+    if (graphMode == "build" || graphMode == "modify" || (graphMode == "run" && !animationController.isReady())) {
       // Get the mouse position relative to the canvas element
       cursorX = ev.pageX - this.offsetLeft - 2; // Accommodates border of 2px
       cursorY = ev.pageY - this.offsetTop - 2; // Accommodates border of 2px
     }
     
+    // Variable that will contain the item the user has their mouse over
+    var containingItem;
+    
     // If in Build Mode...
     if (graphMode == "build") {
       // Get the node that the cursor is currently on, if there is one
-      var containingNode = getNearbyNode(cursorX, cursorY, false, 1);
+      containingItem = getNearbyNode(cursorX, cursorY, false, 1);
       
       // Update the current item that the cursor is on
-      updateCurrentItem(containingNode);
+      updateCurrentItem(containingItem);
     }
     
     // If in Build Mode
     if (graphMode == "modify") {
       // Get the node or edge that the cursor is currently on, if there is one
-      var containingItem = determineSelectedItem();
+      containingItem = determineSelectedItem();
       
+      // Update the current item that the cursor is on
+      updateCurrentItem(containingItem);
+    }
+    
+    if (graphMode == "run" && !animationController.isReady()) {
+      // Get the node that the cursor is currently on, if there is one
+      containingItem = getNearbyNode(cursorX, cursorY, false, 1);     
+     
       // Update the current item that the cursor is on
       updateCurrentItem(containingItem);
     }
@@ -174,32 +254,189 @@ $(document).bind('pagecreate',function () {
     // If selected item is a node...
     if (selectedItem instanceof Node) {
       // Set the node's label to the contents of the text box
-      selectedItem.setLabel($('#rename-item').val());
+      selectedItem.setName($('#rename-item').val());
     }
     
     // If selected item is an edge...
     else if (selectedItem instanceof Edge) {
       // Set the edge's value to the contents of the text box 
       // (need to restrict to numerical values)
-      selectedItem.setValue($('#rename-item').val());
+      selectedItem.setWeight(parseInt($('#rename-item').val()));
     }
   })
   
+  // Change mode to Build when the "Build" button is clicked
+  $('#build').click(function() {
+    changeMode('build');
+  })
+  
+  // Change mode to Modify when the "Modify" button is clicked
+  $('#modify').click(function() {
+    changeMode('modify');
+  })
+  
+  // Change mode to Run when the "Run" button is clicked
+  $('#run').click(function() {
+    if (graphMode != 'run') {
+      changeMode('run');
+    }
+  })
+  
+  $('#high-level').click(function() {
+    animationController.toggleFeedMode();
+    animationController.updateFeed(animationController);
+  });
+
+  $('#pseudocode').click(function() {
+    animationController.toggleFeedMode();
+    animationController.updateFeed(animationController);
+  });
+  
   // 'Change' event handler for the graph mode selector
-  $('input[name=graph-mode]').change(function() {
-    // Get current value of the selector
-    graphMode = $('input[name=graph-mode]:checked').val();
+  function changeMode(newGraphMode) {
+    // Ensure there are no timer duplicates
+    animationController.clearTimer();
+    
+    // Record the previous graph mode
+    var oldGraphMode = graphMode;   
+    
+    graphMode = newGraphMode;
+       
+    // If the user left Run Mode, remove the algorithm data from the nodes
+    if (oldGraphMode == "run" && graphMode != "run") {
+      // Ensure alert timer is still not running
+      clearInterval(alertTimer); 
+      // Hide animation elements
+      $('.hide-at-init').hide();
+      // Ensure text on pause button is correct
+      $('#pause').html('Pause');
+      // Reset animation controller
+      animationController.reset();
+      // Remove all animation-related data from nodes
+      for (var i = 0; i < nodes.length; i++) {
+        nodes[i].setLabel(nodes[i].getName());
+        nodes[i].resetAlgorithmSpecificData();
+      }
+    }
+    
     // If in Build Mode, hide the mod buttons (can't be used in this mode)
     if (graphMode == "build") {
       $('#mod-buttons').hide();
+    }
+    
+    // Clear algorithm feed if user has left Run Mode
+    if (graphMode != "run") {
+      $('#feed').val('');
     }
     
     // Ensure there is no selected item after mode has been changed
     if (selectedItem != null) { 
       selectedItem = null;
     }
+    
+    // Hide algorithm feed - only Run Mode will show it
+    $('#algorithm-feed-container').hide();
+    
+    // If in Run Mode...
+    if (graphMode == "run") { 
+      // Show animation elements and hide mod buttons
+      $('.hide-at-init').show();
+      $('#mod-buttons').hide(); 
+      
+      // Initialise feed
+      $('#feed-title').html("Current Line Of Algorithm (click box to see all lines so far)");
+      $('#feed').hide();
+      $('#feed').val('');
+      $('#currentStep').show();
+      $('#currentStep').css('font-size', '300%');
+      $('#currentStep').html("SELECT STARTING NODE.");
+      
+      // Turn off highlight mode to enable cursor after mode change
+      highlightMode = false;
+      
+      // Enable the 'pause' button and set the slider to 5
+      $('#pause').prop('disabled', false);
+      $('#slider-3').val(5).slider('refresh');
+
+      // Start the flashing alert
+      activateAlertTimer();
+    }
+  }
+  
+  // Show flashing alert asking the user to select a starting node for animation
+  function activateAlertTimer() {
+    // Variable representing whether alert message is black. Its value is passed 
+    // to an anonymous function via a closure.
+    var black = false;
+    // Change colour of alert message every 300 milliseconds
+    alertTimer = setInterval(function() {        
+      if(black) {
+        $('#currentStep').css('color', 'red');
+        black = false;
+      }
+      else {
+        $('#currentStep').css('color', 'black');
+        black = true;
+      }
+    }, 300);    
+  }  
+    
+  // When 'current step' box is clicked, show 'feed' box
+  $('#currentStep').click(function () {
+    $('#feed-title').html("All Lines Of Algorithm Run So Far (click box to see current line)");
+    $('#currentStep').slideToggle('fast');
+    // Pause to let 'current step' box disappear (prevents scroll bar from appearing)
+    setTimeout(function() { $('#feed').slideToggle('fast') }, 400);
   });
   
+  // When 'feed' box is clicked, show 'current step' box
+  $('#feed').click(function () {
+    $('#feed-title').html("Current Line Of Algorithm (click box to see all lines so far)");
+    $('#feed').slideToggle('fast');
+    // Pause to let 'feed' box disappear (prevents scroll bar from appearing)
+    setTimeout(function() { $('#currentStep').slideToggle('fast') }, 400);
+  });
+  
+  // When 'play' button is clicked, play algorithm and enable 'pause' button
+  $('#play').click(function () {
+    animationController.play();
+    $('#pause').prop('disabled', false);
+    $('#pause').html('Pause');
+  });
+  
+  // When 'pause' button is clicked, pause algortihm and disable 'pause' button
+  $('#pause').click(function () {
+    animationController.pause();
+    $('#pause').prop('disabled', true);
+    $('#pause').html('Paused');
+  });
+  
+  // When 'next' button is clicked, go to next step of algorithm
+  $('#next').click(function () {
+    animationController.next();
+  });
+  
+  // When 'prev' button is clicked, go to previous step of algorithm
+  $('#prev').click(function () {
+    animationController.prev();
+  });
+  
+  // When 'start' button is clicked, go to first step of algorithm
+  $('#start').click(function () {
+    animationController.beginning();
+  });
+  
+  // When 'end' button is clicked, go to end of algorithm
+  $('#end').click(function () {
+    animationController.end();
+  });
+  
+  // 'Change' event handler for slider. Updates step delay value
+  $('#slider-3').change(function(){
+    var stepDelay = $(this).val();
+    animationController.changeSpeed(stepDelay*1000);
+ })
+   
   // Updates the node or edge that is currently selected
   function updateSelectedItem() {
     // What did the user just click on?
@@ -228,7 +465,7 @@ $(document).bind('pagecreate',function () {
         $('#rename-item').val(selectedItem.getLabel());
       }
       else if (selectedItem instanceof Edge) {
-        $('#rename-item').val(selectedItem.getValue()); 
+        $('#rename-item').val(selectedItem.getWeight()); 
       }
     }
   }
@@ -239,11 +476,11 @@ $(document).bind('pagecreate',function () {
   // parameter determines whether a given node is overlapping any 
   // other node (value: 2) or has its centre inside another node 
   // (value: 1).
-  function getNearbyNode (x,y,ignoreCurrentNode, checkLengthMultiplier) {  
+  function getNearbyNode (x,y,ignoreCurrentItem, checkLengthMultiplier) {  
     // For each node...
     for (var i = 0; i < nodes.length; i++) {
       // If current node isn't being ignored or this node isn't the current node...
-      if (!ignoreCurrentNode || nodes[i] != currentItem) {
+      if (!ignoreCurrentItem || nodes[i] != currentItem) {
         // Coordinates of this node
         var nodeX = nodes[i].getX();
         var nodeY = nodes[i].getY();
@@ -274,7 +511,7 @@ $(document).bind('pagecreate',function () {
     // Nearest item found so far
     var nearestItem = null;
     // Distance to nearest item found so far
-    var shortestDistance = 100000;   
+    var shortestDistance = Infinity;   
 
     // For each of the potential edges...
     for (var i = 0; i < edgePotentials.length; i++) {
@@ -338,6 +575,10 @@ $(document).bind('pagecreate',function () {
         getNearbyNode(cursorX, cursorY, true, 2) == null) {
       currentItem.setX(cursorX);
       currentItem.setY(cursorY); 
+      // Update node's relative position on canvas
+      var xDepth = cursorX/canvas.width;
+      var yDepth = cursorY/canvas.height;
+      currentItem.setDepth(xDepth,yDepth);
     }
   }
   
@@ -383,7 +624,7 @@ $(document).bind('pagecreate',function () {
     else {       
       // If the current item is highlighted and no node is being dragged,
       // unhighlight it and deactivate highlight mode.
-      if (currentItem.isHighlighted() && !isDragged) {
+      if (currentItem != null && currentItem.isHighlighted() && !isDragged) {
         currentItem.highlight();
         highlightMode = false;
       }
@@ -403,14 +644,16 @@ $(document).bind('pagecreate',function () {
   function placeNode () {
     // If there is space for a node to be placed at the cursor's position,
     // create a new node there
-    if (nodeCanBePlaced()) {      
-      var newNode = new Node(cursorX,cursorY,nodeRadius,nodeNumber);
+    if (nodeCanBePlaced()) { 
+      // These depth coordinates record node's relative position on canvas
+      var xDepth = cursorX/canvas.width;
+      var yDepth = cursorY/canvas.height;
+      var newNode = new Node(cursorX,cursorY,nodeNumber,xDepth,yDepth);
       nodes.push(newNode);  
       nodeNumber++;
       currentItem = newNode;
       currentItem.highlight();
       highlightMode = true;
-      $('p#numberOfNodes').html(nodes.length);
       nodeJustBeenPlaced = true;  
       return true;
     }
@@ -423,7 +666,6 @@ $(document).bind('pagecreate',function () {
     if (edgeCanBePlaced()) {
       var newEdge = new Edge(selectedItem, currentItem);
       edges.push(newEdge);
-      $('p#numberOfEdges').html(edges.length);
     }
   }
   
@@ -488,7 +730,7 @@ $(document).bind('pagecreate',function () {
     }
     
     // If nothing is being highlighted while building, draw an appropriate cursor
-    if (!highlightMode && graphMode == "build") {
+    if (!highlightMode && (graphMode == "build" || (graphMode == "run" && !animationController.isReady()))) {
       drawCursor();
     }
     
@@ -523,7 +765,7 @@ $(document).bind('pagecreate',function () {
   }
 
   // Draws a given node on to the canvas
-  function drawNode(node) {
+  function drawNode(node) {    
     // Coordinates of the node's centre
     var x = node.getX();
     var y = node.getY();
@@ -531,28 +773,36 @@ $(document).bind('pagecreate',function () {
     // Begin drawing
     context.beginPath();
     
-    // Draw the node's label
+    // Fill style is black by default
     context.fillStyle = "#000000";
+    
+    // Draw the node's label
     context.font="18px sans-serif";
     context.fillText(node.getLabel(), x + nodeRadius, y - nodeRadius);
     
-    // If the node is selected, set it's colour to blue
-    if (selectedItem == node) {
-      context.fillStyle = "#0000FF"; 
+    // Use the algorithm animator to draw the node if in Run Mode
+    if (graphMode == "run" && !animationController.isActive()) {
+      animationController.draw(node, context, nodeRadius);
     }
-    
-    // Draw the node
-    context.arc(x,y,nodeRadius,0,Math.PI*2,false);
-    context.fill();  
-    
-    // If the node is highlighted, give it a yellow outer ring
-    if (node.isHighlighted()) {
-      context.strokeStyle = "#FFD700";
-      for (var i = 0; i < 3; i++) {
-        context.arc(x,y,nodeRadius-i,0,Math.PI*2,false);
+    else {
+      // If the node is selected, set it's colour to blue
+      if (selectedItem == node) {
+        context.fillStyle = "#0000FF"; 
       }
-      context.stroke(); 
-    } 
+
+      // Draw the node
+      context.arc(x,y,nodeRadius,0,Math.PI*2,false);
+      context.fill();  
+
+      // If the node is highlighted, give it a yellow outer ring
+      if (node.isHighlighted()) {
+        context.strokeStyle = "#FFD700";
+        for (var i = 0; i < 3; i++) {
+          context.arc(x,y,nodeRadius-i,0,Math.PI*2,false);
+        }
+        context.stroke(); 
+      } 
+    }
   }
 
   // Draws a 'ghost' edge that could potentially be placed if the mouse was clicked
@@ -560,7 +810,7 @@ $(document).bind('pagecreate',function () {
     // If user has clicked a node different to the selected node, draw the potential edge
     if (selectedItem != null && currentItem != null && currentItem != selectedItem) {
       var potentialEdge = new Edge(currentItem,selectedItem); 
-      potentialEdge.setValue("");
+      potentialEdge.setWeight(0);
       drawEdge(potentialEdge);
     }
   }
@@ -623,10 +873,10 @@ $(document).bind('pagecreate',function () {
     
     // Draw at coordinates where the edge is least likely to cross the text 
     if (y1 < y2) {
-      context.fillText(edge.getValue(), x3,y3+5);
+      context.fillText(edge.getWeight(), x3,y3+5);
     }
     else {
-      context.fillText(edge.getValue(), x4,y4+5);
+      context.fillText(edge.getWeight(), x4,y4+5);
     }
   }  
 }); 
