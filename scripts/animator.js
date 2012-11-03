@@ -15,7 +15,6 @@ $(document).bind('pagecreate',function () {
   var graphMode = "build"; // The editing mode for the graph editor (build/modify/run)
   var nodeNumber = 1; // Current node number
   var animationController = new AnimationController(); // Object that controls animation
-  var alertTimer; // Timer that enables flashing alert message
   var width = $(window).width(); // Width of window
   var height = $(window).height(); // Height of window
 
@@ -45,6 +44,9 @@ $(document).bind('pagecreate',function () {
     
     // Resize all elements on screen
     resizeDivs();
+    
+    // Initialise tooltips
+    initialiseTooltips();
     
     // Begin drawing on the canvas
     setInterval(function () { draw() }, 25);
@@ -79,25 +81,93 @@ $(document).bind('pagecreate',function () {
       $('#animation-control-buttons').height(0.18 * height);
       $('#animation-control-buttons').width(0.3 * width);
       $('#animation-control-buttons').css("margin-left", (0.7 * width) + 'px');
-      $('.control').css("height", 0.4 * ($('#animation-control-buttons').height()-2));
-      $('.control').css("width", (1/6) * ($('#animation-control-buttons').width()-30));
+      $('.control').css("height", 0.4 * ($('#animation-control-buttons').height()-4));
+      $('.control').css("width", (1/6) * ($('#animation-control-buttons').width()+1));
       $('#slider-container').css('margin-top', '2px');
       $('#slider-container').css('width', $('#animation-control-buttons').width()-14);
-      $('#slider-container').css('height', 0.4 * ($('#animation-control-buttons').height()-2));
+      $('#slider-container').css('height', 0.39 * ($('#animation-control-buttons').height()-4));
       $('#slider-label').css('height', 0.5 * ($('#slider-container').height()-2));
-      $('.ownslider + div.ui-slider').css("margin-left", '0px');
-      $('.ownslider + div.ui-slider').css("margin-right", '0px');
-      $('.ownslider + div.ui-slider').css("margin-top", '0px');
-      $('.ownslider + div.ui-slider').css("margin-bottom", '0px');
+      $('.ownslider + div.ui-slider').css("margin", '0px');
       $('.ownslider + div.ui-slider').css("width", $('#slider-container').width()-2);
-      $('.ownslider + div.ui-slider').css("height", 0.5 * ($('#slider-container').height()-2));
-      $('#feed-mode-container').css('width', $('#animation-control-buttons').width()-12);
-      $('#feed-mode-container').css('height', 0.3 * ($('#animation-control-buttons').height()-2));
+      $('.ownslider + div.ui-slider').css("height", 0.45 * ($('#slider-container').height()-2));
+      $('#feed-mode-container').css('width', $('#animation-control-buttons').width()-10);
+      $('#feed-mode-container').css('height', 0.3 * ($('#animation-control-buttons').height()-4));
       $('.feed-mode').css('height', 0.95 * $('#feed-mode-container').height()); 
-
+      $('.feed-mode').css('line-height', '50%');
+      
       // Set proportional node radius
       nodeRadius = (width / 60);
     }
+  }
+  
+  // Initialise tooltips
+  function initialiseTooltips() {
+    $('.control').qtip( {
+      position: {
+        my: "bottom right",
+        at: "top left",
+        adjust: {
+          x: $('.control').width() / 2
+        }
+      },
+      style: {
+          classes: 'ui-tooltip-tipsy'
+      }
+    }); 
+
+    $('.feed-tip').qtip( {
+      content: {
+        text: function() {
+          if ($(this).attr('id') == "high-level") {
+            return "Show high-level description of algorithm in text box.";
+          }
+          else {
+            return "Show algorithm pseudocode in text box.";
+          }
+        }
+      },
+      position: {
+        my: "bottom right",
+        at: "top left",
+        adjust: {
+          x: $('.feed-tip').width() / 2
+        }
+      },
+      style: {
+        classes: 'ui-tooltip-tipsy'
+      }
+    });
+
+    $('#slider-container').qtip( {
+      content : "Slider position determines the delay in seconds between each animation step. \n\
+                 Leftmost position is 0.1 seconds. Rightmost position is 10 seconds.",
+      position: {
+        my: "bottom right",
+        at: "top left",
+        adjust: {
+          x: $('.feed-tip').width() / 2
+        }
+      },
+      style: {
+        classes: 'ui-tooltip-tipsy'
+      }        
+    });
+
+    $('#button-box').qtip( {
+      content: "A starting node must be selected from your graph to start the animation.",
+      position: {
+        my: "bottom left",
+        at: "top left",
+        adjust: {
+          x: $('#algorithm-feed-container').width() / 2
+        }          
+      },
+      style: {
+        classes: 'ui-tooltip-tipsy'
+      } 
+    });
+
+    $('#button-box').qtip('disable');    
   }
   
   // Reposition nodes so that they remain in correct position on canvas
@@ -134,13 +204,12 @@ $(document).bind('pagecreate',function () {
       if (currentItem != null && currentItem instanceof Node) {
         // Unhighlight that node and turn off highlight mode
         currentItem.highlight();
-        highlightMode = false;
-        
-        // Turn off the flashing alert and return feed font to normal
-        clearInterval(alertTimer);
-        $('#currentStep').css('color', 'black');
-        $('#currentStep').css('font-size', '100%');
+        highlightMode = false;        
 
+        // Disable alert message
+        $('#button-box').qtip('hide');
+        $('#button-box').qtip('disable');
+        
         // Initialise animation controller
         animationController.init(nodes, edges, currentItem);
         animationController.setReady();
@@ -282,13 +351,15 @@ $(document).bind('pagecreate',function () {
     }
   })
   
+  // Change feed mode to 'high-level'
   $('#high-level').click(function() {
-    animationController.toggleFeedMode();
+    animationController.setFeedMode("high-level");
     animationController.updateFeed(animationController);
   });
 
+  // Change feed mode to 'pseudocode'
   $('#pseudocode').click(function() {
-    animationController.toggleFeedMode();
+    animationController.setFeedMode("pseudocode");
     animationController.updateFeed(animationController);
   });
   
@@ -304,12 +375,15 @@ $(document).bind('pagecreate',function () {
        
     // If the user left Run Mode, remove the algorithm data from the nodes
     if (oldGraphMode == "run" && graphMode != "run") {
-      // Ensure alert timer is still not running
-      clearInterval(alertTimer); 
+      // Disable alert message
+      $('#button-box').qtip('hide');
+      if ($('#button-box').qtip('disable', 'false')) {
+        $('#button-box').qtip('disable');
+      }
       // Hide animation elements
       $('.hide-at-init').hide();
       // Ensure text on pause button is correct
-      $('#pause').html('Pause');
+      $('#pause-button').attr('src', 'images/pause.png');
       // Reset animation controller
       animationController.reset();
       // Remove all animation-related data from nodes
@@ -348,37 +422,23 @@ $(document).bind('pagecreate',function () {
       $('#feed').hide();
       $('#feed').val('');
       $('#currentStep').show();
-      $('#currentStep').css('font-size', '300%');
-      $('#currentStep').html("SELECT STARTING NODE.");
+      $('#currentStep').html("");
       
       // Turn off highlight mode to enable cursor after mode change
       highlightMode = false;
       
       // Enable the 'pause' button and set the slider to 5
-      $('#pause').prop('disabled', false);
       $('#slider-3').val(5).slider('refresh');
 
-      // Start the flashing alert
-      activateAlertTimer();
+      // Turn on alert for user to select starting node
+      activateAlert();
     }
   }
   
-  // Show flashing alert asking the user to select a starting node for animation
-  function activateAlertTimer() {
-    // Variable representing whether alert message is black. Its value is passed 
-    // to an anonymous function via a closure.
-    var black = false;
-    // Change colour of alert message every 300 milliseconds
-    alertTimer = setInterval(function() {        
-      if(black) {
-        $('#currentStep').css('color', 'red');
-        black = false;
-      }
-      else {
-        $('#currentStep').css('color', 'black');
-        black = true;
-      }
-    }, 300);    
+  // Alert user to the fact that a starting node needs to be selected
+  function activateAlert() {
+    $('#button-box').qtip('enable');
+    $('#button-box').qtip('show');
   }  
     
   // When 'current step' box is clicked, show 'feed' box
@@ -400,15 +460,15 @@ $(document).bind('pagecreate',function () {
   // When 'play' button is clicked, play algorithm and enable 'pause' button
   $('#play').click(function () {
     animationController.play();
-    $('#pause').prop('disabled', false);
-    $('#pause').html('Pause');
+    $('#pause-button').attr('src', 'images/pause.png');
   });
   
   // When 'pause' button is clicked, pause algortihm and disable 'pause' button
   $('#pause').click(function () {
-    animationController.pause();
-    $('#pause').prop('disabled', true);
-    $('#pause').html('Paused');
+    if (animationController.isReady()) {
+      animationController.pause();
+      $('#pause-button').attr('src', 'images/paused.png');
+    }
   });
   
   // When 'next' button is clicked, go to next step of algorithm

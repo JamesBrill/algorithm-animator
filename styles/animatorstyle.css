@@ -3,3 +3,16 @@
     Created on : 17-Sep-2012, 17:43:34
     Author     : jebby457
 */
+
+.dynamic-img {
+  height:90%;
+  width:90%;
+  margin-left:0px;
+  margin-right:0px;
+  margin-bottom:-3px;
+  margin-top:0px;
+}
+
+.control {
+  margin-right:-6px;
+}

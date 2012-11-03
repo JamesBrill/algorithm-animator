@@ -64,17 +64,13 @@ AnimationController.prototype.buildFeed = function() {
   }
   else if (this.feedMode == "pseudocode") {
     $('#feed').val(this.algorithmAnimator.getPseudoCode());
+    $('#feed').scrollTop(0);
   }
 }
 
-// Toggle the contents of the feed between a high-level description and pseudocode
-AnimationController.prototype.toggleFeedMode = function() {  
-  if (this.feedMode == "high-level") {
-    this.feedMode = "pseudocode";
-  }
-  else {
-    this.feedMode = "high-level";
-  }
+// Set the feed mode to either high-level or pseudocode
+AnimationController.prototype.setFeedMode = function(newFeedMode) {  
+  this.feedMode = newFeedMode;
 }
 
 // Play animation

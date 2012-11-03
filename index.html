@@ -4,10 +4,11 @@
     <meta charset="utf-8">
     <title>Graph-O-Matic</title>
     <link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.min.css" />
+    <link rel="stylesheet" href="styles/external/jquery.qtip.min.css" />
     <link rel="stylesheet" href="styles/animatorstyle.css" />
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.2.js"></script>
     <script type="text/javascript" src="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.js"></script>
-    <script type="text/javascript" src="scripts/buckets.js"></script>
+    <script type="text/javascript" src="scripts/external/buckets.js"></script>
     <script type="text/javascript" charset="utf-8" src="scripts/animator.js"></script>
     <script type="text/javascript" src="scripts/node.js"></script>
     <script type="text/javascript" src="scripts/edge.js"></script>
@@ -15,6 +16,7 @@
     <script type="text/javascript" charset="utf-8" src="scripts/dijkstra.js"></script>
     <script type="text/javascript" charset="utf-8" src="scripts/animation-controller.js"></script>
     <script type="text/javascript" charset="utf-8" src="scripts/feed-data.js"></script>
+    <script type="text/javascript" src="scripts/external/jquery.qtip.min.js"></script>
   </head>
   <body> 
     <div style="padding: 0;" id="container" data-role="page" data-theme="c" data-content-theme="c">
@@ -48,18 +50,18 @@
           </div>
           
           <div class="hide-at-init" id="animation-control-buttons">
-            <button class="control" id="play"  data-role="none">Play</button>
-            <button class="control" id="pause"  data-role="none">Pause</button>
-            <button class="control" id="start"  data-role="none">Start</button>
-            <button class="control" id="end"  data-role="none">End</button>
-            <button class="control" id="next"  data-role="none">Next</button>
-            <button class="control" id="prev"  data-role="none">Prev</button>   
-
+            <button class="control" id="play" data-role="none" title="Play"><img class="dynamic-img" src='images/play.png'/></button>
+            <button class="control" id="pause"  data-role="none" title="Pause"><img class="dynamic-img" id="pause-button" src='images/pause.png'/></button>
+            <button class="control" id="prev"  data-role="none" title="Previous Step"><img class="dynamic-img" src='images/prev.png'/></button>   
+            <button class="control" id="next"  data-role="none" title="Next Step"><img class="dynamic-img" src='images/next.png'/></button>
+            <button class="control" id="start"  data-role="none" title="Start"><img class="dynamic-img" src='images/start.png'/></button>
+            <button class="control" id="end"  data-role="none" title="End"><img class="dynamic-img" src='images/end.png'/></button>
+            
             <div id="feed-mode-container" style="margin-left:1px;">
               <div class="feed-mode" id="feed-mode" data-role="navbar" style="margin-top: 1px">
                 <ul>
-                  <li><a class="feed-mode ui-btn-active" id="high-level" href="#">High-level</a></li>
-                  <li><a class="feed-mode" id="pseudocode" href="#">Pseudocode</a></li>
+                  <li><a class="feed-mode feed-tip ui-btn-active" id="high-level" href="#">High-level</a></li>
+                  <li><a class="feed-mode feed-tip" id="pseudocode" href="#">Pseudocode</a></li>
                 </ul>
               </div> 
             </div>
