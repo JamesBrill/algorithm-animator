@@ -9,7 +9,9 @@
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.2.js"></script>
     <script type="text/javascript" src="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.js"></script>
     <script type="text/javascript" src="scripts/external/buckets.js"></script>
-    <script type="text/javascript" charset="utf-8" src="scripts/animator.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/tooltip-control.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/graph-animator-control.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/main-menu.js"></script>
     <script type="text/javascript" src="scripts/node.js"></script>
     <script type="text/javascript" src="scripts/edge.js"></script>
     <script type="text/javascript" src="scripts/distance-calculator.js"></script>
@@ -18,17 +20,42 @@
     <script type="text/javascript" charset="utf-8" src="scripts/feed-data.js"></script>
     <script type="text/javascript" src="scripts/external/jquery.qtip.min.js"></script>
   </head>
-  <body> 
-    <div style="padding: 0;" id="container" data-role="page" data-theme="c" data-content-theme="c">
-      <div style="padding: 0;" data-role="content">    
-        
-        <div class="mode" id="mode" data-role="navbar">
-          <ul>
-            <li><a class="mode ui-btn-active" id="build" href="#">Build</a></li>
-            <li><a class="mode" id="modify" href="#">Modify</a></li>
-            <li><a class="mode" id="run" href="#">Run</a></li>
-          </ul>
-        </div>  
+  <body>     
+    <div style="padding: 0;" id="home" data-role="page" data-theme="c" data-content-theme="c"> 
+      <div id="banner-container" style="border-style:solid; border-width:2px; background-color: white;">
+        <img id="banner" src="images/banner1.png" style="display: block; margin-left: auto; margin-right: auto;"/>
+      </div><a class="mode" data-role="button" id="graph" data-transition="slide" href="#graph-animator">Graph Algorithms</a>
+            <a class="mode" data-role="button" id="sort" data-transition="slide" href="#">Sorting Algorithms</a>
+            <a class="mode" data-role="button" id="about" data-transition="slide" href="#">About Graph-O-Matic</a>
+    </div>
+    
+    <div style="padding: 0;" id="graph-animator" data-role="page" data-theme="c" data-content-theme="c">       
+      <div style="padding: 0;" data-role="content">  
+        <div data-role="header" id="header"> 
+          <div>  
+            <div data-role="fieldcontain" class="mode" id="graph-select-container" 
+                 style="margin-top:0px; margin-bottom:0px; margin-left: 15px;margin-right: 15px; float:left;">
+              <select id="graph-select" data-native-menu="false" data-theme="c">
+                <optgroup label="Choose a graph algorithm">
+                  <option value="dijkstra">Dijkstra</option>
+                  <option value="otherAlgorithm">Another Algorithm</option>
+                </optgroup>
+              </select>
+            </div>
+            
+            <a href="#home" class="mode" data-icon="home" id="main-menu" data-transition="slide" data-direction="reverse" data-role="button" data-theme="c" 
+               style="margin-top:-2px;margin-left: 15px;margin-right: 15px; float: right;">Main Menu</a>
+               
+            <div data-role="navbar" class="mode ui-navbar ui-navbar-noicons" 
+                 style="text-align: center;margin-right: auto;margin-left: auto;" role="navigation">
+              <ul class="ui-grid-a">
+                <li class="ui-block-c"><a href="#" class="mode ui-btn-active" id="build" data-theme="c">Build</a></li>
+                <li class="ui-block-c"><a href="#" class="mode" id="modify" data-theme="c">Modify</a></li>
+                <li class="ui-block-c"><a href="#" class="mode" id="run" data-theme="c">Run</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
         
         <canvas id="canvas" style="border-style:solid; border-width:2px; display: block;">
           <p>Unfortunately, your browser is currently unsupported by our web 
@@ -67,8 +94,8 @@
             </div>
             
             <div id="slider-container" style="border-style:solid; border-width:2px; border-radius:10px;">
-              <div id="slider-label" style="text-align: center;">Step delay</div>
-              <input class="ownslider" type="range" name="slider-3" id="slider-3" value="5" min="0.1" max="10" step="0.1"
+              <div id="slider-label" style="text-align: center;">Animation Speed</div>
+              <input class="ownslider" type="range" name="slider-3" id="slider-3" value="12" min="3" max="300" step="3"
                      data-highlight="true" data-mini="true" style="display:none;"/>  
             </div>
           </div>

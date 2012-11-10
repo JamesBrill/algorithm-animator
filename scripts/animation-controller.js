@@ -22,8 +22,13 @@ AnimationController.prototype.reset = function() {
 }
   
 // Initialise animator and feed information  
-AnimationController.prototype.init = function (nodes, edges, startingNode) {  
-  this.algorithmAnimator = new DijkstraAnimator(nodes,edges,startingNode);
+AnimationController.prototype.init = function (nodes, edges, startingNode, algorithm) { 
+  if (algorithm == "dijkstra") {
+    this.algorithmAnimator = new DijkstraAnimator(nodes,edges,startingNode);
+  }
+  else {
+    this.algorithmAnimator = null;
+  }
   this.algorithmAnimator.buildAnimation();
   this.feedLines = this.algorithmAnimator.getFeedLines();
   this.update(this);
@@ -48,7 +53,7 @@ AnimationController.prototype.updateFeed = function(objectRef) {
   if (this.feedMode == "pseudocode") {
     nextFeedLine = this.feedLines[this.currentFeedLine].getPseudoCode();
   }
-  $('#currentStep').html(nextFeedLine);
+  $('#currentStep').val(nextFeedLine);
   objectRef.buildFeed();  
 }
 
@@ -88,6 +93,11 @@ AnimationController.prototype.play = function() {
 AnimationController.prototype.pause = function() {
   this.clearTimer();
   this.paused = true;
+}
+
+// Stop animation
+AnimationController.prototype.stop = function() {
+  this.clearTimer();
 }
 
 // Go to next step of animation
@@ -142,12 +152,17 @@ AnimationController.prototype.changeSpeed = function(newSpeed) {
 
 // Has an animation been built?
 AnimationController.prototype.isActive = function() {
-  return this.algorithmAnimator == null;
+  return this.algorithmAnimator != null;
 }
 
 // Draw a given node according to the custom animator
 AnimationController.prototype.draw = function(node, context, nodeRadius) {
   this.algorithmAnimator.drawNode(node, context, nodeRadius);
+}
+
+// Is animation paused?
+AnimationController.prototype.isPaused = function() {
+  return this.paused;
 }
 
 // Is animation ready to play?
