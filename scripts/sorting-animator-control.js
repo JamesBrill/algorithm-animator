@@ -5,6 +5,7 @@ $(document).delegate('#sorting-animator','pageinit',function () {
   var width = $(window).width(); // Width of window
   var height = $(window).height(); // Height of window
   var algorithm = "bubble"; // Algorithm currently being animated
+  var display;
 
   // Begin running the sorting animator
   init(); 
@@ -21,13 +22,24 @@ $(document).delegate('#sorting-animator','pageinit',function () {
 
     // Get the 2D canvas context
     context = canvas1.getContext('2d');
+    
     // Hide all unneeded elements
     $('.hide-at-init').hide(); 
+    
     // Resize all elements on screen
     resizeDivs();
     
     // Initialise tooltips
-    initialiseTooltips("sorting");
+    initialiseTooltips("sorting");    
+    
+    display = new BarGraph(canvas1);
+    display.addInputNumber(1);
+    display.addInputNumber(7);
+    display.addInputNumber(7);
+    display.addInputNumber(2);
+
+    display.animateStep("swap 3 1", 20000); // MIN STEP DELAY IS 150
+    setTimeout(function() {display.animateStep("swap 3 1", 20000); }, 20000);
     
     // Begin drawing on the canvas
     drawTimer = setInterval(function () { draw() }, 25);
@@ -154,6 +166,8 @@ $(document).delegate('#sorting-animator','pageinit',function () {
   // Draws all items to the canvas
   function draw () {
     // Clear the contents of the canvas
-    context.clearRect(0,0,canvas.width,canvas.height);        
+    context.clearRect(0,0,canvas1.width,canvas1.height);    
+
+    display.draw();
   }  
 }); 

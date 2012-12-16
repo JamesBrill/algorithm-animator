@@ -181,7 +181,7 @@ function initialiseTooltips(animationType) {
     }   
   });
 
-  $('.control').qtip( {
+  $('.graph-control').qtip( {
     position: {
       my: "bottom right",
       at: "top left",
