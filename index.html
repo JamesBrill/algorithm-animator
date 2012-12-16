@@ -11,6 +11,7 @@
     <script type="text/javascript" src="scripts/external/buckets.js"></script>
     <script type="text/javascript" charset="utf-8" src="scripts/tooltip-control.js"></script>
     <script type="text/javascript" charset="utf-8" src="scripts/graph-animator-control.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/sorting-animator-control.js"></script>
     <script type="text/javascript" charset="utf-8" src="scripts/main-menu.js"></script>
     <script type="text/javascript" src="scripts/node.js"></script>
     <script type="text/javascript" src="scripts/edge.js"></script>
@@ -18,6 +19,8 @@
     <script type="text/javascript" charset="utf-8" src="scripts/dijkstra.js"></script>
     <script type="text/javascript" charset="utf-8" src="scripts/animation-controller.js"></script>
     <script type="text/javascript" charset="utf-8" src="scripts/feed-data.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/animator-factory.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/animation-data.js"></script>
     <script type="text/javascript" src="scripts/external/jquery.qtip.min.js"></script>
   </head>
   <body>     
@@ -25,13 +28,15 @@
       <div id="banner-container" style="border-style:solid; border-width:2px; background-color: white;">
         <img id="banner" src="images/banner1.png" style="display: block; margin-left: auto; margin-right: auto;"/>
       </div><a class="mode" data-role="button" id="graph" data-transition="slide" href="#graph-animator">Graph Algorithms</a>
-            <a class="mode" data-role="button" id="sort" data-transition="slide" href="#">Sorting Algorithms</a>
+            <a class="mode" data-role="button" id="sort" data-transition="slide" href="#sorting-animator">Sorting Algorithms</a>
             <a class="mode" data-role="button" id="about" data-transition="slide" href="#">About Graph-O-Matic</a>
     </div>
     
+    
+    
     <div style="padding: 0;" id="graph-animator" data-role="page" data-theme="c" data-content-theme="c">       
       <div style="padding: 0;" data-role="content">  
-        <div data-role="header" id="header"> 
+        <div data-role="header"> 
           <div>  
             <div data-role="fieldcontain" class="mode" id="graph-select-container" 
                  style="margin-top:0px; margin-bottom:0px; margin-left: 15px;margin-right: 15px; float:left;">
@@ -43,7 +48,7 @@
               </select>
             </div>
             
-            <a href="#home" class="mode" data-icon="home" id="main-menu" data-transition="slide" data-direction="reverse" data-role="button" data-theme="c" 
+            <a href="#home" class="mode main-menu" id="graph-main-menu" data-icon="home" data-transition="slide" data-direction="reverse" data-role="button" data-theme="c" 
                style="margin-top:-2px;margin-left: 15px;margin-right: 15px; float: right;">Main Menu</a>
                
             <div data-role="navbar" class="mode ui-navbar ui-navbar-noicons" 
@@ -57,18 +62,9 @@
           </div>
         </div>
         
-        <canvas id="canvas" style="border-style:solid; border-width:2px; display: block;">
-          <p>Unfortunately, your browser is currently unsupported by our web 
-          application.  We are sorry for the inconvenience. Please use one of the 
-          supported browsers listed below, or draw the image you want using an 
-          offline tool.</p>
-          <p>Supported browsers: <a href="http://www.opera.com">Opera</a>, <a 
-            href="http://www.mozilla.com">Firefox</a>, <a 
-            href="http://www.apple.com/safari">Safari</a> and <a 
-            href="http://www.konqueror.org">Konqueror</a>.</p>
-        </canvas>  
+        <canvas id="graph-canvas" style="border-style:solid; border-width:2px; display: block;"></canvas>  
         
-        <div id="button-box" style="border-style:solid; border-width:5px;">
+        <div id="graph-button-box" style="border-style:solid; border-width:5px;">
           <div class="bottom-left hide-at-init" id="feed-title" style="text-align: center; float:left;">
             Current Line Of Algorithm (click box to see all lines so far)</div>
           <div class="bottom-left hide-at-init" id="algorithm-feed-container" style="float:left;">
@@ -76,13 +72,13 @@
             <textarea class="feed-box" id="feed" style="margin: 0;"></textarea>          
           </div>
           
-          <div class="hide-at-init" id="animation-control-buttons">
-            <button class="control" id="play" data-role="none" title="Play"><img class="dynamic-img" src='images/play.png'/></button>
-            <button class="control" id="pause"  data-role="none" title="Pause"><img class="dynamic-img" id="pause-button" src='images/pause.png'/></button>
-            <button class="control" id="prev"  data-role="none" title="Previous Step"><img class="dynamic-img" src='images/prev.png'/></button>   
-            <button class="control" id="next"  data-role="none" title="Next Step"><img class="dynamic-img" src='images/next.png'/></button>
-            <button class="control" id="start"  data-role="none" title="Start"><img class="dynamic-img" src='images/start.png'/></button>
-            <button class="control" id="end"  data-role="none" title="End"><img class="dynamic-img" src='images/end.png'/></button>
+          <div class="hide-at-init" id="graph-animation-control-buttons">
+            <button class="control" id="graph-play" data-role="none" title="Play"><img class="dynamic-img" src='images/play.png'/></button>
+            <button class="control" id="graph-pause"  data-role="none" title="Pause"><img class="dynamic-img" id="graph-pause-button" src='images/pause.png'/></button>
+            <button class="control" id="graph-prev"  data-role="none" title="Previous Step"><img class="dynamic-img" src='images/prev.png'/></button>   
+            <button class="control" id="graph-next"  data-role="none" title="Next Step"><img class="dynamic-img" src='images/next.png'/></button>
+            <button class="control" id="graph-start"  data-role="none" title="Start"><img class="dynamic-img" src='images/start.png'/></button>
+            <button class="control" id="graph-end"  data-role="none" title="End"><img class="dynamic-img" src='images/end.png'/></button>
             
             <div id="feed-mode-container" style="margin-left:1px;">
               <div class="feed-mode" id="feed-mode" data-role="navbar" style="margin-top: 1px">
@@ -93,9 +89,9 @@
               </div> 
             </div>
             
-            <div id="slider-container" style="border-style:solid; border-width:2px; border-radius:10px;">
-              <div id="slider-label" style="text-align: center;">Animation Speed</div>
-              <input class="ownslider" type="range" name="slider-3" id="slider-3" value="12" min="3" max="300" step="3"
+            <div id="graph-slider-container" class="slider-container" style="border-style:solid; border-width:2px; border-radius:10px;">
+              <div id="graph-slider-label" style="text-align: center;">Animation Speed</div>
+              <input class="ownslider" type="range" id="graph-slider" name="slider-3" value="12" min="3" max="300" step="3"
                      data-highlight="true" data-mini="true" style="display:none;"/>  
             </div>
           </div>
@@ -110,5 +106,54 @@
         </div> 
       </div>
     </div>  
+    
+    
+    
+    <div style="padding: 0;" id="sorting-animator" data-role="page" data-theme="c" data-content-theme="c">       
+      <div style="padding: 0;" data-role="content">  
+        <div data-role="header"> 
+          <div>  
+            <div data-role="fieldcontain" class="mode" id="sorting-select-container" 
+                 style="margin-top:0px; margin-bottom:0px; margin-left: 15px;margin-right: 15px; float:left;">
+              <select id="sorting-select" data-native-menu="false" data-theme="c">
+                <optgroup label="Choose a sorting algorithm">
+                  <option value="bubble">Bubble Sort</option>
+                  <option value="otherAlgorithm">Another Algorithm</option>
+                </optgroup>
+              </select>
+            </div>
+  
+            <a href="#home" class="mode main-menu" id="sorting-main-menu" data-icon="home" data-transition="slide" data-direction="reverse" data-role="button" data-theme="c" 
+               style="margin-top:-2px;margin-left: 15px;margin-right: 15px; float: right;">Main Menu</a>
+                         
+            <div data-role="navbar" class="mode ui-navbar ui-navbar-noicons" 
+                 style="text-align: center;margin-right: auto;margin-left: auto;" role="navigation">
+            </div>
+          </div>
+        </div>
+        
+        <canvas id="sorting-canvas1" style="border-style:solid; border-width:2px; display: block; float: right;"></canvas>  
+        <canvas id="sorting-canvas2" style="border-style:solid; border-width:2px; display: block;"></canvas>  
+        
+        <div id="sorting-button-box" style="border-style:solid; border-width:5px;">          
+          <div class="hide-at-init" id="sorting-animation-control-buttons">
+            <button class="control" id="sorting-play" data-role="none" title="Play"><img class="dynamic-img" src='images/play.png'/></button>
+            <button class="control" id="sorting-pause"  data-role="none" title="Pause"><img class="dynamic-img" id="sorting-pause-button" src='images/pause.png'/></button>
+            <button class="control" id="sorting-prev"  data-role="none" title="Previous Step"><img class="dynamic-img" src='images/prev.png'/></button>   
+            <button class="control" id="sorting-next"  data-role="none" title="Next Step"><img class="dynamic-img" src='images/next.png'/></button>
+            <button class="control" id="sorting-start"  data-role="none" title="Start"><img class="dynamic-img" src='images/start.png'/></button>
+            <button class="control" id="sorting-end"  data-role="none" title="End"><img class="dynamic-img" src='images/end.png'/></button>
+            
+            <div id="sorting-slider-container" class="slider-container" style="border-style:solid; border-width:2px; border-radius:10px;">
+              <div id="sorting-slider-label" style="text-align: center;">Animation Speed</div>
+              <input class="ownslider" type="range" id="sorting-slider" name="slider-3" value="12" min="3" max="300" step="3"
+                     data-highlight="true" data-mini="true" style="display:none;"/>  
+            </div>
+          </div>
+        </div> 
+      </div>
+    </div> 
+    
+    
   </body>
 </html>

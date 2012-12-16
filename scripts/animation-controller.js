@@ -1,5 +1,5 @@
 // Object that controls animation by storing an information feed and custom
-// animator that controls appearance of nodes in a graph
+// animator that controls the algorithm views
 AnimationController = function() {
   // Initialise object properties
   this.reset();  
@@ -22,13 +22,8 @@ AnimationController.prototype.reset = function() {
 }
   
 // Initialise animator and feed information  
-AnimationController.prototype.init = function (nodes, edges, startingNode, algorithm) { 
-  if (algorithm == "dijkstra") {
-    this.algorithmAnimator = new DijkstraAnimator(nodes,edges,startingNode);
-  }
-  else {
-    this.algorithmAnimator = null;
-  }
+AnimationController.prototype.init = function (animationData, algorithm) { 
+  this.algorithmAnimator = AnimatorFactory.getAnimator(animationData, algorithm);  
   this.algorithmAnimator.buildAnimation();
   this.feedLines = this.algorithmAnimator.getFeedLines();
   this.update(this);

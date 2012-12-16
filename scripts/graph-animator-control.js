@@ -28,7 +28,7 @@ $(document).delegate('#graph-animator','pageinit',function () {
   // Initialization sequence
   function init () {
     // Find the canvas element
-    canvas = $('#canvas')[0];
+    canvas = $('#graph-canvas')[0];
     if (!canvas || !canvas.getContext) {
       alert('Error: browser does not support HTML5 canvas.');
       return;
@@ -50,7 +50,7 @@ $(document).delegate('#graph-animator','pageinit',function () {
     resizeDivs();
     
     // Initialise tooltips
-    initialiseTooltips();
+    initialiseTooltips("graph");
     
     // Begin drawing on the canvas
     drawTimer = setInterval(function () { draw() }, 25);
@@ -79,27 +79,27 @@ $(document).delegate('#graph-animator','pageinit',function () {
       $('.mode').css('line-height', '120%');
       $('#graph-select-button').css('height', (0.06 * height)-1);
       $('#graph-select-button').css('line-height', '140%');
-      $('#main-menu').css('line-height', '140%');
-      $('#button-box').height(0.22 * height - 10);
-      $('#feed-title').height(0.15 * $('#button-box').height());
+      $('#graph-main-menu').css('line-height', '140%');
+      $('#graph-button-box').height(0.22 * height - 10);
+      $('#feed-title').height(0.15 * $('#graph-button-box').height());
       $('.bottom-left').css('width', 0.7 * width);
-      $('.feed-box').css('height', $('#button-box').height() - $('#feed-title').height());
-      $('.feed-box').css('max-height', ($('#button-box').height()) + 'px');
+      $('.feed-box').css('height', $('#graph-button-box').height() - $('#feed-title').height());
+      $('.feed-box').css('max-height', ($('#graph-button-box').height()) + 'px');
       $('.feed-box').css('max-width', (0.7 * width) + 'px');
-      $('#animation-control-buttons').height(0.18 * height);
-      $('#animation-control-buttons').width(0.3 * width);
-      $('#animation-control-buttons').css("margin-left", (0.7 * width) + 'px');
-      $('.control').css("height", 0.4 * ($('#animation-control-buttons').height()-4));
-      $('.control').css("width", (1/6) * ($('#animation-control-buttons').width()+1));
-      $('#slider-container').css('margin-top', '2px');
-      $('#slider-container').css('width', $('#animation-control-buttons').width()-14);
-      $('#slider-container').css('height', 0.39 * ($('#animation-control-buttons').height()-4));
-      $('#slider-label').css('height', 0.5 * ($('#slider-container').height()-2));
+      $('#graph-animation-control-buttons').height(0.18 * height);
+      $('#graph-animation-control-buttons').width(0.3 * width);
+      $('#graph-animation-control-buttons').css("margin-left", (0.7 * width) + 'px');
+      $('.control').css("height", 0.4 * ($('#graph-animation-control-buttons').height()-4));
+      $('.control').css("width", (1/6) * ($('#graph-animation-control-buttons').width()+1));
+      $('#graph-slider-container').css('margin-top', '2px');
+      $('#graph-slider-container').css('width', $('#graph-animation-control-buttons').width()-14);
+      $('#graph-slider-container').css('height', 0.39 * ($('#graph-animation-control-buttons').height()-4));
+      $('#graph-slider-label').css('height', 0.5 * ($('#graph-slider-container').height()-2));
       $('.ownslider + div.ui-slider').css("margin", '0px');
-      $('.ownslider + div.ui-slider').css("width", $('#slider-container').width()-2);
-      $('.ownslider + div.ui-slider').css("height", 0.45 * ($('#slider-container').height()-2));
-      $('#feed-mode-container').css('width', $('#animation-control-buttons').width()-10);
-      $('#feed-mode-container').css('height', 0.3 * ($('#animation-control-buttons').height()-4));
+      $('.ownslider + div.ui-slider').css("width", $('#graph-slider-container').width()-2);
+      $('.ownslider + div.ui-slider').css("height", 0.45 * ($('#graph-slider-container').height()-2));
+      $('#feed-mode-container').css('width', $('#graph-animation-control-buttons').width()-10);
+      $('#feed-mode-container').css('height', 0.3 * ($('#graph-animation-control-buttons').height()-4));
       $('.feed-mode').css('height', 0.95 * $('#feed-mode-container').height()); 
       $('.feed-mode').css('line-height', '50%');
       
@@ -117,7 +117,7 @@ $(document).delegate('#graph-animator','pageinit',function () {
   }
   
   // Virtual mouse-move event handler
-  $('#canvas').bind('vmousemove', function (ev) {
+  $('#graph-canvas').bind('vmousemove', function (ev) {
     // If in Build Mode or Modify Mode...
     if (graphMode == "build" || graphMode == "modify" || (graphMode == "run" && !animationController.isReady())) {
       // Get the mouse position relative to the canvas element
@@ -163,7 +163,7 @@ $(document).delegate('#graph-animator','pageinit',function () {
   });
   
   // Virtual mouse-down event handler
-$('#canvas').bind('vmousedown', function (ev) { 
+$('#graph-canvas').bind('vmousedown', function (ev) { 
     // Prevent text from being highlighted
     ev.preventDefault();
 
@@ -173,7 +173,7 @@ $('#canvas').bind('vmousedown', function (ev) {
     pageY = ev.pageY;
 
     // Ensures cursor is moved to current location on touch devices
-    $('#canvas').trigger('vmousemove');
+    $('#graph-canvas').trigger('vmousemove');
 
     // If in Build Mode...
     if (graphMode == "build") {
@@ -199,18 +199,19 @@ $('#canvas').bind('vmousedown', function (ev) {
         highlightMode = false;        
 
         // Disable alert message
-        $('#button-box').qtip('hide');
-        $('#button-box').qtip('disable');
+        $('#graph-button-box').qtip('hide');
+        $('#graph-button-box').qtip('disable');
 
         // Initialise animation controller
-        animationController.init(nodes, edges, currentItem, algorithm);
+        var animationData = new AnimationData(nodes, edges, currentItem);
+        animationController.init(animationData, algorithm);
         animationController.setReady();
       }
     }
   });
 
   // Virtual mouse-up event handler 
-$('#canvas').bind('vmouseup', function () {
+$('#graph-canvas').bind('vmouseup', function () {
     // If in Build Mode...
     if (graphMode == "build") {
       // If no drag was performed and the cursor is over a node that hasn't
@@ -265,7 +266,7 @@ $('#canvas').bind('vmouseup', function () {
     clearInterval(drawTimer);
     if (animationController.isReady()) {
       animationController.stop();
-    }
+    }    
   }); 
   
   // When a graph algorithm is selected, update the algorithm to be animated
@@ -336,6 +337,11 @@ $('#canvas').bind('vmouseup', function () {
     }
   })
   
+  // Make sure the 'select starting node' tooltip is hidden when user moves to main menu
+  $('#graph-main-menu').click(function() {
+    $('#graph-button-box').qtip('hide');
+  });
+  
   // Change mode to Build when the "Build" button is clicked
   $('#build').click(function() {
     changeMode('build');
@@ -378,14 +384,14 @@ $('#canvas').bind('vmouseup', function () {
     // If the user left Run Mode, remove the algorithm data from the nodes
     if (oldGraphMode == "run" && graphMode != "run") {
       // Disable alert message
-      $('#button-box').qtip('hide');
-      if ($('#button-box').qtip('disable', 'false')) {
-        $('#button-box').qtip('disable');
+      $('#graph-button-box').qtip('hide');
+      if ($('#graph-button-box').qtip('disable', 'false')) {
+        $('#graph-button-box').qtip('disable');
       }
       // Hide animation elements
       $('.hide-at-init').hide();
       // Ensure text on pause button is correct
-      $('#pause-button').attr('src', 'images/pause.png');
+      $('#graph-pause-button').attr('src', 'images/pause.png');
       // Reset animation controller
       animationController.reset();
       // Remove all animation-related data from nodes
@@ -430,7 +436,7 @@ $('#canvas').bind('vmouseup', function () {
       highlightMode = false;
       
       // Enable the 'pause' button and set the slider to 12
-      $('#slider-3').val(12).slider('refresh');
+      $('#graph-slider').val(12).slider('refresh');
 
       // Turn on alert for user to select starting node
       activateAlert();
@@ -439,8 +445,8 @@ $('#canvas').bind('vmouseup', function () {
   
   // Alert user to the fact that a starting node needs to be selected
   function activateAlert() {
-    $('#button-box').qtip('enable');
-    $('#button-box').qtip('show');
+    $('#graph-button-box').qtip('enable');
+    $('#graph-button-box').qtip('show');
   }  
     
   // When 'current step' box is clicked, show 'feed' box
@@ -460,41 +466,41 @@ $('#canvas').bind('vmouseup', function () {
   });
   
   // When 'play' button is clicked, play algorithm and enable 'pause' button
-  $('#play').click(function () {
+  $('#graph-play').click(function () {
     animationController.play();
-    $('#pause-button').attr('src', 'images/pause.png');
+    $('#graph-pause-button').attr('src', 'images/pause.png');
   });
   
   // When 'pause' button is clicked, pause algortihm and disable 'pause' button
-  $('#pause').click(function () {
+  $('#graph-pause').click(function () {
     if (animationController.isReady()) {
       animationController.pause();
-      $('#pause-button').attr('src', 'images/paused.png');
+      $('#graph-pause-button').attr('src', 'images/paused.png');
     }
   });
   
   // When 'next' button is clicked, go to next step of algorithm
-  $('#next').click(function () {
+  $('#graph-next').click(function () {
     animationController.next();
   });
   
   // When 'prev' button is clicked, go to previous step of algorithm
-  $('#prev').click(function () {
+  $('#graph-prev').click(function () {
     animationController.prev();
   });
   
   // When 'start' button is clicked, go to first step of algorithm
-  $('#start').click(function () {
+  $('#graph-start').click(function () {
     animationController.beginning();
   });
   
   // When 'end' button is clicked, go to end of algorithm
-  $('#end').click(function () {
+  $('#graph-end').click(function () {
     animationController.end();
   });
   
   // 'Change' event handler for slider. Updates step delay value
-  $('#slider-3').change(function(){
+  $('#graph-slider').change(function(){
     var stepsPerMinute = $(this).val();
     animationController.changeSpeed(60000 / stepsPerMinute);
  })

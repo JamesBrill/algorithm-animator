@@ -58,50 +58,116 @@ function confirm(question, callback)
 }
 
 // Initialise tooltips
-function initialiseTooltips() {
-  $('#build').qtip({
-    content: "Place nodes and edges.",
+function initialiseTooltips(animationType) {
+  if (animationType == "graph") {
+    $('#build').qtip({
+      content: "Place nodes and edges.",
+      position: {
+        my: "top left",
+        at: "bottom left",
+        adjust: {
+          x: 50
+        }
+      },
+      style: {
+        classes: 'ui-tooltip-tipsy'
+      }   
+    });
+
+    $('#modify').qtip({
+      content: "Delete objects or change node labels/edge attributes.",
+      position: {
+        my: "top left",
+        at: "bottom left",
+        adjust: {
+          x: 50
+        }
+      },
+      style: {
+        classes: 'ui-tooltip-tipsy'
+      }   
+    });
+
+    $('#run').qtip({
+      content: "Animate the chosen algorithm on your data.",
+      position: {
+        my: "top left",
+        at: "bottom left",
+        adjust: {
+          x: 50
+        }
+      },
+      style: {
+        classes: 'ui-tooltip-tipsy'
+      }   
+    });
+    
+    $('#graph-select-container').qtip( {
+      content: "Choose the graph algorithm you want to animate here.",
+      position: {
+        my: "top left",
+        at: "bottom right",
+        adjust: {
+          x: -20
+        }
+      },
+      style: {
+        classes: 'ui-tooltip-tipsy'
+      }
+    });
+    
+    $('.feed-tip').qtip( {
+      content: {
+        text: function() {
+          if ($(this).attr('id') == "high-level") {
+            return "Show high-level description of algorithm in text box.";
+          }
+          else {
+            return "Show algorithm pseudocode in text box.";
+          }
+        }
+      },
+      position: {
+        my: "bottom right",
+        at: "top left"
+      },
+      style: {
+        classes: 'ui-tooltip-tipsy'
+      }
+    });
+    
+    $('#graph-button-box').qtip( {
+      content: "A starting node must be selected from your graph to start the animation.",
+      position: {
+        my: "bottom left",
+        at: "top left",
+        adjust: {
+          x: $('#algorithm-feed-container').width() / 2
+        }          
+      },
+      style: {
+        classes: 'ui-tooltip-tipsy'
+      } 
+    });
+
+    $('#graph-button-box').qtip('disable');  
+  }
+  
+  $('#sorting-select-container').qtip( {
+    content: "Choose the sorting algorithm you want to animate here.",
     position: {
       my: "top left",
-      at: "bottom left",
+      at: "bottom right",
       adjust: {
-        x: 50
+        x: -20
       }
     },
     style: {
       classes: 'ui-tooltip-tipsy'
-    }   
+    }
   });
   
-  $('#modify').qtip({
-    content: "Delete objects or change node labels/edge attributes.",
-    position: {
-      my: "top left",
-      at: "bottom left",
-      adjust: {
-        x: 50
-      }
-    },
-    style: {
-      classes: 'ui-tooltip-tipsy'
-    }   
-  });
-  
-  $('#run').qtip({
-    content: "Animate the chosen algorithm on your data.",
-    position: {
-      my: "top left",
-      at: "bottom left",
-      adjust: {
-        x: 50
-      }
-    },
-    style: {
-      classes: 'ui-tooltip-tipsy'
-    }   
-  });
-  
-  $('#main-menu').qtip({
+  $('.main-menu').qtip({
     content: "Return to main menu.",
     position: {
       my: "top right",
@@ -113,20 +179,6 @@ function initialiseTooltips() {
     style: {
       classes: 'ui-tooltip-tipsy'
     }   
-  });
-  
-  $('#graph-select-container').qtip( {
-    content: "Choose the graph algorithm you want to animate here.",
-    position: {
-      my: "top left",
-      at: "bottom right",
-      adjust: {
-        x: -20
-      }
-    },
-    style: {
-      classes: 'ui-tooltip-tipsy'
-    }
   });
 
   $('.control').qtip( {
@@ -142,27 +194,7 @@ function initialiseTooltips() {
     }
   }); 
 
-  $('.feed-tip').qtip( {
-    content: {
-      text: function() {
-        if ($(this).attr('id') == "high-level") {
-          return "Show high-level description of algorithm in text box.";
-        }
-        else {
-          return "Show algorithm pseudocode in text box.";
-        }
-      }
-    },
-    position: {
-      my: "bottom right",
-      at: "top left"
-    },
-    style: {
-      classes: 'ui-tooltip-tipsy'
-    }
-  });
-
-  $('#slider-container').qtip( {
+  $('.slider-container').qtip( {
     content : "Slider position determines animation speed in steps per minute (spm). \n\
                Leftmost position is 3spm. Rightmost position is 300spm.",
     position: {
@@ -172,21 +204,5 @@ function initialiseTooltips() {
     style: {
       classes: 'ui-tooltip-tipsy'
     }        
-  });
-
-  $('#button-box').qtip( {
-    content: "A starting node must be selected from your graph to start the animation.",
-    position: {
-      my: "bottom left",
-      at: "top left",
-      adjust: {
-        x: $('#algorithm-feed-container').width() / 2
-      }          
-    },
-    style: {
-      classes: 'ui-tooltip-tipsy'
-    } 
-  });
-
-  $('#button-box').qtip('disable');    
+  });  
 }

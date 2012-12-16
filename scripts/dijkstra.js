@@ -3,10 +3,10 @@
  * algorithm. The object also produces an information feed to show the user
  * each step of the algorithm in various forms of pseudo-code. 
  */
-DijkstraAnimator = function (nodes,edges,startingNode) {
-  this.nodes = nodes; // Nodes in graph to be operated on
-  this.edges = edges; // Edges in graph to be operated on
-  this.startingNode = startingNode; // Node from which shortest distances are calculated
+DijkstraAnimator = function (animationData) {
+  this.nodes = animationData.getNodes(); // Nodes in graph to be operated on
+  this.edges = animationData.getEdges(); // Edges in graph to be operated on
+  this.startingNode = animationData.getStartingNode(); // Node from which shortest distances are calculated
   this.dijkstraStates = new Array(); // Array of all states reached during the algorithm
   this.stateIndex = 0; // Index of current state
   this.ended = false; // Has algorithm finished its last step?
