@@ -1,7 +1,7 @@
 $(document).delegate('#sorting-animator','pageinit',function () {
   var canvas1, canvas2, context; // Canvas variables
   var drawTimer; // Dictates rate at which canvas objects are redrawn
-  var animationController = new AnimationController(); // Object that controls animation
+  var animationController = new SmoothAnimationController(); // Object that controls animation
   var width = $(window).width(); // Width of window
   var height = $(window).height(); // Height of window
   var algorithm = "bubble"; // Algorithm currently being animated
@@ -30,19 +30,17 @@ $(document).delegate('#sorting-animator','pageinit',function () {
     resizeDivs();
     
     // Initialise tooltips
-    initialiseTooltips("sorting");    
+    initialiseTooltips("sorting");        
     
-    display = new BarGraph(canvas1);
-    display.addInputNumber(1);
-    display.addInputNumber(7);
-    display.addInputNumber(7);
-    display.addInputNumber(2);
-
-    display.animateStep("swap 3 1", 20000); // MIN STEP DELAY IS 150
-    setTimeout(function() {display.animateStep("swap 3 1", 20000); }, 20000);
+    display = new BarGraph(canvas1); 
+    var randomSortingInput = SortingInputGenerator.generateRandomSortingInput(15, 10);
+    var data = new AnimationData(randomSortingInput);
+    animationController.setStepDelay(300);
+    animationController.init(data, algorithm, display);
+    
     
     // Begin drawing on the canvas
-    drawTimer = setInterval(function () { draw() }, 25);
+    drawTimer = setInterval(function () {draw()}, 25);
   }
   
   // When the window is resized, resize all elements
@@ -87,7 +85,7 @@ $(document).delegate('#sorting-animator','pageinit',function () {
 
   // Event listener for when sorting animator page is shown
   $('#sorting-animator').live('pageshow', function () {
-    drawTimer = setInterval(function () { draw() }, 25);
+    drawTimer = setInterval(function () {draw()}, 25);
     if (animationController.isReady()) {
       if (animationController.isPaused()) {
         animationController.pause();

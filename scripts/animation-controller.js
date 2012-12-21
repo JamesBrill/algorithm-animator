@@ -43,7 +43,7 @@ AnimationController.prototype.update = function(objectRef) {
 }
 
 // Update contents of feed
-AnimationController.prototype.updateFeed = function(objectRef) {
+AnimationController.prototype.updateFeed = function(objectRef) {  
   var nextFeedLine = this.feedLines[this.currentFeedLine].getHighLevel();
   if (this.feedMode == "pseudocode") {
     nextFeedLine = this.feedLines[this.currentFeedLine].getPseudoCode();

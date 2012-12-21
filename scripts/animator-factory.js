@@ -7,6 +7,9 @@ AnimatorFactory.getAnimator = function (animationData, animatorType) {
   if (animatorType == "dijkstra") {
     return new DijkstraAnimator(animationData);
   }
+  else {
+    return new BubbleSortAnimator(animationData);
+  }
   return null;
 }
 
