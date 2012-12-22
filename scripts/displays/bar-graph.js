@@ -50,9 +50,21 @@ BarGraph.prototype.animateStep = function(instruction) {
 
 BarGraph.prototype.recolour = function(operation) {
   this.input[operation[1]].setStatus(operation[3]);
+  
+  var prevInstruction = this.animationController.prevState();
+
+  if (prevInstruction != null && prevInstruction.split(" ")[0] != "recolour") {
+    if (prevInstruction.split(" ")[1] != operation[1]) {
+      this.input[prevInstruction.split(" ")[1]].setStatus("unsorted");
+    }
+    if (prevInstruction.split(" ")[2] != operation[1]) {
+      this.input[prevInstruction.split(" ")[2]].setStatus("unsorted");
+    }
+  }
+  
+  this.animationController.moveToNextState();
   if (this.animationMode) {
-    var nextInstruction = this.animationController.nextState();
-    this.animationController.moveToNextState();
+    var nextInstruction = this.animationController.nextState();    
     this.animating = false;
     this.animateStep(nextInstruction);    
   }
@@ -61,23 +73,29 @@ BarGraph.prototype.recolour = function(operation) {
 BarGraph.prototype.compare = function(operation) {
   var firstBar = this.input[operation[1]];
   var secondBar = this.input[operation[2]];
-  var newFirstBarIndex = operation[1];
-  var newSecondBarIndex = operation[2];
   firstBar.setStatus("compared");
   secondBar.setStatus("compared");
+  
+  var prevInstruction = this.animationController.prevState();
+  
+  if (prevInstruction != null && prevInstruction.split(" ")[0] != "recolour") {
+    if (prevInstruction.split(" ")[1] != operation[1] && prevInstruction.split(" ")[1] != operation[2]) {
+      this.input[prevInstruction.split(" ")[1]].setStatus("unsorted");
+    }
+    if (prevInstruction.split(" ")[2] != operation[1] && prevInstruction.split(" ")[2] != operation[2]) {
+      this.input[prevInstruction.split(" ")[2]].setStatus("unsorted");
+    }
+  }
+  
+  this.animationController.moveToNextState();
+  
   var objectRef = this;
   var stepDelay = this.animationController.getStepDelay();
   setTimeout(function() {
     objectRef.animating = false;
     var nextInstruction = objectRef.animationController.nextState();
-    if (nextInstruction.split(" ")[1] != newFirstBarIndex && nextInstruction.split(" ")[2] != newFirstBarIndex) {
-      firstBar.setStatus("unsorted");
-    }
-    if (nextInstruction.split(" ")[1] != newSecondBarIndex && nextInstruction.split(" ")[2] != newSecondBarIndex) {
-      secondBar.setStatus("unsorted");
-    }      
+ 
     if (objectRef.animationMode) {
-      objectRef.animationController.moveToNextState();
       objectRef.animateStep(nextInstruction);    
     }  
   }, stepDelay);
@@ -85,18 +103,13 @@ BarGraph.prototype.compare = function(operation) {
 
 BarGraph.prototype.swap = function(operation) {  
   var firstBar, secondBar;
-  var newFirstBarIndex, newSecondBarIndex;
   if (this.input[operation[1]].getXCoordinate() < this.input[operation[2]].getXCoordinate()) {
     firstBar = this.input[operation[1]];
     secondBar = this.input[operation[2]];
-    newFirstBarIndex = operation[2];
-    newSecondBarIndex = operation[1];
   }
   else {
     firstBar = this.input[operation[2]];
     secondBar = this.input[operation[1]];
-    newFirstBarIndex = operation[1];
-    newSecondBarIndex = operation[2];
   }
     
   var startingX_FirstBar = firstBar.getXCoordinate();
@@ -105,6 +118,19 @@ BarGraph.prototype.swap = function(operation) {
   var numberOfMoves = this.animationController.getStepDelay() / 25;
   var moveDistance = distanceBetweenBars / numberOfMoves;  
   var objectRef = this;  
+    
+  var prevInstruction = this.animationController.prevState();
+
+  if (prevInstruction != null && prevInstruction.split(" ")[0] != "recolour") {
+    if (prevInstruction.split(" ")[1] != operation[1] && prevInstruction.split(" ")[1] != operation[2]) {
+      this.input[prevInstruction.split(" ")[1]].setStatus("unsorted");
+    }
+    if (prevInstruction.split(" ")[2] != operation[1] && prevInstruction.split(" ")[2] != operation[2]) {
+      this.input[prevInstruction.split(" ")[2]].setStatus("unsorted");
+    }
+  }
+  
+  this.animationController.moveToNextState();    
     
   var swapTimer = setInterval(function() {     
     firstBar.setStatus("compared");
@@ -130,14 +156,7 @@ BarGraph.prototype.swap = function(operation) {
         secondBar.setStatus("unsorted");
         return;
       }
-      if (nextInstruction.split(" ")[1] != newFirstBarIndex && nextInstruction.split(" ")[2] != newFirstBarIndex) {
-        firstBar.setStatus("unsorted");
-      }
-      if (nextInstruction.split(" ")[1] != newSecondBarIndex && nextInstruction.split(" ")[2] != newSecondBarIndex) {
-        secondBar.setStatus("unsorted");
-      }        
-      if (objectRef.animationMode) {
-        objectRef.animationController.moveToNextState();
+      if (objectRef.animationMode) {     
         objectRef.animateStep(nextInstruction);    
       }
     }

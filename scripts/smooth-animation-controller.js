@@ -31,6 +31,13 @@ SmoothAnimationController.prototype.nextState = function() {
   return null;
 }
 
+SmoothAnimationController.prototype.prevState = function() {
+  if (this.algorithmAnimator != null) {
+    return this.algorithmAnimator.prevState();
+  }  
+  return null;
+}
+
 SmoothAnimationController.prototype.moveToNextState = function() {
   if (this.algorithmAnimator != null) {
     this.algorithmAnimator.moveToNextState();

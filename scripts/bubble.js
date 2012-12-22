@@ -38,6 +38,13 @@ BubbleSortAnimator.prototype.nextState = function() {
   return this.bubbleStates[this.stateIndex];
 }
 
+BubbleSortAnimator.prototype.prevState = function() {
+  if (this.stateIndex - 1 >= 0) {
+    return this.bubbleStates[this.stateIndex - 1];
+  }
+  return null;
+}
+
 BubbleSortAnimator.prototype.moveToNextState = function() {
   this.stateIndex++;
 }
