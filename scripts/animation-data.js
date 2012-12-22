@@ -7,12 +7,12 @@ AnimationData = function(nodes, edges, startingNode) {
 }
 
 // Constructor for sorting animation data, including numbers to be sorted
-AnimationData = function(sortingInput) {
+SortingAnimationData = function(sortingInput) {
   this.sortingInput = sortingInput;
 }
 
 // Get array of SortingInput objects
-AnimationData.prototype.getSortingInput = function() {
+SortingAnimationData.prototype.getSortingInput = function() {
   return this.sortingInput;
 }
 

@@ -24,7 +24,7 @@ $(document).delegate('#sorting-animator','pageinit',function () {
     context = canvas1.getContext('2d');
     
     // Hide all unneeded elements
-    $('.hide-at-init').hide(); 
+    //$('.hide-at-init').hide(); 
     
     // Resize all elements on screen
     resizeDivs();
@@ -33,9 +33,9 @@ $(document).delegate('#sorting-animator','pageinit',function () {
     initialiseTooltips("sorting");        
     
     display = new BarGraph(canvas1); 
-    var randomSortingInput = SortingInputGenerator.generateRandomSortingInput(15, 10);
-    var data = new AnimationData(randomSortingInput);
-    animationController.setStepDelay(300);
+    var randomSortingInput = SortingInputGenerator.generateRandomSortingInput(15, 100);
+    var data = new SortingAnimationData(randomSortingInput);
+    animationController.setStepDelay(100);
     animationController.init(data, algorithm, display);
     
     
@@ -57,7 +57,7 @@ $(document).delegate('#sorting-animator','pageinit',function () {
       // Update canvas size
       canvas1.height = 0.72 * height - 4;
       canvas1.width = 0.5*width - 4;
-            canvas2.height = 0.72 * height - 4;
+      canvas2.height = 0.72 * height - 4;
       canvas2.width = 0.5*width - 4;
       
       // Update size of other elements
@@ -129,10 +129,8 @@ $(document).delegate('#sorting-animator','pageinit',function () {
   
   // When 'pause' button is clicked, pause algortihm and disable 'pause' button
   $('#sorting-pause').click(function () {
-    if (animationController.isReady()) {
-      animationController.pause();
-      $('#sorting-pause-button').attr('src', 'images/paused.png');
-    }
+    animationController.pause();
+    $('#sorting-pause-button').attr('src', 'images/paused.png');
   });
   
   // When 'next' button is clicked, go to next step of algorithm

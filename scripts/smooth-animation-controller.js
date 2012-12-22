@@ -11,7 +11,7 @@ SmoothAnimationController = function() {
 SmoothAnimationController.prototype.reset = function() {
   this.algorithmAnimator = null; // Custom animator object
   this.speed = 1000; // Delay between steps (ms)
-  this.paused = false; // Is animation paused?
+  this.paused = true; // Is animation paused?
   this.display = null; // The algorithm's view for this animation
 }
 
@@ -31,6 +31,12 @@ SmoothAnimationController.prototype.nextState = function() {
   return null;
 }
 
+SmoothAnimationController.prototype.moveToNextState = function() {
+  if (this.algorithmAnimator != null) {
+    this.algorithmAnimator.moveToNextState();
+  }  
+}
+
 SmoothAnimationController.prototype.setStepDelay = function(stepDelay) {
   this.speed = stepDelay;
 }
@@ -41,10 +47,12 @@ SmoothAnimationController.prototype.getStepDelay = function() {
 
 // Play animation
 SmoothAnimationController.prototype.play = function() {
-  if (this.algorithmAnimator != null) {
+  if (this.algorithmAnimator != null && this.paused == true) {
     this.paused = false;
     this.display.setAnimationMode(true);
-    this.display.animateStep(this.nextState());
+    if (!this.algorithmAnimator.isEnded()) {
+      this.display.animateStep(this.nextState());
+    }
   }
 }
 
