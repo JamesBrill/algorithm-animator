@@ -34,7 +34,7 @@ BubbleSortAnimator.prototype.addNewState = function(state) {
   this.bubbleStates.push(state);
 }
 
-BubbleSortAnimator.prototype.nextState = function() {
+BubbleSortAnimator.prototype.currentState = function() {
   return this.bubbleStates[this.stateIndex];
 }
 
@@ -45,12 +45,32 @@ BubbleSortAnimator.prototype.prevState = function() {
   return null;
 }
 
-BubbleSortAnimator.prototype.moveToNextState = function() {
+BubbleSortAnimator.prototype.nextState = function() {
+  if (this.stateIndex + 1 <= this.bubbleStates.length - 1) {
+    return this.bubbleStates[this.stateIndex + 1];
+  }
+  return null;
+}
+
+BubbleSortAnimator.prototype.moveToNextState = function() {  
   this.stateIndex++;
+}
+
+BubbleSortAnimator.prototype.moveToPrevState = function() {
+  this.stateIndex--;
 }
 
 BubbleSortAnimator.prototype.isEnded = function() {
   return (this.stateIndex >= this.bubbleStates.length);
+}
+
+BubbleSortAnimator.prototype.calibrateStateIndex = function() {
+  if (this.stateIndex < 0) {
+    this.stateIndex = 0;
+  }
+  if (this.stateIndex >= this.bubbleStates.length) {
+    this.stateIndex = this.bubbleStates.length - 1;
+  }
 }
 
 

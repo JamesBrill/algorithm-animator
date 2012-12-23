@@ -35,7 +35,6 @@ $(document).delegate('#sorting-animator','pageinit',function () {
     display = new BarGraph(canvas1); 
     var randomSortingInput = SortingInputGenerator.generateRandomSortingInput(15, 100);
     var data = new SortingAnimationData(randomSortingInput);
-    animationController.setStepDelay(100);
     animationController.init(data, algorithm, display);
     
     
@@ -156,7 +155,7 @@ $(document).delegate('#sorting-animator','pageinit',function () {
   // 'Change' event handler for slider. Updates step delay value
   $('#sorting-slider').change(function(){
     var stepsPerMinute = $(this).val();
-    animationController.changeSpeed(60000 / stepsPerMinute);
+    animationController.setStepDelay(60000 / stepsPerMinute);
   });    
 
   // Draws all items to the canvas

@@ -181,7 +181,7 @@ function initialiseTooltips(animationType) {
     }   
   });
 
-  $('.graph-control').qtip( {
+  $('.control').qtip( {
     position: {
       my: "bottom right",
       at: "top left",
@@ -193,8 +193,9 @@ function initialiseTooltips(animationType) {
         classes: 'ui-tooltip-tipsy'
     }
   }); 
+  
 
-  $('.slider-container').qtip( {
+  $('#graph-slider-container').qtip( {
     content : "Slider position determines animation speed in steps per minute (spm). \n\
                Leftmost position is 3spm. Rightmost position is 300spm.",
     position: {
@@ -205,4 +206,16 @@ function initialiseTooltips(animationType) {
       classes: 'ui-tooltip-tipsy'
     }        
   });  
+  
+    $('#sorting-slider-container').qtip( {
+    content : "Slider position determines animation speed in steps per minute (spm). \n\
+               Leftmost position is 30spm. Rightmost position is 1500spm.",
+    position: {
+      my: "bottom right",
+      at: "top left"
+    },
+    style: {
+      classes: 'ui-tooltip-tipsy'
+    }        
+  }); 
 }

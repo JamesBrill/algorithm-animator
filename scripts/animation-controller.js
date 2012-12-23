@@ -140,6 +140,7 @@ AnimationController.prototype.clearTimer = function() {
 // Change speed of animation
 AnimationController.prototype.changeSpeed = function(newSpeed) {
   this.speed = newSpeed;
+  // If not currently paused, call the play method so the animation runs in the new speed
   if (!this.paused) {
     this.play();
   }
