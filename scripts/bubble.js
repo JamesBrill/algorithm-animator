@@ -8,7 +8,7 @@ BubbleSortAnimator.prototype.buildAnimation = function() {
   var input = this.sortingInput;
   var swapped;
   var sortedIndex = input.length-1;
-  
+  this.addNewState("begin");
   do {
     swapped = false;
     for (var i=0; i < sortedIndex; i++) {
