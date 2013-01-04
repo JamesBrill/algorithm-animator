@@ -69,18 +69,18 @@ SmoothAnimationController.prototype.getStepDelay = function() {
 SmoothAnimationController.prototype.play = function() {
   if (this.algorithmAnimator != null && this.paused == true && !this.display.isAnimating()) {
     this.paused = false;
-    this.display.setAnimationMode(true);
+    this.display.setPlayMode(true);
     this.display.setSkipMode(false);
     if (!this.algorithmAnimator.isEnded()) {
       this.algorithmAnimator.calibrateStateIndex();
-      this.display.animateStep(this.currentState(), "not reverse");
+      this.display.animateStep(this.currentState(), "not instant", "not reverse");
     }
   }
 }
 
 // Pause animation
 SmoothAnimationController.prototype.pause = function() {
-  this.display.setAnimationMode(false);
+  this.display.setPlayMode(false);
   this.paused = true;
 }
 
