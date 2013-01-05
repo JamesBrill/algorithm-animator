@@ -64,6 +64,10 @@ BubbleSortAnimator.prototype.isEnded = function() {
   return (this.stateIndex >= this.bubbleStates.length);
 }
 
+BubbleSortAnimator.prototype.isLastInstruction = function() {
+  return (this.stateIndex == this.bubbleStates.length - 1);
+}
+
 BubbleSortAnimator.prototype.calibrateStateIndex = function() {
   if (this.stateIndex < 0) {
     this.stateIndex = 0;
@@ -72,5 +76,3 @@ BubbleSortAnimator.prototype.calibrateStateIndex = function() {
     this.stateIndex = this.bubbleStates.length - 1;
   }
 }
-
-

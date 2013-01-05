@@ -36,7 +36,7 @@ $(document).delegate('#sorting-animator','pageinit',function () {
     var randomSortingInput = SortingInputGenerator.generateRandomSortingInput(15, 100);
     var data = new SortingAnimationData(randomSortingInput);
     animationController.init(data, algorithm, display);
-    
+    animationController.setPauseButtonID("#sorting-pause-button");    
     
     // Begin drawing on the canvas
     drawTimer = setInterval(function () {draw()}, 25);
@@ -85,14 +85,13 @@ $(document).delegate('#sorting-animator','pageinit',function () {
   // Event listener for when sorting animator page is shown
   $('#sorting-animator').live('pageshow', function () {
     drawTimer = setInterval(function () {draw()}, 25);
-    if (animationController.isReady()) {
-      if (animationController.isPaused()) {
-        animationController.pause();
-      }
-      else {
-        animationController.play();
-      }
-    }   
+    // What was the animation state when this page was last hidden?
+    if (animationController.isPaused()) {
+      animationController.pause();
+    }
+    else {
+      animationController.play();
+    }
   });
 
   // Event listener for when sorting animator page is hidden
@@ -123,13 +122,11 @@ $(document).delegate('#sorting-animator','pageinit',function () {
   // When 'play' button is clicked, play algorithm and enable 'pause' button
   $('#sorting-play').click(function () {
     animationController.play();
-    $('#sorting-pause-button').attr('src', 'images/pause.png');
   });
   
   // When 'pause' button is clicked, pause algortihm and disable 'pause' button
   $('#sorting-pause').click(function () {
     animationController.pause();
-    $('#sorting-pause-button').attr('src', 'images/paused.png');
   });
   
   // When 'next' button is clicked, go to next step of algorithm

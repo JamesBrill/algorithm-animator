@@ -13,6 +13,7 @@ SmoothAnimationController.prototype.reset = function() {
   this.speed = 300; // Delay between steps (ms)
   this.paused = true; // Is animation paused?
   this.display = null; // The algorithm's view for this animation
+  this.pauseButtonID = "#button";
 }
 
 SmoothAnimationController.prototype.init = function (animationData, algorithm, display) { 
@@ -20,8 +21,11 @@ SmoothAnimationController.prototype.init = function (animationData, algorithm, d
   this.display.setAnimationController(this); 
   this.display.setInput(animationData.getSortingInput());   
   this.algorithmAnimator = AnimatorFactory.getAnimator(animationData, algorithm);  
-  this.algorithmAnimator.buildAnimation();
-  this.play();
+  this.algorithmAnimator.buildAnimation(); 
+}
+
+SmoothAnimationController.prototype.setPauseButtonID = function(ID) {
+  this.pauseButtonID = ID;
 }
 
 SmoothAnimationController.prototype.currentState = function() {
@@ -69,8 +73,10 @@ SmoothAnimationController.prototype.getStepDelay = function() {
 SmoothAnimationController.prototype.play = function() {
   if (this.algorithmAnimator != null && this.paused == true && !this.display.isAnimating()) {
     this.paused = false;
+    $(this.pauseButtonID).attr('src', 'images/pause.png');
     this.display.setPlayMode(true);
     this.display.setSkipMode(false);
+    this.display.turnForwards();
     if (!this.algorithmAnimator.isEnded()) {
       this.algorithmAnimator.calibrateStateIndex();
       this.display.animateStep(this.currentState(), "not instant", "not reverse");
@@ -82,6 +88,12 @@ SmoothAnimationController.prototype.play = function() {
 SmoothAnimationController.prototype.pause = function() {
   this.display.setPlayMode(false);
   this.paused = true;
+  $(this.pauseButtonID).attr('src', 'images/paused.png');
+}
+
+// Is animation paused?
+SmoothAnimationController.prototype.isPaused = function() {
+  return this.paused;
 }
 
 // Go to next step of animation
@@ -90,7 +102,7 @@ SmoothAnimationController.prototype.next = function() {
     this.pause();
     this.display.setSkipMode(true);
     this.algorithmAnimator.calibrateStateIndex();
-        
+                
     var display = this.display;
     setTimeout(function() { display.nextStep(); }, 25);    
   }
@@ -102,6 +114,9 @@ SmoothAnimationController.prototype.prev = function() {
     this.pause();
     this.display.setSkipMode(true);
     this.algorithmAnimator.calibrateStateIndex();
+    if (this.algorithmAnimator.isLastInstruction()) {
+      this.display.setReverse();
+    }
     
     var display = this.display;
     setTimeout(function() { display.prevStep(); }, 25);    
@@ -114,10 +129,9 @@ SmoothAnimationController.prototype.beginning = function() {
     this.pause();
     this.display.setSkipMode(true);
     this.algorithmAnimator.calibrateStateIndex(); 
-    this.algorithmAnimator.moveToPrevState();
     
     var display = this.display;
-    setTimeout(function() { display.goToBeginning(); }, 25);
+    setTimeout(function() { display.goToBeginning(); }, 35);
   }
 }
 
@@ -129,6 +143,6 @@ SmoothAnimationController.prototype.end = function() {
     this.algorithmAnimator.calibrateStateIndex();
     
     var display = this.display;
-    setTimeout(function() { display.goToEnd(); }, 25);
+    setTimeout(function() { display.goToEnd(); }, 35);
   }
 }

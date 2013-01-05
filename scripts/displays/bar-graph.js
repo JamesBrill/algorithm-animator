@@ -44,30 +44,44 @@ BarGraph.prototype.setSkipMode = function(skipMode) {
   this.skipMode = skipMode;
 }
 
-BarGraph.prototype.nextStep = function() {
+BarGraph.prototype.setReverse = function() {
+  this.lastDirection = "reverse";
+}
+
+BarGraph.prototype.nextStep = function() { 
   this.skipMode = false;
   this.singleStepMode = true;
-  if (this.lastDirection == "reverse") {
-    this.animationController.moveToNextState();
-  }
+  this.turnForwards();
   this.animateStep(this.animationController.currentState(), "instant", "not reverse");
 }
 
 BarGraph.prototype.prevStep = function() {
   this.skipMode = false;
   this.singleStepMode = true;
-  if (this.lastDirection == "not reverse") {
-    this.animationController.moveToPrevState();
-  }
+  this.turnBackwards();
   this.animateStep(this.animationController.currentState(), "instant", "reverse");
 }
 
 BarGraph.prototype.goToBeginning = function() {
+  this.turnBackwards();
   this.animateStep(this.animationController.currentState(), "instant", "reverse");
 }
 
 BarGraph.prototype.goToEnd = function() {
+  this.turnForwards();
   this.animateStep(this.animationController.currentState(), "instant", "not reverse");
+}
+
+BarGraph.prototype.turnForwards = function() {
+  if (this.lastDirection == "reverse") {
+    this.animationController.moveToNextState();
+  }  
+}
+
+BarGraph.prototype.turnBackwards = function() {
+  if (this.lastDirection == "not reverse") {
+    this.animationController.moveToPrevState();
+  }  
 }
 
 BarGraph.prototype.animateStep = function(instruction, instantMode, reverseMode) {
@@ -142,7 +156,6 @@ BarGraph.prototype.recolour = function(operation, instantMode, reverseMode) {
     return;
   }
   this.animateStep(nextInstruction, instantMode, reverseMode);
-  this.singleStepMode = false;
 }
 
 BarGraph.prototype.compare = function(operation, instantMode, reverseMode) {
@@ -154,16 +167,19 @@ BarGraph.prototype.compare = function(operation, instantMode, reverseMode) {
   this.tidyUpLastStep(operation, reverseMode);
   
   if (instantMode == "not instant") {
-    var stepDelay = this.animationController.getStepDelay();
-    setTimeout(function() {
-      this.animating = false;
-      var nextInstruction = this.animationController.currentState();
+    var numberOfChecksLeft = this.animationController.getStepDelay() / 25;
+    var compareTimer = setInterval(function() {
+      numberOfChecksLeft -= 1;
+      if (numberOfChecksLeft <= 0 || this.skipMode) {
+        this.animating = false;
+        var nextInstruction = this.animationController.currentState();
 
-      if (this.playMode) {
-        this.animateStep(nextInstruction, "not instant", reverseMode);    
-      }  
-
-    }.bind(this), stepDelay);  
+        if (this.playMode) {
+          this.animateStep(nextInstruction, "not instant", reverseMode);    
+        }  
+        clearInterval(compareTimer);
+      }
+    }.bind(this), 25);  
   }
   else {
     var nextInstruction = this.animationController.currentState(); 
@@ -185,13 +201,13 @@ BarGraph.prototype.swap = function(operation, instantMode, reverseMode) {
   
   if (instantMode == "not instant") {
     var swapTimer = setInterval(function() {  
-      if (this.skipMode) {
+      if (this.skipMode) {     
         clearInterval(swapTimer);
         this.singleStepMode = false;
         barSwapper.instantSwap();
         buckets.arrays.swap(this.input,operation[1],operation[2]);
         this.animating = false;
-        this.skipMode = false;
+        this.skipMode = false;        
         return;
       }
       barSwapper.setBarStatuses("compared");

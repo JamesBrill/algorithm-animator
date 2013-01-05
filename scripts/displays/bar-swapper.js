@@ -2,6 +2,7 @@ BarSwapper = function(input, swapOperation, stepDelay) {
   this.input = input;
   this.firstBar = null;
   this.secondBar = null;
+  this.stepDelay = stepDelay;
   if (this.input[swapOperation[1]].getXCoordinate() < this.input[swapOperation[2]].getXCoordinate()) {
     this.firstBar = this.input[swapOperation[1]];
     this.secondBar = this.input[swapOperation[2]];
@@ -14,7 +15,7 @@ BarSwapper = function(input, swapOperation, stepDelay) {
   this.startingX_FirstBar = this.firstBar.getXCoordinate();
   this.startingX_SecondBar = this.secondBar.getXCoordinate();  
   var distanceBetweenBars = this.startingX_SecondBar - this.startingX_FirstBar;
-  var numberOfMoves = stepDelay / 25;
+  var numberOfMoves = this.stepDelay / 25;
   this.moveDistance = distanceBetweenBars / numberOfMoves;  
 }
 
