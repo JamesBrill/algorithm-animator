@@ -31,6 +31,11 @@ SmoothAnimationController.prototype.setPauseButtonID = function(ID) {
   this.pauseButtonID = ID;
 }
 
+// Get name of algorithm
+SmoothAnimationController.prototype.getName = function() {
+  return this.algorithmAnimator.getName();
+}
+
 // Return current instruction of algorithm
 SmoothAnimationController.prototype.currentInstruction = function() {
   if (this.algorithmAnimator != null) {
@@ -124,7 +129,7 @@ SmoothAnimationController.prototype.next = function() {
                 
     // Wait for current animation to finish before animating the next step
     var display = this.display;
-    setTimeout(function() { display.nextStep(); }, 25);    
+    setTimeout(function() { display.nextStep(); }, 40);    
   }
 }
 
@@ -144,7 +149,7 @@ SmoothAnimationController.prototype.prev = function() {
     
     // Wait for current animation to finish before animating the previous step
     var display = this.display;
-    setTimeout(function() { display.prevStep(); }, 25);    
+    setTimeout(function() { display.prevStep(); }, 40);    
   }
 }
 

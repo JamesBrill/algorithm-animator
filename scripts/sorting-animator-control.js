@@ -1,45 +1,45 @@
 $(document).delegate('#sorting-animator','pageinit',function () {
-  var canvas1, canvas2, context; // Canvas variables
+  var canvasArray = new Array(); // Canvas array
   var drawTimer; // Dictates rate at which canvas objects are redrawn
-  var animationController = new SmoothAnimationController(); // Object that controls animation
+  var animationControllers = new Array(); // Object that controls animation
   var width = $(window).width(); // Width of window
   var height = $(window).height(); // Height of window
-  var algorithm = "bubble"; // Algorithm currently being animated
-  var display;
+  var algorithm = "selection"; // Algorithm currently being animated
+  var displays = new Array(); // Array of algorithm displays
 
   // Begin running the sorting animator
   init(); 
 
   // Initialization sequence
   function init () {
-    // Find the canvas element
-    canvas1 = $('#sorting-canvas1')[0];
-    canvas2 = $('#sorting-canvas2')[0];
-    if (!canvas1 || !canvas1.getContext) {
+    for (var i = 1; i < 4; i++) {
+      $('#sorting-canvas' + (i+1)).hide();
+    }
+    
+    if (!$('#sorting-canvas1')[0] || !$('#sorting-canvas1')[0].getContext) {
       alert('Error: browser does not support HTML5 canvas.');
       return;
     }
-
-    // Get the 2D canvas context
-    context = canvas1.getContext('2d');
     
     // Hide all unneeded elements
-    //$('.hide-at-init').hide(); 
+    //$('.hide-at-init').hide();              
+       
+    var randomSortingInput = SortingInputGenerator.generateRandomSortingInput(15, 100);
+    addController();
+    addController();
     
     // Resize all elements on screen
     resizeDivs();
     
-    // Initialise tooltips
-    initialiseTooltips("sorting");        
+    for (i = 0; i < animationControllers.length; i++) {
+      setUpController(i, buckets.arrays.copy(randomSortingInput), algorithm);
+    }
     
-    display = new BarGraph(canvas1); 
-    var randomSortingInput = SortingInputGenerator.generateRandomSortingInput(15, 100);
-    var data = new SortingAnimationData(randomSortingInput);
-    animationController.init(data, algorithm, display);
-    animationController.setPauseButtonID("#sorting-pause-button");    
+    // Initialise tooltips
+    initialiseTooltips("sorting");   
     
     // Begin drawing on the canvas
-    drawTimer = setInterval(function () {draw()}, 25);
+    drawTimer = setInterval(function() { draw() }, 25);
   }
   
   // When the window is resized, resize all elements
@@ -49,15 +49,31 @@ $(document).delegate('#sorting-animator','pageinit',function () {
     height = $(window).height();
     resizeDivs();
   })
+   
+  // Add new animation controller
+  function addController() {
+    var size = canvasArray.length;
+    canvasArray[size] = $('#sorting-canvas' + (size + 1));
+    canvasArray[size].show();
+    var newAnimationController = new SmoothAnimationController();
+    animationControllers.push(newAnimationController);
+  }
+  
+  // Initialise animation controllers
+  function setUpController(index, sortingInput, algorithm) {
+    var newDisplay = new BarGraph(getCanvas(index));
+    displays.push(newDisplay);
+    var data = new SortingAnimationData(sortingInput);
+    animationControllers[index].init(data, algorithm, newDisplay);
+    animationControllers[index].setPauseButtonID("#sorting-pause-button"); 
+  }
   
   // Resize all elements, unless width is too small
   function resizeDivs() {
     if (width > 500 && height > 500) {  
+      
       // Update canvas size
-      canvas1.height = 0.72 * height - 4;
-      canvas1.width = 0.5*width - 4;
-      canvas2.height = 0.72 * height - 4;
-      canvas2.width = 0.5*width - 4;
+      resizeCanvasArray();
       
       // Update size of other elements
       $('.mode').css('height', (0.06 * height)-1);
@@ -81,24 +97,101 @@ $(document).delegate('#sorting-animator','pageinit',function () {
       $('.ownslider + div.ui-slider').css("height", 0.45 * ($('#sorting-slider-container').height()-2));      
     }
   }    
+  
+  function resizeCanvasArray() {
+    if (canvasArray.length <= 1) {
+      $('#sorting-canvas1')[0].height = 0.72 * height - 4;
+      $('#sorting-canvas1')[0].width = width - 4;
+    }
+    else if (canvasArray.length == 2) {
+      getCanvas(0).height = 0.72 * height - 4;
+      getCanvas(0).width = 0.5*width - 4;
+      getCanvas(1).height = 0.72 * height - 4;
+      getCanvas(1).width = 0.5*width - 4;
+    }
+  }
+  
+  function getCanvas(index) {
+    return canvasArray[index][0];
+  }
+  
+  function pauseAll() {
+    for (var i = 0; i < animationControllers.length; i++) {
+      animationControllers[i].pause();
+    }
+  }
+  
+  function playAll() {
+    for (var i = 0; i < animationControllers.length; i++) {
+      animationControllers[i].play();
+    }
+  }
+  
+  function stopAll() {
+    for (var i = 0; i < animationControllers.length; i++) {
+      animationControllers[i].play();
+    }
+  }
+  
+  function resetAll() {
+    for (var i = 0; i < animationControllers.length; i++) {
+      animationControllers[i] = new AnimationController();
+    }
+  }
+  
+  function nextAll() {
+    for (var i = 0; i < animationControllers.length; i++) {
+      animationControllers[i].next();
+    }
+  }
+  
+  function prevAll() {
+    for (var i = 0; i < animationControllers.length; i++) {
+      animationControllers[i].prev();
+    }
+  }
+  
+  function startAll() {
+    for (var i = 0; i < animationControllers.length; i++) {
+      animationControllers[i].beginning();
+    }
+  }
+  
+  function endAll() {
+    for (var i = 0; i < animationControllers.length; i++) {
+      animationControllers[i].end();
+    }
+  }
+  
+  function setStepDelay(stepsPerMinute) {
+    for (var i = 0; i < animationControllers.length; i++) {
+      animationControllers[i].setStepDelay(60000 / stepsPerMinute);
+    }
+  }  
+  
+  function drawDisplays() {
+    for (var i = 0; i < displays.length; i++) {
+      displays[i].draw();
+    }    
+  }
 
   // Event listener for when sorting animator page is shown
   $('#sorting-animator').live('pageshow', function () {
     drawTimer = setInterval(function () {draw()}, 25);
     // What was the animation state when this page was last hidden?
-    if (animationController.isPaused()) {
-      animationController.pause();
+    if (animationControllers[0].isPaused()) {
+      pauseAll();
     }
     else {
-      animationController.play();
+      playAll();
     }
   });
 
   // Event listener for when sorting animator page is hidden
   $('#sorting-animator').live('pagehide', function () {
     clearInterval(drawTimer);
-    if (animationController.isReady()) {
-      animationController.stop();
+    if (animationControllers[0].isReady()) {
+      stopAll();
     }
   }); 
   
@@ -108,8 +201,8 @@ $(document).delegate('#sorting-animator','pageinit',function () {
       // If user clicked 'OK', reset animator
 			if (yes) {
         algorithm = $('#sorting-select option:selected').val();
-        animationController.stop();
-        animationController = new AnimationController();
+        stopAll();
+        resetAll();
       }
       // If user clicked 'Cancel', return selected algorithm to original value
       else {
@@ -121,45 +214,42 @@ $(document).delegate('#sorting-animator','pageinit',function () {
   
   // When 'play' button is clicked, play algorithm and enable 'pause' button
   $('#sorting-play').click(function () {
-    animationController.play();
+    playAll();
   });
   
   // When 'pause' button is clicked, pause algortihm and disable 'pause' button
   $('#sorting-pause').click(function () {
-    animationController.pause();
+    pauseAll();
   });
   
   // When 'next' button is clicked, go to next step of algorithm
   $('#sorting-next').click(function () {
-    animationController.next();
+    nextAll();
   });
   
   // When 'prev' button is clicked, go to previous step of algorithm
   $('#sorting-prev').click(function () {
-    animationController.prev();
+    prevAll();
   });
   
   // When 'start' button is clicked, go to first step of algorithm
   $('#sorting-start').click(function () {
-    animationController.beginning();
+    startAll();
   });
   
   // When 'end' button is clicked, go to end of algorithm
   $('#sorting-end').click(function () {
-    animationController.end();
+    endAll();
   });
   
   // 'Change' event handler for slider. Updates step delay value
   $('#sorting-slider').change(function(){
     var stepsPerMinute = $(this).val();
-    animationController.setStepDelay(60000 / stepsPerMinute);
+    setStepDelay(stepsPerMinute);
   });    
 
   // Draws all items to the canvas
   function draw () {
-    // Clear the contents of the canvas
-    context.clearRect(0,0,canvas1.width,canvas1.height);    
-
-    display.draw();
+    drawDisplays();
   }  
 }); 

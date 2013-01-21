@@ -2,6 +2,7 @@
 SortingInput = function(value) {
   this.value = value; // Numerical value
   this.status = "unsorted"; // Status - affects the way the input is drawn
+  this.marker = "unmarked"; // Marker - denotes special property when drawn
   this.xCoordinate = 0; // X-coordinate on display
   this.size = 0; // Size on display
 }
@@ -24,6 +25,16 @@ SortingInput.prototype.getStatus = function() {
 // Set status
 SortingInput.prototype.setStatus = function(status) {
   this.status = status;
+}
+
+// Get marker
+SortingInput.prototype.getMarker = function() {
+  return this.marker;
+}
+
+// Set marker
+SortingInput.prototype.setMarker = function(marker) {
+  this.marker = marker;
 }
 
 // Get display size
