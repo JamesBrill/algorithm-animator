@@ -25,15 +25,13 @@ $(document).delegate('#sorting-animator','pageinit',function () {
     //$('.hide-at-init').hide();              
        
     var randomSortingInput = SortingInputGenerator.generateRandomSortingInput(15, 100);
-    addController();
-    addController();
+    addDisplay(randomSortingInput, algorithm);
+    addDisplay(randomSortingInput, algorithm);
+    addDisplay(randomSortingInput, algorithm);
+    addDisplay(randomSortingInput, algorithm);
     
     // Resize all elements on screen
-    resizeDivs();
-    
-    for (i = 0; i < animationControllers.length; i++) {
-      setUpController(i, buckets.arrays.copy(randomSortingInput), algorithm);
-    }
+    resizeDivs();    
     
     // Initialise tooltips
     initialiseTooltips("sorting");   
@@ -49,11 +47,20 @@ $(document).delegate('#sorting-animator','pageinit',function () {
     height = $(window).height();
     resizeDivs();
   })
+  
+  // Add new algorithm display to the screen
+  function addDisplay(randomSortingInput, algorithm) {
+    addController();
+    resizeDivs();
+    for (var i = 0; i < animationControllers.length; i++) {
+      setUpController(i, buckets.arrays.copy(randomSortingInput), algorithm);
+    }
+  }
    
   // Add new animation controller
   function addController() {
     var size = canvasArray.length;
-    canvasArray[size] = $('#sorting-canvas' + (size + 1));
+    canvasArray[size] = new Canvas('#sorting-canvas' + (size + 1));
     canvasArray[size].show();
     var newAnimationController = new SmoothAnimationController();
     animationControllers.push(newAnimationController);
@@ -61,7 +68,7 @@ $(document).delegate('#sorting-animator','pageinit',function () {
   
   // Initialise animation controllers
   function setUpController(index, sortingInput, algorithm) {
-    var newDisplay = new BarGraph(getCanvas(index));
+    var newDisplay = new BarGraph(canvasArray[index].getUsableCanvas());
     displays.push(newDisplay);
     var data = new SortingAnimationData(sortingInput);
     animationControllers[index].init(data, algorithm, newDisplay);
@@ -70,8 +77,7 @@ $(document).delegate('#sorting-animator','pageinit',function () {
   
   // Resize all elements, unless width is too small
   function resizeDivs() {
-    if (width > 500 && height > 500) {  
-      
+    if (width > 500 && height > 500) {       
       // Update canvas size
       resizeCanvasArray();
       
@@ -99,21 +105,16 @@ $(document).delegate('#sorting-animator','pageinit',function () {
   }    
   
   function resizeCanvasArray() {
-    if (canvasArray.length <= 1) {
+    if (canvasArray.length == 0) {
       $('#sorting-canvas1')[0].height = 0.72 * height - 4;
       $('#sorting-canvas1')[0].width = width - 4;
     }
-    else if (canvasArray.length == 2) {
-      getCanvas(0).height = 0.72 * height - 4;
-      getCanvas(0).width = 0.5*width - 4;
-      getCanvas(1).height = 0.72 * height - 4;
-      getCanvas(1).width = 0.5*width - 4;
+    else {
+      for (var i = 0; i < canvasArray.length; i++) {
+        canvasArray[i].resize(canvasArray.length, width, height);
+      }
     }
-  }
-  
-  function getCanvas(index) {
-    return canvasArray[index][0];
-  }
+  }  
   
   function pauseAll() {
     for (var i = 0; i < animationControllers.length; i++) {
@@ -139,7 +140,7 @@ $(document).delegate('#sorting-animator','pageinit',function () {
     }
   }
   
-  function nextAll() {
+  function nextAll() {    
     for (var i = 0; i < animationControllers.length; i++) {
       animationControllers[i].next();
     }
