@@ -3,10 +3,31 @@ Canvas = function(canvasName) {
   this.usableCanvas = this.originalCanvas[0];
   this.name = canvasName;
   this.index = parseInt(canvasName.substring(canvasName.length-1)) - 1;
+  this.animationController = new SmoothAnimationController();
+  this.active = false;
+}
+
+Canvas.prototype.setAnimation = function(display, input, algorithm) {
+  var data = new SortingAnimationData(input);
+  this.animationController.init(data, algorithm, display);
+  this.animationController.setPauseButtonID("#sorting-pause-button");
+  this.active = true;
+}
+
+Canvas.prototype.getAnimationController = function() {
+  return this.animationController;
+}
+
+Canvas.prototype.eraseAnimation = function() {
+  this.animationController = new SmoothAnimationController();  
 }
 
 Canvas.prototype.show = function() {
   this.originalCanvas.show();
+}
+
+Canvas.prototype.isActive = function() {
+  return this.active;
 }
 
 Canvas.prototype.setHeight = function(height) {
@@ -21,42 +42,28 @@ Canvas.prototype.css = function(attribute, value) {
   $(this.name).css(attribute, value);
 }
 
+Canvas.prototype.updateIndex = function(newIndex) {
+  this.index = newIndex;
+}
+
 Canvas.prototype.getUsableCanvas = function() {
   return this.usableCanvas;
 }
 
-Canvas.prototype.resize = function(numberOfCanvases, documentWidth, documentHeight) {
-  switch (numberOfCanvases) {
-    case 1: 
-      this.setHeight(0.72 * documentHeight - 4);
-      this.setWidth(documentWidth - 4);
-      break;
-    case 2:
-      this.setHeight(0.72 * documentHeight - 4);
-      this.setWidth(0.5 * documentWidth - 4);
-      if (this.index == 0) {
-        this.css('float', 'right');
-      }
-      break;
-    case 3:
-      this.setHeight(0.36 * documentHeight - 4);
-      if (this.index == 2) {
-        this.setWidth(documentWidth - 4);
-      }
-      else {
-        this.setWidth(0.5 * documentWidth - 4);
-      }
-      if (this.index == 0) {
-        this.css('float', 'right');
-      }
-      break; 
-    case 4:
-      this.setHeight(0.36 * documentHeight - 4);
-      this.setWidth(0.5 * documentWidth - 4);
-      if (this.index == 0 || this.index == 2) {
-        this.css('float', 'right');
-      }
+Canvas.prototype.getName = function() {
+  return this.name;
+}
+
+Canvas.prototype.shutdownDisplay = function(numberOfCanvases) {
+  this.active = false;
+  this.clear();
+  this.eraseAnimation();
+  this.css('float', 'none');
+  if (numberOfCanvases > 1) {
+    this.originalCanvas.hide();
   }
 }
 
-
+Canvas.prototype.clear = function() {
+  this.usableCanvas.width = this.usableCanvas.width;
+}

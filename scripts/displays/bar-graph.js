@@ -9,6 +9,7 @@ BarGraph = function(canvas) {
   this.input = new Array(); // The algorithm input in bar form
   this.height = canvas.height; // Height of canvas
   this.width = canvas.width; // Width of canvas
+  this.oldWidth = canvas.width; // Canvas width before resize
   this.largestInput = 0; // Size of largest input number
   this.animationController = null; // Animation controller
   this.animating = false; // Is an animation in progress?
@@ -19,6 +20,7 @@ BarGraph = function(canvas) {
   this.lastDirection = "not reverse"; // Direction of previous animation
   this.comparedBars = new Array(); // Bars that are being compared
   this.barWidth = 0; // Width of each bar
+  this.barSwapper = null; // Object used for coordinating bar swaps
 }
 
 // Get the algorithm's input numbers in bar form
@@ -82,7 +84,7 @@ BarGraph.prototype.prevStep = function() {
   this.skipMode = false;
   this.singleStepMode = true;
   // Compensate for changes in direction
-  this.turnBackwards();
+  this.turnBackwards();  
   // Animate current step instantly in a backward direction
   this.animateStep(this.animationController.currentInstruction(), "instant", "reverse");
 }
@@ -108,21 +110,8 @@ BarGraph.prototype.addInputNumber = function(inputNumber) {
   // Add new input number in bar form
   this.input.push(new SortingInput(inputNumber));
   
-  // Keep track of current x-coordinate of the current bar being operated on
-  var xCoordinate = 0.05 * this.width;
-  // Update x-coordinate and height of each bar
-  for (var i = 0; i < this.input.length; i++) {
-    // Update x-coordinate of bar
-    this.input[i].setXCoordinate(xCoordinate);
-    // Update height of bar
-    var inputProportion = this.input[i].getValue() / this.largestInput;
-    var barHeight = inputProportion * (0.8 * this.height);
-    this.input[i].setSize(barHeight);
-    // Move x-coordinate to next position on display
-    xCoordinate += (0.9 * this.width) / ((this.input.length * 3 - 1)/3);
-  }
-  // Update width of all bars
-  this.barWidth = ((0.9 * this.width) / this.input.length) * (2/3);
+  // Resize bars
+  this.resize();
 }
 
 // If changing direction from backwards to forwards, make appropriate moves to compensate
@@ -330,7 +319,7 @@ BarGraph.prototype.compare = function(operation, instantMode, reverseMode) {
 // within the step delay or instantly.
 BarGraph.prototype.swap = function(operation, instantMode, reverseMode) {  
   // Create BarSwapper object to handle positioning of bars during the animation
-  var barSwapper = new BarSwapper(this.input, operation, this.animationController.getStepDelay());  
+  this.barSwapper = new BarSwapper(this.input, operation, this.animationController.getStepDelay());  
   // Move to following step, which is dependent on current direction
   this.moveToFollowingStep(reverseMode);   
   // Remove any unwanted colourings/highlighting/peripheral drawings from last step
@@ -348,7 +337,7 @@ BarGraph.prototype.swap = function(operation, instantMode, reverseMode) {
         clearInterval(swapTimer);
         this.singleStepMode = false;
         // Swap the two bars instantly both on the canvas and in the virtual representation
-        barSwapper.instantSwap();
+        this.barSwapper.instantSwap();
         buckets.arrays.swap(this.input,operation[1],operation[2]);
         // The animation has ended
         this.animating = false;
@@ -357,10 +346,10 @@ BarGraph.prototype.swap = function(operation, instantMode, reverseMode) {
         return;
       }
       // Ensure bar statuses are set to "swapping" so draw method can highlight them
-      barSwapper.setBarStatuses("swapping");
+      this.barSwapper.setBarStatuses("swapping");
       // If the bars could not be moved any further without going beyond their index
       // positions, clear the timer, perform a virtual swap and animate the next step
-      if (!barSwapper.moveBarsTowardsEachOther()) { 
+      if (!this.barSwapper.moveBarsTowardsEachOther()) { 
         clearInterval(swapTimer); 
         // Perform virtual swap
         buckets.arrays.swap(this.input,operation[1],operation[2]);
@@ -369,7 +358,7 @@ BarGraph.prototype.swap = function(operation, instantMode, reverseMode) {
         // The next instruction that will be dealt with by the next call to animateStep
         var nextInstruction = this.animationController.currentInstruction();
         // Set the bar statuses back to "unsorted"
-        barSwapper.setBarStatuses("unsorted");
+        this.barSwapper.setBarStatuses("unsorted");
         // If at the end of the algorithm, ensure singleStepMode is not left on and return
         if (nextInstruction == null) {
           this.singleStepMode = false;
@@ -388,7 +377,7 @@ BarGraph.prototype.swap = function(operation, instantMode, reverseMode) {
   // If the animation is to be instant, immediately swap and move on to the next step
   else {
     // Swap the two bars instantly both on the canvas and in the virtual representation
-    barSwapper.instantSwap();
+    this.barSwapper.instantSwap();
     buckets.arrays.swap(this.input,operation[1],operation[2]);
     // The next instruction that will be dealt with by the next call to animateStep
     var nextInstruction = this.animationController.currentInstruction(); 
@@ -435,13 +424,46 @@ BarGraph.prototype.tidyUpLastStep = function(operation, reverseMode) {
   this.lastDirection = reverseMode;
 }
 
+// Resize bars to fit new canvas size
+BarGraph.prototype.resize = function() {
+  // Update canvas dimensions
+  this.updateCanvasDimensions();  
+  // Calculate scaling factor and update old width
+  var xScalingFactor = this.width / this.oldWidth;
+  this.oldWidth = this.width;  
+  // Scale x-coordinate information stored in the bar swapper
+  if (this.barSwapper != null) {
+    this.barSwapper.scaleX(xScalingFactor);
+  }  
+  // Keep track of current x-coordinate of the current bar being operated on
+  var xCoordinate = 0.05 * this.width;
+  // Update x-coordinate and height of each bar
+  for (var i = 0; i < this.input.length; i++) {
+    // Update x-coordinate of bar
+    this.input[i].setXCoordinate(xCoordinate);
+    // Update height of bar
+    var inputProportion = this.input[i].getValue() / this.largestInput;
+    var barHeight = inputProportion * (0.79 * this.height);
+    this.input[i].setSize(barHeight);
+    // Move x-coordinate to next position on display
+    xCoordinate += (0.9 * this.width) / ((this.input.length * 3 - 1)/3);
+  }
+  // Update width of all bars
+  this.barWidth = ((0.9 * this.width) / this.input.length) * (2/3);
+}
+
+// Update canvas dimensions
+BarGraph.prototype.updateCanvasDimensions = function() {
+  this.height = this.canvas.height;
+  this.width = this.canvas.width;
+}
+
 // Draw all bars and peripherals to canvas
 BarGraph.prototype.draw = function() {
   // Clear canvas
-  this.context.canvas.width = this.context.canvas.width;
+  this.canvas.width = this.canvas.width;
   // Update canvas dimensions
-  this.height = this.canvas.height;
-  this.width = this.canvas.width;
+  this.updateCanvasDimensions();
       
   // Collect bars that are moving so that they can be drawn over other bars
   var movingBars = new Array();
@@ -464,6 +486,7 @@ BarGraph.prototype.draw = function() {
   this.drawTitle(); // Draw name of algorithm at top
   this.drawArrayBoxes(); // Draw boxes around input values
   this.drawIndexes(); // Draw index numbers
+  this.drawDeleteIcon(); // Draw delete icon
   this.showComparisons(); // Show any comparisons on display
   this.comparedBars = new Array(); // Reset compared bars
 }
@@ -473,8 +496,14 @@ BarGraph.prototype.drawTitle = function() {
   this.context.save();
   this.context.translate(0,this.height);
   this.context.rotate(Math.PI*1.5);
-  this.prepareText("29", "bottom");
-  this.context.fillText(this.animationController.getName(), this.height / 2, 29, this.height / 4);
+  if (this.width > 3 * this.height) {
+    this.prepareText(0.015 * this.width, "bottom");
+    this.context.fillText(this.animationController.getName(), this.height / 2, 0.028 * this.width, this.height / 3.5);
+  }
+  else {
+    this.prepareText(0.02 * this.width, "bottom");
+    this.context.fillText(this.animationController.getName(), this.height / 2, 0.035 * this.width, this.height / 4);
+  }
   this.context.restore();  
 }
 
@@ -512,8 +541,16 @@ BarGraph.prototype.drawBar = function(input) {
   this.addComparedBar(input);
   
   // Draw the input's value under the bar
-  this.prepareText("30", "top");
+  this.prepareText(0.08 * this.height, "top");
   this.context.fillText(input.getValue(), topX + 0.5 * this.barWidth, topY + input.getSize(), this.barWidth);
+}
+
+// Is this point inside the delete icon area?
+BarGraph.prototype.isDeleteClick = function(cursorX, cursorY) {
+  if (cursorX >= 0.97 * this.width && cursorY <= 0.03 * this.width) {
+    return true;
+  }
+  return false;
 }
 
 // Draw outline of bar - i.e. highlight it
@@ -535,7 +572,7 @@ BarGraph.prototype.drawArrayBoxes = function() {
   this.context.strokeStyle = "black";
   var x = 0.05 * this.width - (((0.9 * this.width) / this.input.length) * (1/6));
   for (var i = 0; i < this.input.length; i++) {
-    this.context.strokeRect(x, 0.85 * this.height, ((0.9 * this.width) / this.input.length), 30);
+    this.context.strokeRect(x, 0.85 * this.height, ((0.9 * this.width) / this.input.length), 0.08 * this.height);
     x += (0.9 * this.width) / ((this.input.length * 3 - 1)/3);
   }
 }
@@ -545,12 +582,28 @@ BarGraph.prototype.drawIndexes = function() {
   var x = 0.05 * this.width;
   for (var i = 0; i < this.input.length; i++) {
     var topX = x + ((0.9 * this.width) / this.input.length) * (1/3);
-    var topY = 0.85 * this.height + 30;
+    var topY = 0.93 * this.height;
     var maxWidth = ((0.9 * this.width) / this.input.length) * (2/3);
-    this.prepareText("20", "top");
+    this.prepareText(0.05 * this.height, "top");
     this.context.fillText(i, topX, topY, maxWidth);
     x += (0.9 * this.width) / ((this.input.length * 3 - 1)/3);
   }
+}
+
+// Draw icon for deleting canvas display
+BarGraph.prototype.drawDeleteIcon = function() {
+  this.context.fillStyle = "red";
+  this.context.fillRect(0.97 * this.width, 0, 0.03 * this.width, 0.03 * this.width);
+  
+  this.context.beginPath();
+  this.context.moveTo(0.995 * this.width, 0.005 * this.width); 
+  this.context.lineTo(0.975 * this.width, 0.025 * this.width);
+  this.context.moveTo(0.995 * this.width, 0.025 * this.width); 
+  this.context.lineTo(0.975 * this.width, 0.005 * this.width);
+
+  this.context.strokeStyle = "white";
+  this.context.stroke();
+  this.context.closePath();
 }
 
 // Show comparisons between bars - currently only handles two compared bars
@@ -558,7 +611,7 @@ BarGraph.prototype.showComparisons = function() {
   if (this.comparedBars.length == 2) {
     var firstBarX = this.comparedBars[0].getXCoordinate() + 0.5 * this.barWidth;
     var secondBarX = this.comparedBars[1].getXCoordinate() + 0.5 * this.barWidth;
-    var topY = 0.05 * this.height;
+    var topY = 0.06 * this.height;
     
     // Draw comparison lines coming up from the top of each bar and then some
     // "compared" text above the lines
@@ -572,18 +625,21 @@ BarGraph.prototype.showComparisons = function() {
 BarGraph.prototype.drawComparisonLines = function(firstBarX, secondBarX, topY) {
   var firstBarY = 0.85 * this.height - this.comparedBars[0].getSize();
   var secondBarY = 0.85 * this.height - this.comparedBars[1].getSize();
+  this.context.beginPath();
   this.context.moveTo(firstBarX, firstBarY);
   this.context.lineTo(firstBarX, topY);
   this.context.lineTo(secondBarX, topY);  
-  this.context.lineTo(secondBarX, secondBarY);  
+  this.context.lineTo(secondBarX, secondBarY); 
+  this.context.strokeStyle = "black";
   this.context.stroke();
+  this.context.closePath();
 }
 
 // Draw text that indicates that two bars are being compared 
 BarGraph.prototype.drawComparisonText = function(firstBarX, secondBarX, topY) {
   var distanceBetweenBars = secondBarX - firstBarX;
 
-  this.prepareText("20", "bottom");
+  this.prepareText(topY, "bottom");
   this.context.fillText("Compared", firstBarX + 0.5 * distanceBetweenBars, topY, distanceBetweenBars);  
 }
 

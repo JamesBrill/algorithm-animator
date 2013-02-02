@@ -1,11 +1,11 @@
 $(document).delegate('#sorting-animator','pageinit',function () {
   var canvasArray = new Array(); // Canvas array
   var drawTimer; // Dictates rate at which canvas objects are redrawn
-  var animationControllers = new Array(); // Object that controls animation
   var width = $(window).width(); // Width of window
   var height = $(window).height(); // Height of window
   var algorithm = "selection"; // Algorithm currently being animated
-  var displays = new Array(); // Array of algorithm displays
+  var numberOfActiveCanvases = 0; // Number of canvases ready to be drawn on
+  var baseCanvasIndex = 0; // Visible canvas when no displays are drawn
 
   // Begin running the sorting animator
   init(); 
@@ -22,22 +22,32 @@ $(document).delegate('#sorting-animator','pageinit',function () {
     }
     
     // Hide all unneeded elements
-    //$('.hide-at-init').hide();              
+    //$('.hide-at-init').hide();   
+    
+    for (i = 0; i < 4; i++) {
+      canvasArray[i] = new Canvas('#sorting-canvas' + (i + 1));
+    }
        
     var randomSortingInput = SortingInputGenerator.generateRandomSortingInput(15, 100);
-    addDisplay(randomSortingInput, algorithm);
-    addDisplay(randomSortingInput, algorithm);
-    addDisplay(randomSortingInput, algorithm);
-    addDisplay(randomSortingInput, algorithm);
+    addCanvas(randomSortingInput, algorithm);
+    addCanvas(randomSortingInput, "bubble");
+    addCanvas(randomSortingInput, "bubble");
+    addCanvas(randomSortingInput, "insertion");
+    //removeCanvas(2);
+    //removeCanvas(0);
+    //addCanvas(randomSortingInput, algorithm);
     
     // Resize all elements on screen
     resizeDivs();    
     
     // Initialise tooltips
-    initialiseTooltips("sorting");   
+    initialiseTooltips("sorting");  
+    
+    // Initialise click listeners
+    initialiseClickListeners();
     
     // Begin drawing on the canvas
-    drawTimer = setInterval(function() { draw() }, 25);
+    drawTimer = setInterval(function() {draw()}, 25);
   }
   
   // When the window is resized, resize all elements
@@ -46,40 +56,85 @@ $(document).delegate('#sorting-animator','pageinit',function () {
     width = $(window).width();
     height = $(window).height();
     resizeDivs();
-  })
+  });
+  
+  function initialiseClickListeners() {
+    for (var i = 0; i < canvasArray.length; i++) {
+      // Virtual mouse click event handler
+      $(canvasArray[i].getName()).bind('vclick', function (ev) {
+        // Get the mouse position relative to the canvas element
+        var cursorX = ev.pageX - this.offsetLeft - 2; // Accommodates border of 2px
+        var cursorY = ev.pageY - this.offsetTop - 2; // Accommodates border of 2px
+        
+        // Get index of the canvas that was clicked on
+        var index = ev.target.id.substring(ev.target.id.length-1) - 1;
+        
+        if (canvasArray[index].getAnimationController().getDisplay().isDeleteClick(cursorX, cursorY)) {
+          removeCanvas(index);
+        }  
+      });
+    }
+  }  
   
   // Add new algorithm display to the screen
-  function addDisplay(randomSortingInput, algorithm) {
-    addController();
-    resizeDivs();
-    for (var i = 0; i < animationControllers.length; i++) {
-      setUpController(i, buckets.arrays.copy(randomSortingInput), algorithm);
+  function addCanvas(randomSortingInput, algorithm) {
+    if (numberOfActiveCanvases == 0) {
+      //canvasArray[baseCanvasIndex].show();
+      numberOfActiveCanvases++;  
+      setAnimation(baseCanvasIndex, buckets.arrays.copy(randomSortingInput), algorithm);
     }
-  }
-   
-  // Add new animation controller
-  function addController() {
-    var size = canvasArray.length;
-    canvasArray[size] = new Canvas('#sorting-canvas' + (size + 1));
-    canvasArray[size].show();
-    var newAnimationController = new SmoothAnimationController();
-    animationControllers.push(newAnimationController);
+    else if (numberOfActiveCanvases > 0 && numberOfActiveCanvases < 4){
+      var indexOfNewCanvas = 0;
+      for (var i = 0; i < canvasArray.length; i++) {
+        if (!canvasArray[i].isActive()) {
+          indexOfNewCanvas = i; 
+          break;
+        }
+      }
+      canvasArray[indexOfNewCanvas].show();
+      numberOfActiveCanvases++;  
+      setAnimation(indexOfNewCanvas, buckets.arrays.copy(randomSortingInput), algorithm);
+    }   
+    resizeDivs();
   }
   
-  // Initialise animation controllers
-  function setUpController(index, sortingInput, algorithm) {
+  // Remove algorithm display with given index from the screen
+  // NOTE: reason for needing index and specifying the canvas to be removed is 
+  // because each canvas will contain a specific view that the user might want
+  // removed.
+  function removeCanvas(index) {
+    // If chosen canvas is not active, remove the first active canvas
+    if (!canvasArray[index].isActive()) {
+      for (var i = 0; i < canvasArray.length; i++) {
+        if (canvasArray[i].isActive()) {
+          index = i; 
+          break;
+        }
+      }
+    }
+    if (index >= 0 && index <= 3 && canvasArray[index].isActive()) {
+      canvasArray[index].shutdownDisplay(numberOfActiveCanvases); 
+      numberOfActiveCanvases--;
+      
+      if (numberOfActiveCanvases == 0) {
+        baseCanvasIndex = index;
+      }
+      
+      resizeDivs();
+    }
+  }
+     
+  // Initialise animation
+  function setAnimation(index, sortingInput, algorithm) {
     var newDisplay = new BarGraph(canvasArray[index].getUsableCanvas());
-    displays.push(newDisplay);
-    var data = new SortingAnimationData(sortingInput);
-    animationControllers[index].init(data, algorithm, newDisplay);
-    animationControllers[index].setPauseButtonID("#sorting-pause-button"); 
+    canvasArray[index].setAnimation(newDisplay, sortingInput, algorithm);
   }
   
   // Resize all elements, unless width is too small
   function resizeDivs() {
     if (width > 500 && height > 500) {       
       // Update canvas size
-      resizeCanvasArray();
+      updateCanvasArray();
       
       // Update size of other elements
       $('.mode').css('height', (0.06 * height)-1);
@@ -104,83 +159,200 @@ $(document).delegate('#sorting-animator','pageinit',function () {
     }
   }    
   
-  function resizeCanvasArray() {
-    if (canvasArray.length == 0) {
-      $('#sorting-canvas1')[0].height = 0.72 * height - 4;
-      $('#sorting-canvas1')[0].width = width - 4;
+  function updateCanvasArray() {
+    if (numberOfActiveCanvases == 0) {
+      canvasArray[baseCanvasIndex].setHeight(0.72 * height - 4);
+      canvasArray[baseCanvasIndex].setWidth(width - 4);
     }
     else {
-      for (var i = 0; i < canvasArray.length; i++) {
-        canvasArray[i].resize(canvasArray.length, width, height);
+      floatCanvasArray();
+      resizeCanvasArray();
+    }
+    
+    for (var i = 0; i < canvasArray.length; i++) {
+      if (canvasArray[i].isActive()) {
+        canvasArray[i].getAnimationController().getDisplay().resize();
       }
+    }
+  }    
+    
+  function floatCanvasArray() {
+    switch (numberOfActiveCanvases) {
+      case 0:
+        break;
+      case 1:
+        for (var i = 0; i < canvasArray.length; i++) {
+          if (canvasArray[i].isActive()) {
+            canvasArray[i].css('float', 'none');
+            break;
+          }
+        }
+        break;
+      case 2:
+        var activeCanvases = 0;
+        for (var i = 0; i < canvasArray.length; i++) {
+          if (canvasArray[i].isActive()) {
+            activeCanvases++;
+          }
+          if (activeCanvases == 1) {
+            canvasArray[i].css('float', 'right');
+          }
+          else {
+            canvasArray[i].css('float', 'none');
+          }
+        }
+        break;
+      case 3:
+        activeCanvases = 0;
+        for (i = 0; i < canvasArray.length; i++) {
+          if (canvasArray[i].isActive()) {
+            activeCanvases++;
+          }
+          if (activeCanvases == 1) {
+            canvasArray[i].css('float', 'right');
+          }
+          else {
+            canvasArray[i].css('float', 'none');
+          }
+        }
+        break; 
+      case 4:
+        activeCanvases = 0;
+        for (i = 0; i < canvasArray.length; i++) {
+          if (canvasArray[i].isActive()) {
+            activeCanvases++;
+          }
+          if (activeCanvases == 1 || activeCanvases == 3) {
+            canvasArray[i].css('float', 'right');
+          }
+          else {
+            canvasArray[i].css('float', 'none');
+          }
+        }
+        break;        
+    }
+  }  
+  
+  function resizeCanvasArray() {
+    switch (numberOfActiveCanvases) {
+      case 1:
+        for (var i = 0; i < canvasArray.length; i++) {
+          if (canvasArray[i].isActive()) {
+            canvasArray[i].setHeight(0.72 * height - 4);
+            canvasArray[i].setWidth(width - 4);
+          }
+        }
+        break;
+      case 2:
+        for (i = 0; i < canvasArray.length; i++) {
+          if (canvasArray[i].isActive()) {
+            canvasArray[i].setHeight(0.72 * height - 4);
+            canvasArray[i].setWidth(0.5 * width - 4);
+          }
+        }
+        break;
+      case 3:
+        var activeCanvases = 0;
+        for (i = 0; i < canvasArray.length; i++) {
+          canvasArray[i].setHeight(0.36 * height - 4);
+          if (canvasArray[i].isActive()) {
+            activeCanvases++;
+          }
+          if (activeCanvases == 3) {
+            canvasArray[i].setWidth(width - 4);
+          }
+          else {
+            canvasArray[i].setWidth(0.5 * width - 4);
+          }
+        }
+        break; 
+      case 4:
+        for (i = 0; i < canvasArray.length; i++) {
+          if (canvasArray[i].isActive()) {
+            canvasArray[i].setHeight(0.36 * height - 4);
+            canvasArray[i].setWidth(0.5 * width - 4);
+          }
+        }
+        break;        
     }
   }  
   
   function pauseAll() {
-    for (var i = 0; i < animationControllers.length; i++) {
-      animationControllers[i].pause();
+    for (var i = 0; i < canvasArray.length; i++) {
+      var animationController = canvasArray[i].getAnimationController();
+      animationController.pause();
     }
   }
   
   function playAll() {
-    for (var i = 0; i < animationControllers.length; i++) {
-      animationControllers[i].play();
+    for (var i = 0; i < canvasArray.length; i++) {
+      var animationController = canvasArray[i].getAnimationController();
+      animationController.play();
     }
   }
   
   function stopAll() {
-    for (var i = 0; i < animationControllers.length; i++) {
-      animationControllers[i].play();
+    for (var i = 0; i < canvasArray.length; i++) {
+      var animationController = canvasArray[i].getAnimationController();
+      animationController.play();
     }
   }
   
   function resetAll() {
-    for (var i = 0; i < animationControllers.length; i++) {
-      animationControllers[i] = new AnimationController();
+    for (var i = 0; i < canvasArray.length; i++) {
+      canvasArray[i].eraseAnimation();
     }
   }
   
-  function nextAll() {    
-    for (var i = 0; i < animationControllers.length; i++) {
-      animationControllers[i].next();
+  function nextAll() {        
+    for (var i = 0; i < canvasArray.length; i++) {
+      var animationController = canvasArray[i].getAnimationController();
+      animationController.next();
     }
   }
   
   function prevAll() {
-    for (var i = 0; i < animationControllers.length; i++) {
-      animationControllers[i].prev();
+    for (var i = 0; i < canvasArray.length; i++) {
+      var animationController = canvasArray[i].getAnimationController();
+      animationController.prev();
     }
   }
   
   function startAll() {
-    for (var i = 0; i < animationControllers.length; i++) {
-      animationControllers[i].beginning();
+    for (var i = 0; i < canvasArray.length; i++) {
+      var animationController = canvasArray[i].getAnimationController();
+      animationController.beginning();
     }
   }
   
   function endAll() {
-    for (var i = 0; i < animationControllers.length; i++) {
-      animationControllers[i].end();
+    for (var i = 0; i < canvasArray.length; i++) {
+      var animationController = canvasArray[i].getAnimationController();
+      animationController.end();
     }
   }
   
   function setStepDelay(stepsPerMinute) {
-    for (var i = 0; i < animationControllers.length; i++) {
-      animationControllers[i].setStepDelay(60000 / stepsPerMinute);
+    for (var i = 0; i < canvasArray.length; i++) {
+      var animationController = canvasArray[i].getAnimationController();
+      animationController.setStepDelay(60000 / stepsPerMinute);
     }
   }  
   
   function drawDisplays() {
-    for (var i = 0; i < displays.length; i++) {
-      displays[i].draw();
-    }    
+    for (var i = 0; i < canvasArray.length; i++) {
+      if (canvasArray[i].isActive()) {
+        canvasArray[i].getAnimationController().getDisplay().draw();
+      }
+    }   
   }
 
   // Event listener for when sorting animator page is shown
   $('#sorting-animator').live('pageshow', function () {
     drawTimer = setInterval(function () {draw()}, 25);
+    var animationController = canvasArray[0].getAnimationController();
     // What was the animation state when this page was last hidden?
-    if (animationControllers[0].isPaused()) {
+    if (animationController.isPaused()) {
       pauseAll();
     }
     else {
@@ -191,7 +363,8 @@ $(document).delegate('#sorting-animator','pageinit',function () {
   // Event listener for when sorting animator page is hidden
   $('#sorting-animator').live('pagehide', function () {
     clearInterval(drawTimer);
-    if (animationControllers[0].isReady()) {
+    var animationController = canvasArray[0].getAnimationController();
+    if (animationController.isReady()) {
       stopAll();
     }
   }); 
@@ -252,5 +425,11 @@ $(document).delegate('#sorting-animator','pageinit',function () {
   // Draws all items to the canvas
   function draw () {
     drawDisplays();
+    
+    for (var i = 0; i < canvasArray.length; i++) {
+      if (canvasArray[i].isMarkedForRemoval()) {
+        removeCanvas(i);
+      }
+    }
   }  
 }); 

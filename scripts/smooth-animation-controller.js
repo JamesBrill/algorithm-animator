@@ -18,7 +18,7 @@ SmoothAnimationController.prototype.reset = function() {
 }
 
 // Initialise animation
-SmoothAnimationController.prototype.init = function (animationData, algorithm, display) { 
+SmoothAnimationController.prototype.init = function (animationData, algorithm, display) {
   this.display = display;
   this.display.setAnimationController(this); 
   this.display.setInput(animationData.getSortingInput());   
@@ -34,6 +34,11 @@ SmoothAnimationController.prototype.setPauseButtonID = function(ID) {
 // Get name of algorithm
 SmoothAnimationController.prototype.getName = function() {
   return this.algorithmAnimator.getName();
+}
+
+// Get display
+SmoothAnimationController.prototype.getDisplay = function() {
+  return this.display;
 }
 
 // Return current instruction of algorithm

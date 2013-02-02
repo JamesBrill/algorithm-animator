@@ -59,3 +59,12 @@ BarSwapper.prototype.setBarStatuses = function(status) {
   this.secondBar.setStatus(status);
 }
 
+// Scale x-coordinates according to scaling factor
+BarSwapper.prototype.scaleX = function(scalingFactor) {
+  this.firstBar.setXCoordinate(this.firstBar.getXCoordinate() * scalingFactor);
+  this.secondBar.setXCoordinate(this.secondBar.getXCoordinate() * scalingFactor);
+  this.startingX_FirstBar *= scalingFactor;
+  this.startingX_SecondBar *= scalingFactor;
+  this.moveDistance *= scalingFactor;
+}
+
