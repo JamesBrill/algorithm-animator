@@ -27,15 +27,6 @@ $(document).delegate('#sorting-animator','pageinit',function () {
     for (i = 0; i < 4; i++) {
       canvasArray[i] = new Canvas('#sorting-canvas' + (i + 1));
     }
-       
-    var randomSortingInput = SortingInputGenerator.generateRandomSortingInput(15, 100);
-    addCanvas(randomSortingInput, algorithm);
-    addCanvas(randomSortingInput, "bubble");
-    addCanvas(randomSortingInput, "bubble");
-    addCanvas(randomSortingInput, "insertion");
-    //removeCanvas(2);
-    //removeCanvas(0);
-    //addCanvas(randomSortingInput, algorithm);
     
     // Resize all elements on screen
     resizeDivs();    
@@ -50,6 +41,29 @@ $(document).delegate('#sorting-animator','pageinit',function () {
     drawTimer = setInterval(function() {draw()}, 25);
   }
   
+  // I have no idea why this solves the layout problem caused by the popup
+  $("#menu-button").click(function () {
+    $('#sorting-button-box').hide();
+    $('#choose-algorithm').trigger('collapse');
+    $('#choose-view').trigger('collapse');
+    $('#menu-popup').popup('open', { positionTo: "window" });    
+    
+    setTimeout(function() { $('#sorting-button-box').show(); }, 0);
+  });
+  
+  $('#create-algorithm-view').click(function() {
+    var chosenAlgorithm = $('input:radio[name=algo-radio]:checked').val();
+    var chosenView = $('input:radio[name=view-radio]:checked').val();
+    
+    $('#choose-algorithm').trigger('collapse');
+    $('#choose-view').trigger('collapse');
+    
+    var randomSortingInput = SortingInputGenerator.generateRandomSortingInput(15, 100);
+    addCanvas(randomSortingInput, chosenAlgorithm, chosenView);
+    
+    $('#menu-popup').popup('close');
+  });
+    
   // When the window is resized, resize all elements
   $(window).resize(function() {
     // Update window size
@@ -77,11 +91,11 @@ $(document).delegate('#sorting-animator','pageinit',function () {
   }  
   
   // Add new algorithm display to the screen
-  function addCanvas(randomSortingInput, algorithm) {
+  function addCanvas(randomSortingInput, algorithm, view) {
     if (numberOfActiveCanvases == 0) {
       //canvasArray[baseCanvasIndex].show();
       numberOfActiveCanvases++;  
-      setAnimation(baseCanvasIndex, buckets.arrays.copy(randomSortingInput), algorithm);
+      setAnimation(baseCanvasIndex, buckets.arrays.copy(randomSortingInput), algorithm, view);
     }
     else if (numberOfActiveCanvases > 0 && numberOfActiveCanvases < 4){
       var indexOfNewCanvas = 0;
@@ -93,7 +107,7 @@ $(document).delegate('#sorting-animator','pageinit',function () {
       }
       canvasArray[indexOfNewCanvas].show();
       numberOfActiveCanvases++;  
-      setAnimation(indexOfNewCanvas, buckets.arrays.copy(randomSortingInput), algorithm);
+      setAnimation(indexOfNewCanvas, buckets.arrays.copy(randomSortingInput), algorithm, view);
     }   
     resizeDivs();
   }
@@ -125,25 +139,27 @@ $(document).delegate('#sorting-animator','pageinit',function () {
   }
      
   // Initialise animation
-  function setAnimation(index, sortingInput, algorithm) {
-    var newDisplay = new BarGraph(canvasArray[index].getUsableCanvas());
+  function setAnimation(index, sortingInput, algorithm, view) {
+    var newDisplay;
+    if (view == "bar-graph") {
+      newDisplay = new BarGraph(canvasArray[index].getUsableCanvas());
+    }
+    else {
+      newDisplay = null;
+    }
     canvasArray[index].setAnimation(newDisplay, sortingInput, algorithm);
   }
   
   // Resize all elements, unless width is too small
   function resizeDivs() {
-    if (width > 500 && height > 500) {       
+    //if (width > 500 && height > 500) {       
       // Update canvas size
       updateCanvasArray();
       
       // Update size of other elements
-      $('.mode').css('height', (0.06 * height)-1);
-      $('.mode').css('line-height', '120%');
-      $('#sorting-select-button').css('height', (0.06 * height)-1);
-      $('#sorting-select-button').css('line-height', '140%');
-      $('#sorting-main-menu').css('line-height', '140%');
-      $('#sorting-button-box').height(0.22 * height - 10);
-      $('.bottom-left').css('width', 0.7 * width);
+      $('#header').css('height', (0.06 * height)-1);
+      $('#menu-button').css('height', ($('#header').height() - 2));
+      $('#sorting-button-box').height(0.22 * height - 10);      
       $('#sorting-animation-control-buttons').height(0.18 * height);
       $('#sorting-animation-control-buttons').width(0.3 * width);
       $('#sorting-animation-control-buttons').css("margin-left", (0.7 * width) + 'px');
@@ -156,7 +172,7 @@ $(document).delegate('#sorting-animator','pageinit',function () {
       $('.ownslider + div.ui-slider').css("margin", '0px');
       $('.ownslider + div.ui-slider').css("width", $('#sorting-slider-container').width()-2);
       $('.ownslider + div.ui-slider').css("height", 0.45 * ($('#sorting-slider-container').height()-2));      
-    }
+    //}
   }    
   
   function updateCanvasArray() {
@@ -190,7 +206,7 @@ $(document).delegate('#sorting-animator','pageinit',function () {
         break;
       case 2:
         var activeCanvases = 0;
-        for (var i = 0; i < canvasArray.length; i++) {
+        for (i = 0; i < canvasArray.length; i++) {
           if (canvasArray[i].isActive()) {
             activeCanvases++;
           }

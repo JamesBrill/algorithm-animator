@@ -3,11 +3,14 @@
   <head>
     <meta charset="utf-8">
     <title>Graph-O-Matic</title>
-    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.min.css" />
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css" />
+    <!--<link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.min.css" />-->
     <link rel="stylesheet" href="styles/external/jquery.qtip.min.css" />
     <link rel="stylesheet" href="styles/animatorstyle.css" />
-    <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.2.js"></script>
-    <script type="text/javascript" src="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.js"></script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.8.0.js"></script>
+    <!--<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.2.js"></script>-->
+    <script type="text/javascript" src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.js"></script>
+    <!--<script type="text/javascript" src="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.js"></script>-->
     <script type="text/javascript" src="scripts/external/buckets.js"></script>
     <script type="text/javascript" charset="utf-8" src="scripts/tooltip-control.js"></script>
     <script type="text/javascript" charset="utf-8" src="scripts/graph-animator-control.js"></script>
@@ -47,7 +50,7 @@
       <div style="padding: 0;" data-role="content">  
         <div data-role="header"> 
           <div>  
-            <div data-role="fieldcontain" class="mode" id="graph-select-container" 
+           <!--<div data-role="fieldcontain" class="mode" id="graph-select-container" 
                  style="margin-top:0px; margin-bottom:0px; margin-left: 15px;margin-right: 15px; float:left;">
               <select id="graph-select" data-native-menu="false" data-theme="c">
                 <optgroup label="Choose a graph algorithm">
@@ -58,7 +61,7 @@
             </div>
             
             <a href="#home" class="mode main-menu" id="graph-main-menu" data-icon="home" data-transition="slide" data-direction="reverse" data-role="button" data-theme="c" 
-               style="margin-top:-2px;margin-left: 15px;margin-right: 15px; float: right;">Main Menu</a>
+               style="margin-top:-2px;margin-left: 15px;margin-right: 15px; float: right;">Main Menu</a>-->
                
             <div data-role="navbar" class="mode ui-navbar ui-navbar-noicons" 
                  style="text-align: center;margin-right: auto;margin-left: auto;" role="navigation">
@@ -118,9 +121,9 @@
     
     
     
-    <div style="padding: 0;" id="sorting-animator" data-role="page" data-theme="c" data-content-theme="c">       
+    <div id="sorting-animator" data-role="page" data-theme="c" data-content-theme="c">       
       <div style="padding: 0;" data-role="content">  
-        <div data-role="header"> 
+        <!--<div data-role="header"> 
           <div>  
             <div data-role="fieldcontain" class="mode" id="sorting-select-container" 
                  style="margin-top:0px; margin-bottom:0px; margin-left: 15px;margin-right: 15px; float:left;">
@@ -139,8 +142,52 @@
                  style="text-align: center;margin-right: auto;margin-left: auto;" role="navigation">
             </div>
           </div>
-        </div>
+        </div>-->
         
+        <!--<div id="header" class="ui-tooltip-youtube"> 
+            <div data-role="fieldcontain" class="mode" id="sorting-select-container" 
+                 style="width : 500px; margin-top:0px; margin-bottom:0px; margin-left: 15px;margin-right: 15px; float:left;">
+              <select id="sorting-select" data-native-menu="false" data-theme="c">
+                <optgroup label="Choose a sorting algorithm">
+                  <option value="bubble">Bubble Sort</option>
+                  <option value="otherAlgorithm">Another Algorithm</option>
+                </optgroup>
+              </select>
+            </div>          
+        </div>-->
+        
+        <div id="header" class="ui-tooltip-youtube">  
+          <a id="menu-button" data-transition="pop" href="#simplepopup" data-role="button"
+             style="margin:0; padding:0;">Create Algorithm View</a>
+          <div data-role="popup" id="menu-popup"> 
+            <div data-role="collapsible-set" data-theme="b" data-content-theme="c" 
+                 data-collapsed-icon="arrow-r" data-expanded-icon="arrow-d" style="margin:0; width:250px;">
+              <div data-role="collapsible" data-inset="false" id="choose-algorithm">
+                <h2>Algorithm</h2>
+                <div data-role="fieldcontain">
+                  <fieldset data-role="controlgroup">
+                    <input type="radio" name="algo-radio" id="bubble" value="bubble" checked="checked"/>
+                    <label for="bubble">Bubble Sort</label>
+                    <input type="radio" name="algo-radio" id="selection" value="selection"/>
+                    <label for="selection">Selection Sort</label>
+                    <input type="radio" name="algo-radio" id="insertion" value="insertion"/>
+                    <label for="insertion">Insertion Sort</label>
+                  </fieldset>
+                </div>
+              </div>
+              <div data-role="collapsible" data-inset="false" id="choose-view">
+                <h2>View</h2>
+                <div data-role="fieldcontain">
+                  <fieldset data-role="controlgroup">
+                    <input type="radio" name="view-radio" id="bar-graph" value="bar-graph" checked="checked"/>
+                    <label for="bar-graph">Bar Graph</label>
+                  </fieldset>
+                </div>
+              </div>
+              <button type="submit" id="create-algorithm-view" data-theme="b">Create Algorithm View</button>
+            </div>
+          </div>
+        </div>
         <canvas id="sorting-canvas1" style="border-style:solid; border-width:2px; display: block;"></canvas>  
         <canvas id="sorting-canvas2" style="border-style:solid; border-width:2px; display: block;"></canvas>  
         <canvas id="sorting-canvas3" style="border-style:solid; border-width:2px; display: block;"></canvas>  
@@ -167,6 +214,7 @@
             </div>
           </div>
         </div> 
+        
       </div>
     </div> 
     
