@@ -13,7 +13,7 @@ $(document).delegate('#graph-animator','pageinit',function () {
   var startY = 0; // Starting Y coordinate of a drag
   var isMouseDown = false; // Is the left mouse button held down?
   var nodeJustBeenPlaced = false; // Has a node just been placed?
-  var graphMode = "build"; // The editing mode for the graph editor (build/modify/run)
+  var graphMode = "build"; // The editing mode for the graph editor (build/run)
   var nodeNumber = 1; // Current node number
   var animationController = new AnimationController(); // Object that controls animation
   var width = $(window).width(); // Width of window
@@ -118,8 +118,8 @@ $(document).delegate('#graph-animator','pageinit',function () {
   
   // Virtual mouse-move event handler
   $('#graph-canvas').bind('vmousemove', function (ev) {
-    // If in Build Mode or Modify Mode...
-    if (graphMode == "build" || graphMode == "modify" || (graphMode == "run" && !animationController.isReady())) {
+    // If in Build Mode...
+    if (graphMode == "build" || (graphMode == "run" && !animationController.isReady())) {
       // Get the mouse position relative to the canvas element
       if (ev.pageX == undefined || ev.pageY == undefined) {
         cursorX = pageX - this.offsetLeft - 2; // Accommodates border of 2px
@@ -138,15 +138,6 @@ $(document).delegate('#graph-animator','pageinit',function () {
     // If in Build Mode...
     if (graphMode == "build") {
       // Get the node that the cursor is currently on, if there is one
-      containingItem = getNearbyNode(cursorX, cursorY, false, 1);
-
-      // Update the current item that the cursor is on
-      updateCurrentItem(containingItem);
-    }
-
-    // If in Build Mode
-    if (graphMode == "modify") {
-      // Get the node or edge that the cursor is currently on, if there is one
       containingItem = determineSelectedItem();
 
       // Update the current item that the cursor is on
@@ -177,17 +168,16 @@ $('#graph-canvas').bind('vmousedown', function (ev) {
 
     // If in Build Mode...
     if (graphMode == "build") {
-      // Attempt to place a node. If a new node cannot be placed, the user may 
-      // have intended to have been trying to place a new edge; try this instead.
-      if (!placeNode()) { 
-        placeEdge();
-      }  
-    }
-
-    // If in Build Mode or Modify Mode...
-    if (graphMode == "build" || graphMode == "modify") {
+      if (!(currentItem != null && currentItem.isHighlighted() && currentItem instanceof Edge)) {
+        // Attempt to place a node. If a new node cannot be placed, the user may 
+        // have intended to have been trying to place a new edge; try this instead.
+        if (!placeNode()) { 
+          placeEdge();
+        }  
+      }
+      
       // Attempt to initiate a dragging action
-      initiateDrag();    
+      initiateDrag(); 
     }
 
     // If in Run Mode and starting node hasn't been selected yet...
@@ -226,30 +216,17 @@ $('#graph-canvas').bind('vmouseup', function () {
       if (nodeJustBeenPlaced) {
         nodeJustBeenPlaced = false;
       }
-    }
+      
+      // Update the mod buttons accordingly
+      updateModificationButtons();
 
-    // If in Modify Mode...
-    if (graphMode == "modify") {
-      // If the user has not performed a drag...
-      if (cursorX == startX && cursorY == startY) {
-        // Record any changes to the selected item
-        updateSelectedItem();
-
-        // Update the mod buttons accordingly
-        updateModificationButtons();
-      }     
-    }
-
-    // If in Build Mode or Modify Mode...
-    if (graphMode == "build" || graphMode == "modify") {
       // Record that the mouse button is no longer being held down
       isMouseDown = false;
     }
-  });  
-  
+  });    
 
   // Event listener for when graph animator page is shown
-  $('#graph-animator').live('pageshow', function () {
+  $('#graph-animator').on('pageshow', function () {
     drawTimer = setInterval(function () { draw() }, 25);
     if (animationController.isReady()) {
       if (animationController.isPaused()) {
@@ -262,7 +239,7 @@ $('#graph-canvas').bind('vmouseup', function () {
   });
 
   // Event listener for when graph animator page is hidden
-  $('#graph-animator').live('pagehide', function () {
+  $('#graph-animator').on('pagehide', function () {
     clearInterval(drawTimer);
     if (animationController.isReady()) {
       animationController.stop();
@@ -346,12 +323,7 @@ $('#graph-canvas').bind('vmouseup', function () {
   $('#build').click(function() {
     changeMode('build');
   })
-  
-  // Change mode to Modify when the "Modify" button is clicked
-  $('#modify').click(function() {
-    changeMode('modify');
-  })
-  
+    
   // Change mode to Run when the "Run" button is clicked
   $('#run').click(function() {
     if (graphMode != 'run') {
@@ -608,7 +580,7 @@ $('#graph-canvas').bind('vmouseup', function () {
     var edgePotentials = new Array();
     
     // For each edge...
-    for (var i = 0; i < edges.length; i++) {
+    for (var i = 0; i < edges.length; i++) {      
       // Coordinates of the edge's start and end points
       var startX = edges[i].getFromNode().getX();
       var startY = edges[i].getFromNode().getY();
@@ -650,7 +622,7 @@ $('#graph-canvas').bind('vmouseup', function () {
     }
   }
   
-  // Deletes edges incident to the selected node in Modify Mode
+  // Deletes edges incident to the selected node 
   function deleteIncidentEdges() {
     // Initialise an array of edges to be deleted
     var deletedEdges = new Array();
@@ -740,7 +712,8 @@ $('#graph-canvas').bind('vmouseup', function () {
   // Returns true if edge can be placed between the selected and current nodes
   function edgeCanBePlaced() {
     // If user has not clicked a node different to the selected node, return false
-    if (selectedItem == null || currentItem == null || currentItem == selectedItem) {
+    if (selectedItem == null || currentItem == null || currentItem == selectedItem ||
+        currentItem instanceof Edge || selectedItem instanceof Edge) {
       return false;
     }
     
@@ -876,12 +849,14 @@ $('#graph-canvas').bind('vmouseup', function () {
   // Draws a 'ghost' edge that could potentially be placed if the mouse was clicked
   function drawPotentialEdge() {
     // If user has clicked a node different to the selected node, draw the potential edge
-    if (selectedItem != null && currentItem != null && currentItem != selectedItem) {
+    if (selectedItem != null && currentItem != null && currentItem != selectedItem &&
+        selectedItem instanceof Node && currentItem instanceof Node && 
+        edgeCanBePlaced()) {
       var potentialEdge = new Edge(currentItem,selectedItem); 
       potentialEdge.setWeight(0);
       drawEdge(potentialEdge);
     }
-  }
+  }  
   
   // Draw edge with given endpoints on to the canvas
   function drawEdge(edge) {

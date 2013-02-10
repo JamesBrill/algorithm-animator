@@ -3,13 +3,13 @@
   <head>
     <meta charset="utf-8">
     <title>Graph-O-Matic</title>
-    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css" />
+    <link rel="stylesheet" href="jquery-mobile/jquery.mobile-1.2.0.css" />
     <!--<link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.min.css" />-->
     <link rel="stylesheet" href="styles/external/jquery.qtip.min.css" />
     <link rel="stylesheet" href="styles/animatorstyle.css" />
-    <script type="text/javascript" src="http://code.jquery.com/jquery-1.8.0.js"></script>
+    <script type="text/javascript" src="scripts/external/jquery-1.8.0.js"></script>
     <!--<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.2.js"></script>-->
-    <script type="text/javascript" src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.js"></script>
+    <script type="text/javascript" src="jquery-mobile/jquery.mobile-1.2.0.js"></script>
     <!--<script type="text/javascript" src="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.js"></script>-->
     <script type="text/javascript" src="scripts/external/buckets.js"></script>
     <script type="text/javascript" charset="utf-8" src="scripts/tooltip-control.js"></script>
@@ -41,7 +41,7 @@
         <img id="banner" src="images/banner1.png" style="display: block; margin-left: auto; margin-right: auto;"/>
       </div><a class="mode" data-role="button" id="graph" data-transition="slide" href="#graph-animator">Graph Algorithms</a>
             <a class="mode" data-role="button" id="sort" data-transition="slide" href="#sorting-animator">Sorting Algorithms</a>
-            <a class="mode" data-role="button" id="about" data-transition="slide" href="#">About Graph-O-Matic</a>
+            <a class="mode" data-role="button" id="about" data-transition="slide" href="#about-page">About Graph-O-Matic</a>
     </div>
     
     
@@ -49,6 +49,12 @@
     <div style="padding: 0;" id="graph-animator" data-role="page" data-theme="c" data-content-theme="c">       
       <div style="padding: 0;" data-role="content">  
         <div data-role="header"> 
+                    <div data-role="popup" id="graph-menu-popup"> 
+            <div data-role="collapsible-set" data-theme="b" data-content-theme="c" 
+                 data-collapsed-icon="arrow-r" data-expanded-icon="arrow-d" style="margin:0; width:250px;">
+              <button type="submit" id="delete-node" data-theme="b">Delete Node</button>
+            </div>
+          </div>
           <div>  
            <!--<div data-role="fieldcontain" class="mode" id="graph-select-container" 
                  style="margin-top:0px; margin-bottom:0px; margin-left: 15px;margin-right: 15px; float:left;">
@@ -67,7 +73,6 @@
                  style="text-align: center;margin-right: auto;margin-left: auto;" role="navigation">
               <ul class="ui-grid-a">
                 <li class="ui-block-c"><a href="#" class="mode ui-btn-active" id="build" data-theme="c">Build</a></li>
-                <li class="ui-block-c"><a href="#" class="mode" id="modify" data-theme="c">Modify</a></li>
                 <li class="ui-block-c"><a href="#" class="mode" id="run" data-theme="c">Run</a></li>
               </ul>
             </div>
@@ -157,7 +162,7 @@
         </div>-->
         
         <div id="header" class="ui-tooltip-youtube">  
-          <a id="menu-button" data-transition="pop" href="#simplepopup" data-role="button"
+          <a id="menu-button" data-transition="pop" data-theme="b" href="#simplepopup" data-role="button"
              style="margin:0; padding:0;">Create Algorithm View</a>
           <div data-role="popup" id="menu-popup"> 
             <div data-role="collapsible-set" data-theme="b" data-content-theme="c" 
@@ -194,7 +199,10 @@
         <canvas id="sorting-canvas4" style="border-style:solid; border-width:2px; display: block;"></canvas> 
         
         
-        <div id="sorting-button-box" style="border-style:solid; border-width:5px;">          
+        <div id="sorting-button-box" style="border-style:solid; border-width:5px;">  
+             <!-- <a href="#home" class="mode main-menu" id="sorting-main-menu" data-icon="home" data-transition="slide" 
+                 data-direction="reverse" data-role="button" data-theme="b" 
+                 style="margin-top:5px;margin-left: 15px;margin-right: 15px; float: left;">Main Menu</a>-->
           <div class="hide-at-init" id="sorting-animation-control-buttons">
             <button class="control" id="sorting-play" data-role="none" title="Play"><img class="dynamic-img" src='images/play.png'/></button>
             <button class="control" id="sorting-pause"  data-role="none" title="Pause"><img class="dynamic-img" id="sorting-pause-button" src='images/pause.png'/></button>
@@ -218,5 +226,8 @@
       </div>
     </div> 
     
+    
+    <div id="about-page" data-role="page" data-theme="c" data-content-theme="c">  
+    </div>
   </body>
 </html>

@@ -9,7 +9,7 @@ $(document).delegate('#sorting-animator','pageinit',function () {
 
   // Begin running the sorting animator
   init(); 
-
+  
   // Initialization sequence
   function init () {
     for (var i = 1; i < 4; i++) {
@@ -158,7 +158,9 @@ $(document).delegate('#sorting-animator','pageinit',function () {
       
       // Update size of other elements
       $('#header').css('height', (0.06 * height)-1);
-      $('#menu-button').css('height', ($('#header').height() - 2));
+      var menuButtonHeight = ($('#header').height() - 2);
+      $('#menu-button').css('height', menuButtonHeight);      
+      $('#menu-button').css('line-height', (0.4 * menuButtonHeight) + 'px');
       $('#sorting-button-box').height(0.22 * height - 10);      
       $('#sorting-animation-control-buttons').height(0.18 * height);
       $('#sorting-animation-control-buttons').width(0.3 * width);
@@ -295,8 +297,10 @@ $(document).delegate('#sorting-animator','pageinit',function () {
   
   function pauseAll() {
     for (var i = 0; i < canvasArray.length; i++) {
-      var animationController = canvasArray[i].getAnimationController();
-      animationController.pause();
+      if (canvasArray[i].isActive()) {
+        var animationController = canvasArray[i].getAnimationController();
+        animationController.pause();
+      }
     }
   }
   
@@ -306,14 +310,7 @@ $(document).delegate('#sorting-animator','pageinit',function () {
       animationController.play();
     }
   }
-  
-  function stopAll() {
-    for (var i = 0; i < canvasArray.length; i++) {
-      var animationController = canvasArray[i].getAnimationController();
-      animationController.play();
-    }
-  }
-  
+    
   function resetAll() {
     for (var i = 0; i < canvasArray.length; i++) {
       canvasArray[i].eraseAnimation();
@@ -364,24 +361,25 @@ $(document).delegate('#sorting-animator','pageinit',function () {
   }
 
   // Event listener for when sorting animator page is shown
-  $('#sorting-animator').live('pageshow', function () {
+  $('#sorting-animator').on('pageshow', function () {
     drawTimer = setInterval(function () {draw()}, 25);
-    var animationController = canvasArray[0].getAnimationController();
-    // What was the animation state when this page was last hidden?
-    if (animationController.isPaused()) {
-      pauseAll();
-    }
-    else {
-      playAll();
+    if (canvasArray[0].isActive()) {
+      var animationController = canvasArray[0].getAnimationController();
+      // What was the animation state when this page was last hidden?
+      if (animationController.isPaused()) {
+        pauseAll();
+      }
+      else {
+        playAll();
+      }
     }
   });
 
   // Event listener for when sorting animator page is hidden
-  $('#sorting-animator').live('pagehide', function () {
+  $('#sorting-animator').on('pagehide', function () {
     clearInterval(drawTimer);
-    var animationController = canvasArray[0].getAnimationController();
-    if (animationController.isReady()) {
-      stopAll();
+    if (canvasArray[0].isActive()) {
+      pauseAll();
     }
   }); 
   
