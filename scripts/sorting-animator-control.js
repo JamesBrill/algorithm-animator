@@ -12,6 +12,11 @@ $(document).delegate('#sorting-animator','pageinit',function () {
   
   // Initialization sequence
   function init () {
+    // Disables scrollbars. Prevents jQuery Mobile popups from mysteriously
+    // breaking layout, apparently by adding a scrollbar and not affecting the
+    // size of any elements. Why this happened is still a mystery.
+    $("body").css("overflow", "hidden");
+    
     for (var i = 1; i < 4; i++) {
       $('#sorting-canvas' + (i+1)).hide();
     }
@@ -41,27 +46,33 @@ $(document).delegate('#sorting-animator','pageinit',function () {
     drawTimer = setInterval(function() {draw()}, 25);
   }
   
-  // I have no idea why this solves the layout problem caused by the popup
-  $("#menu-button").click(function () {
-    $('#sorting-button-box').hide();
-    $('#choose-algorithm').trigger('collapse');
-    $('#choose-view').trigger('collapse');
-    $('#menu-popup').popup('open', { positionTo: "window" });    
-    
-    setTimeout(function() { $('#sorting-button-box').show(); }, 0);
+  $("#menu-button").click(function () {    
+    collapsePopupCollapsibles();    
+    $('#menu-popup').popup('open');
   });
-  
+    
   $('#create-algorithm-view').click(function() {
     var chosenAlgorithm = $('input:radio[name=algo-radio]:checked').val();
     var chosenView = $('input:radio[name=view-radio]:checked').val();
+    var dataOrder = $('input:radio[name=order]:checked').val();
+    var dataMode = $('input:radio[name=set-data]:checked').val();
+    var sortingInput;
     
-    $('#choose-algorithm').trigger('collapse');
-    $('#choose-view').trigger('collapse');
+    if (dataMode == 'random') {
+      var randomDataSize = $('#random-data-size').val();
+      sortingInput = SortingInputGenerator.generateRandomSortingInput(randomDataSize, 100, dataOrder);
+    }
+    else {
+      var inputData = $('#custom-data-content').val();
+      sortingInput = SortingInputGenerator.parseInputList(inputData, dataOrder);
+    }
     
-    var randomSortingInput = SortingInputGenerator.generateRandomSortingInput(15, 100);
-    addCanvas(randomSortingInput, chosenAlgorithm, chosenView);
+    collapsePopupCollapsibles();
+    
+    addCanvas(sortingInput, chosenAlgorithm, chosenView);
     
     $('#menu-popup').popup('close');
+    $('#main-menu-popup').popup('close');
   });
     
   // When the window is resized, resize all elements
@@ -71,6 +82,16 @@ $(document).delegate('#sorting-animator','pageinit',function () {
     height = $(window).height();
     resizeDivs();
   });
+  
+  function collapsePopupCollapsibles() {
+    $('#choose-algorithm').trigger('collapse');
+    $('#choose-view').trigger('collapse');
+    $('#choose-data').trigger('collapse');
+    $('#choose-random-data').trigger('collapse');
+    $('#choose-custom-data').trigger('collapse');
+    $('#choose-data-order').trigger('collapse');
+    $('#set-data').trigger('collapse');
+  }
   
   function initialiseClickListeners() {
     for (var i = 0; i < canvasArray.length; i++) {

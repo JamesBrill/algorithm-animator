@@ -6505,12 +6505,11 @@ $( document ).bind( "pagecreate create", function( e ) {
 
 		_handleWindowResize: function( e ) {
 			if ( this._isOpen ) {
-				this._maybeRefreshTimeout();
+				//this._maybeRefreshTimeout();
 			}
 		},
 
 		_handleWindowOrientationchange: function( e ) {
-
 			if ( !this._orientationchangeInProgress ) {
 				// effectively rapid-close the popup while leaving the screen intact
 				this._ui.container

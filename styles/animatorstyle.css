@@ -60,3 +60,11 @@
 	width: 100%;
 }
 
+#menu-popup-popup {
+  top: 0 !important; 
+}
+
+/* Solves scrollbar problem, but allows scrollbar when popup hits bottom of page 
+.ui-popup-screen {
+  border: 0;
+}*/

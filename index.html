@@ -161,15 +161,19 @@
             </div>          
         </div>-->
         
+        <!-- Dummy div used to position popup menu -->
+        <div id="menu-position" style="width: 250px;"></div>
+        
         <div id="header" class="ui-tooltip-youtube">  
-          <a id="menu-button" data-transition="pop" data-theme="b" href="#simplepopup" data-role="button"
+          <a id="menu-button" data-theme="b" data-role="button"
              style="margin:0; padding:0;">Create Algorithm View</a>
-          <div data-role="popup" id="menu-popup"> 
+          <div data-role="popup" data-position-to="#menu-position" data-transition="slidedown" id="menu-popup" 
+               data-overlay-theme="a" data-tolerance="0,0"> 
             <div data-role="collapsible-set" data-theme="b" data-content-theme="c" 
                  data-collapsed-icon="arrow-r" data-expanded-icon="arrow-d" style="margin:0; width:250px;">
               <div data-role="collapsible" data-inset="false" id="choose-algorithm">
                 <h2>Algorithm</h2>
-                <div data-role="fieldcontain">
+                <div data-role="fieldcontain" style="margin:-10px;">
                   <fieldset data-role="controlgroup">
                     <input type="radio" name="algo-radio" id="bubble" value="bubble" checked="checked"/>
                     <label for="bubble">Bubble Sort</label>
@@ -182,28 +186,75 @@
               </div>
               <div data-role="collapsible" data-inset="false" id="choose-view">
                 <h2>View</h2>
-                <div data-role="fieldcontain">
+                <div data-role="fieldcontain" style="margin:-10px;">
                   <fieldset data-role="controlgroup">
                     <input type="radio" name="view-radio" id="bar-graph" value="bar-graph" checked="checked"/>
                     <label for="bar-graph">Bar Graph</label>
                   </fieldset>
                 </div>
               </div>
+              <div data-role="collapsible" data-inset="false" id="choose-data">
+                <h2>Data</h2>
+                <div data-role="collapsible-set" data-theme="a" data-content-theme="c" 
+                   data-collapsed-icon="arrow-r" data-expanded-icon="arrow-d" style="margin:-10px;">
+                  <div data-role="collapsible" data-inset="false" id="choose-random-data">    
+                    <h2>Random Data</h2>
+                    <label for="random-data-size" class="">Size</label>
+                    <input type="js" name="random-data-size" id="random-data-size"/>
+                  </div>
+                  <div data-role="collapsible" data-inset="false" id="choose-custom-data">    
+                    <h2>Custom Data</h2>
+                    <label for="custom-data-content" class="">Input</label>
+                    <input type="js" name="custom-data-content" id="custom-data-content" placeholder="Separate by whitespace"/>
+                  </div>
+                  <div data-role="collapsible" data-inset="false" id="choose-data-order">    
+                    <h2>Order</h2>
+                    <div data-role="fieldcontain" style="margin:-10px;">
+                      <fieldset data-role="controlgroup">
+                        <input type="radio" name="order" id="unchanged-order" value="unchanged" checked="checked"/>
+                        <label for="unchanged-order">Unchanged</label>
+                        <input type="radio" name="order" id="random-order" value="random"/>
+                        <label for="random-order">Random</label>   
+                        <input type="radio" name="order" id="in-order" value="in-order"/>
+                        <label for="in-order">In-Order</label>
+                        <input type="radio" name="order" id="reverse-order" value="reverse"/>
+                        <label for="reverse-order">Reverse</label>
+                      </fieldset>
+                    </div>
+                  </div>
+                  <div data-role="collapsible" data-inset="false" id="set-data">    
+                    <h2>Data Mode</h2>
+                    <div data-role="fieldcontain" style="margin:-10px;">
+                      <fieldset data-role="controlgroup">
+                        <input type="radio" name="set-data" id="use-random" value="random" checked="checked"/>
+                        <label for="use-random">Random</label>
+                        <input type="radio" name="set-data" id="use-custom" value="custom"/>
+                        <label for="use-custom">Custom</label>
+                      </fieldset>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <button type="submit" id="create-algorithm-view" data-theme="b">Create Algorithm View</button>
             </div>
           </div>
         </div>
-        <canvas id="sorting-canvas1" style="border-style:solid; border-width:2px; display: block;"></canvas>  
-        <canvas id="sorting-canvas2" style="border-style:solid; border-width:2px; display: block;"></canvas>  
-        <canvas id="sorting-canvas3" style="border-style:solid; border-width:2px; display: block;"></canvas>  
-        <canvas id="sorting-canvas4" style="border-style:solid; border-width:2px; display: block;"></canvas> 
+        
+        <div>
+          <canvas id="sorting-canvas1" style="border-style:solid; border-width:2px; display: block;"></canvas>  
+          <canvas id="sorting-canvas2" style="border-style:solid; border-width:2px; display: block;"></canvas>  
+          <canvas id="sorting-canvas3" style="border-style:solid; border-width:2px; display: block;"></canvas>  
+          <canvas id="sorting-canvas4" style="border-style:solid; border-width:2px; display: block;"></canvas> 
+        </div>
         
         
         <div id="sorting-button-box" style="border-style:solid; border-width:5px;">  
              <!-- <a href="#home" class="mode main-menu" id="sorting-main-menu" data-icon="home" data-transition="slide" 
                  data-direction="reverse" data-role="button" data-theme="b" 
                  style="margin-top:5px;margin-left: 15px;margin-right: 15px; float: left;">Main Menu</a>-->
-          <div class="hide-at-init" id="sorting-animation-control-buttons">
+             
+          <!-- CONTROL BUTTONS NO LONGER HIDDEN AT INIT TO PREVENT GRAPH ANIMATOR FROM HIDING THEM -->  
+          <div id="sorting-animation-control-buttons">
             <button class="control" id="sorting-play" data-role="none" title="Play"><img class="dynamic-img" src='images/play.png'/></button>
             <button class="control" id="sorting-pause"  data-role="none" title="Pause"><img class="dynamic-img" id="sorting-pause-button" src='images/pause.png'/></button>
             <button class="control" id="sorting-prev"  data-role="none" title="Previous Step"><img class="dynamic-img" src='images/prev.png'/></button>   
