@@ -14,6 +14,10 @@ Canvas.prototype.setAnimation = function(display, input, algorithm) {
   this.active = true;
 }
 
+Canvas.prototype.makeTrainingCanvas = function() {
+  this.animationController.makeTrainer();
+}
+
 Canvas.prototype.getAnimationController = function() {
   return this.animationController;
 }

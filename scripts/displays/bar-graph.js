@@ -21,6 +21,8 @@ BarGraph = function(canvas) {
   this.comparedBars = new Array(); // Bars that are being compared
   this.barWidth = 0; // Width of each bar
   this.barSwapper = null; // Object used for coordinating bar swaps
+  this.deleteIconHidden = false; // Should delete icon be hidden?
+  this.userSelectedBarIndexes = new Array(); // Indexes of bars user has clicked on 
 }
 
 // Get the algorithm's input numbers in bar form
@@ -40,9 +42,9 @@ BarGraph.prototype.setAnimationController = function(animationController) {
   this.animationController = animationController;
 }
 
-// Set play mode
-BarGraph.prototype.setPlayMode = function(isPlaying) {  
-  this.playMode = isPlaying;
+// Prevent delete icon from being drawn
+BarGraph.prototype.hideDeleteIcon = function() {
+  this.deleteIconHidden = true;
 }
 
 // Is overall animation being played automatically?
@@ -55,11 +57,6 @@ BarGraph.prototype.isAnimating = function() {
   return this.animating;
 }
 
-// Set skip mode
-BarGraph.prototype.setSkipMode = function(skipMode) {
-  this.skipMode = skipMode;
-}
-
 // Set reverse mode to "reverse"
 BarGraph.prototype.setReverse = function() {
   this.lastDirection = "reverse";
@@ -67,38 +64,71 @@ BarGraph.prototype.setReverse = function() {
 
 // Animate current step and then move to next step
 BarGraph.prototype.nextStep = function() { 
-  // Ensure skipMode is turned off and that singleStepMode is on so that 
-  // only one animated step of the algorithm is performed
-  this.skipMode = false;
-  this.singleStepMode = true;
-  // Compensate for changes in direction
-  this.turnForwards();
-  // Animate current step instantly in a forward direction
-  this.animateStep(this.animationController.currentInstruction(), "instant", "not reverse");
+  this.skipMode = true;
+  this.animationController.calibrateInstructionIndex();
+  
+  // Wait for current animation to be skipped 
+  setTimeout(function() {
+    // Ensure skipMode is turned off and that singleStepMode is on so that 
+    // only one animated step of the algorithm is performed
+    this.skipMode = false;
+    this.singleStepMode = true;
+    // Compensate for changes in direction
+    this.turnForwards();
+    // Animate current step instantly in a forward direction
+    this.animateStep(this.animationController.currentInstruction(), "instant", "not reverse");
+  }.bind(this), 40);
 }
+
 
 // Animate current step and then move to previous step
 BarGraph.prototype.prevStep = function() {
-  // Ensure skipMode is turned off and that singleStepMode is on so that 
-  // only one animated step of the algorithm is performed
-  this.skipMode = false;
-  this.singleStepMode = true;
-  // Compensate for changes in direction
-  this.turnBackwards();  
-  // Animate current step instantly in a backward direction
-  this.animateStep(this.animationController.currentInstruction(), "instant", "reverse");
+    this.skipMode = true;
+    // Ensure current instruction is not null
+    this.animationController.calibrateInstructionIndex();
+    
+    // Reverse animation direction if on the last instruction
+    if (this.animationController.isLastInstruction()) {
+      this.setReverse();
+    }
+    
+    // Wait for current animation to be skipped 
+    setTimeout(function() {  
+      // Ensure skipMode is turned off and that singleStepMode is on so that 
+      // only one animated step of the algorithm is performed
+      this.skipMode = false;
+      this.singleStepMode = true;
+      // Compensate for changes in direction
+      this.turnBackwards();  
+      // Animate current step instantly in a backward direction
+      this.animateStep(this.animationController.currentInstruction(), "instant", "reverse");
+    }.bind(this), 40);
 }
 
 // Go to beginning of animation, where all inputs are unsorted
-BarGraph.prototype.goToBeginning = function() {
-  this.turnBackwards();
-  this.animateStep(this.animationController.currentInstruction(), "instant", "reverse");
+BarGraph.prototype.goToBeginning = function() { 
+    this.skipMode = true;
+    // Ensure current instruction is not null
+    this.animationController.calibrateInstructionIndex(); 
+    
+    // Wait for current animation to be skipped 
+    setTimeout(function() {
+      this.turnBackwards();
+      this.animateStep(this.animationController.currentInstruction(), "instant", "reverse");
+    }.bind(this), 40);
 }
 
 // Go to end of animation, where all inputs are sorted
 BarGraph.prototype.goToEnd = function() {
-  this.turnForwards();
-  this.animateStep(this.animationController.currentInstruction(), "instant", "not reverse");
+    this.skipMode = true;
+    // Ensure current instruction is not null
+    this.animationController.calibrateInstructionIndex(); 
+    
+    // Wait for current animation to be skipped 
+    setTimeout(function() {
+      this.turnForwards();
+      this.animateStep(this.animationController.currentInstruction(), "instant", "not reverse");
+    }.bind(this), 40);
 }
 
 // Add a new input number in bar form to the display
@@ -112,6 +142,27 @@ BarGraph.prototype.addInputNumber = function(inputNumber) {
   
   // Resize bars
   this.resize();
+}
+
+// Play animation
+BarGraph.prototype.play = function() {
+  // Prepare display for playing
+  this.playMode = true;
+  this.skipMode = false;
+  this.turnForwards();
+  
+  // Begin animation unless animation has ended
+  if (!this.animationController.isEnded()) {
+    // Ensure current instruction is not null
+    this.animationController.calibrateInstructionIndex();
+    this.animateStep(this.animationController.currentInstruction(), "not instant", "not reverse");
+  }
+}
+
+// Pause animation
+BarGraph.prototype.pause = function() {
+  // Turn off play mode
+  this.playMode = false;
 }
 
 // If changing direction from backwards to forwards, make appropriate moves to compensate
@@ -142,7 +193,7 @@ BarGraph.prototype.animateStep = function(instruction, instantMode, reverseMode)
   // If no animations are currently in progress...
   if (!this.animating) {
     // An animation is not in progress if this step is to be animated instantly
-    this.animating = (instantMode == "instant") ? false : true;
+    this.animating = instantMode != "instant";
     var operation = instruction.split(" ");
     
     // If current step is a swap animation...
@@ -458,6 +509,38 @@ BarGraph.prototype.updateCanvasDimensions = function() {
   this.width = this.canvas.width;
 }
 
+// Is this point inside the delete icon area?
+BarGraph.prototype.isDeleteClick = function(cursorX, cursorY) {
+  if (cursorX >= 0.97 * this.width && cursorY <= 0.03 * this.width) {
+    return true;
+  }
+  return false;
+}
+
+// Handle any attempts by the user to click a bar
+BarGraph.prototype.registerClick = function(cursorX, cursorY) {
+  for (var i = 0; i < this.input.length; i++) {
+    var topX = this.input[i].getXCoordinate();
+    var topY = 0.85 * this.height - this.input[i].getSize();
+    
+    if (cursorX >= topX && cursorX <= (topX + this.barWidth) &&
+        cursorY >= topY && cursorY <= (topY + this.input[i].getSize())) {
+      if (buckets.arrays.contains(this.userSelectedBarIndexes, i)) {
+        buckets.arrays.remove(this.userSelectedBarIndexes, i);
+      }  
+      else {
+        if (this.userSelectedBarIndexes.length == 2) {
+          var secondIndex = this.userSelectedBarIndexes[1];
+          this.userSelectedBarIndexes = [secondIndex, i];
+        }  
+        else if (this.userSelectedBarIndexes.length < 2) {
+          this.userSelectedBarIndexes.push(i); 
+        }
+      }
+    }
+  }  
+}
+
 // Draw all bars and peripherals to canvas
 BarGraph.prototype.draw = function() {
   // Clear canvas
@@ -471,7 +554,7 @@ BarGraph.prototype.draw = function() {
   // Draw each bar
   for (var i = 0; i < this.input.length; i++) {
     if (this.input[i].getStatus() != "swapping") {
-      this.drawBar(this.input[i], i);
+      this.drawBar({bar: this.input[i], index: i});
     }
     else {
       movingBars.push({bar: this.input[i], index: i});
@@ -480,13 +563,15 @@ BarGraph.prototype.draw = function() {
   
   // Draw bars that are in process of moving last so that they are in focus
   for (i = 0; i < movingBars.length; i++) {
-    this.drawBar(movingBars[i].bar, movingBars[i].index);
+    this.drawBar(movingBars[i]);
   }
   
   this.drawTitle(); // Draw name of algorithm at top
   this.drawArrayBoxes(); // Draw boxes around input values
   this.drawIndexes(); // Draw index numbers
-  this.drawDeleteIcon(); // Draw delete icon
+  if (!this.deleteIconHidden) {
+    this.drawDeleteIcon(); // Draw delete icon
+  }
   this.showComparisons(); // Show any comparisons on display
   this.comparedBars = new Array(); // Reset compared bars
 }
@@ -508,13 +593,19 @@ BarGraph.prototype.drawTitle = function() {
 }
 
 // Draw a given bar
-BarGraph.prototype.drawBar = function(input) {
+BarGraph.prototype.drawBar = function(barIndexPair) {
+  var input = barIndexPair.bar;
+  var index = barIndexPair.index;
+  
   // Coordinates of the bar's top-left corner
   var topX = input.getXCoordinate();
   var topY = 0.85 * this.height - input.getSize();
   
   // Draw bar with appropriate colour
   this.context.fillStyle = (input.getStatus() == "sorted") ? "#228B22" : "#ADFF2F";
+  if (buckets.arrays.contains(this.userSelectedBarIndexes, index)) {
+    this.context.fillStyle = "red";
+  }
   this.context.fillRect(topX, topY, this.barWidth, input.getSize());
   
   // Draw bar outline if it is in process of being compared or is swapping
@@ -543,14 +634,6 @@ BarGraph.prototype.drawBar = function(input) {
   // Draw the input's value under the bar
   this.prepareText(0.08 * this.height, "top");
   this.context.fillText(input.getValue(), topX + 0.5 * this.barWidth, topY + input.getSize(), this.barWidth);
-}
-
-// Is this point inside the delete icon area?
-BarGraph.prototype.isDeleteClick = function(cursorX, cursorY) {
-  if (cursorX >= 0.97 * this.width && cursorY <= 0.03 * this.width) {
-    return true;
-  }
-  return false;
 }
 
 // Draw outline of bar - i.e. highlight it
@@ -649,4 +732,19 @@ BarGraph.prototype.prepareText = function(size, baseline) {
   this.context.font         = size + 'px sans-serif';
   this.context.textBaseline = baseline;
   this.context.textAlign    = 'center';  
+}
+
+// Has the user guessed the next step by selecting two bars?
+BarGraph.prototype.guessMade = function() {
+  return (this.userSelectedBarIndexes.length == 2);
+}
+
+// Return user's guess as a pair of indexes
+BarGraph.prototype.getGuessIndexes = function() {
+  return this.userSelectedBarIndexes;
+}
+
+// Clear any data about a user's guess
+BarGraph.prototype.clearGuessIndexes = function() {
+  this.userSelectedBarIndexes = new Array();
 }

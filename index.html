@@ -4,33 +4,33 @@
     <meta charset="utf-8">
     <title>Graph-O-Matic</title>
     <link rel="stylesheet" href="jquery-mobile/jquery.mobile-1.2.0.css" />
-    <!--<link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.min.css" />-->
     <link rel="stylesheet" href="styles/external/jquery.qtip.min.css" />
     <link rel="stylesheet" href="styles/animatorstyle.css" />
     <script type="text/javascript" src="scripts/external/jquery-1.8.0.js"></script>
-    <!--<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.2.js"></script>-->
     <script type="text/javascript" src="jquery-mobile/jquery.mobile-1.2.0.js"></script>
-    <!--<script type="text/javascript" src="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.js"></script>-->
     <script type="text/javascript" src="scripts/external/buckets.js"></script>
-    <script type="text/javascript" charset="utf-8" src="scripts/tooltip-control.js"></script>
-    <script type="text/javascript" charset="utf-8" src="scripts/graph-animator-control.js"></script>
-    <script type="text/javascript" charset="utf-8" src="scripts/sorting-animator-control.js"></script>
-    <script type="text/javascript" charset="utf-8" src="scripts/main-menu.js"></script>
-    <script type="text/javascript" src="scripts/node.js"></script>
-    <script type="text/javascript" src="scripts/edge.js"></script>
-    <script type="text/javascript" src="scripts/distance-calculator.js"></script>
-    <script type="text/javascript" charset="utf-8" src="scripts/dijkstra.js"></script>
-    <script type="text/javascript" charset="utf-8" src="scripts/bubble-sort.js"></script>
-    <script type="text/javascript" charset="utf-8" src="scripts/selection-sort.js"></script>
-    <script type="text/javascript" charset="utf-8" src="scripts/insertion-sort.js"></script>
-    <script type="text/javascript" charset="utf-8" src="scripts/animation-controller.js"></script>
-    <script type="text/javascript" charset="utf-8" src="scripts/smooth-animation-controller.js"></script>
-    <script type="text/javascript" charset="utf-8" src="scripts/sorting-input-generator.js"></script>    
-    <script type="text/javascript" charset="utf-8" src="scripts/feed-data.js"></script>
-    <script type="text/javascript" charset="utf-8" src="scripts/animator-factory.js"></script>
-    <script type="text/javascript" charset="utf-8" src="scripts/animation-data.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/util/tooltip-control.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/training-control.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/graph-animator/graph-animator-control.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/sorting-animator/sorting-animator-control.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/main-menu/main-menu.js"></script>
+    <script type="text/javascript" src="scripts/graph-animator/node.js"></script>
+    <script type="text/javascript" src="scripts/graph-animator/edge.js"></script>
+    <script type="text/javascript" src="scripts/util/distance-calculator.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/algorithms/dijkstra.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/algorithms/bubble-sort.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/algorithms/selection-sort.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/algorithms/insertion-sort.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/graph-animator/animation-controller.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/sorting-animator/smooth-animation-controller.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/sorting-animator/sorting-input-generator.js"></script>    
+    <script type="text/javascript" charset="utf-8" src="scripts/algorithms/feed-data.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/algorithms/animator-factory.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/graph-animator/graph-animation-data.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/sorting-animator/sorting-animation-data.js"></script>
     <script type="text/javascript" charset="utf-8" src="scripts/displays/bar-graph.js"></script>
-    <script type="text/javascript" charset="utf-8" src="scripts/displays/sorting-input.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/displays/pseudocode.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/sorting-animator/sorting-input.js"></script>
     <script type="text/javascript" charset="utf-8" src="scripts/displays/bar-swapper.js"></script>    
     <script type="text/javascript" charset="utf-8" src="scripts/displays/canvas.js"></script> 
     <script type="text/javascript" src="scripts/external/jquery.qtip.min.js"></script>
@@ -41,6 +41,7 @@
         <img id="banner" src="images/banner1.png" style="display: block; margin-left: auto; margin-right: auto;"/>
       </div><a class="mode" data-role="button" id="graph" data-transition="slide" href="#graph-animator">Graph Algorithms</a>
             <a class="mode" data-role="button" id="sort" data-transition="slide" href="#sorting-animator">Sorting Algorithms</a>
+            <a class="mode" data-role="button" id="train" data-transition="slide" href="#training">Training</a>
             <a class="mode" data-role="button" id="about" data-transition="slide" href="#about-page">About Graph-O-Matic</a>
     </div>
     
@@ -190,6 +191,8 @@
                   <fieldset data-role="controlgroup">
                     <input type="radio" name="view-radio" id="bar-graph" value="bar-graph" checked="checked"/>
                     <label for="bar-graph">Bar Graph</label>
+                    <input type="radio" name="view-radio" id="pseudocode-view" value="pseudocode-view"/>
+                    <label for="pseudocode-view">Pseudocode</label>
                   </fieldset>
                 </div>
               </div>
@@ -262,7 +265,7 @@
             <button class="control" id="sorting-start"  data-role="none" title="Start"><img class="dynamic-img" src='images/start.png'/></button>
             <button class="control" id="sorting-end"  data-role="none" title="End"><img class="dynamic-img" src='images/end.png'/></button>
             
-            <div id="sorting-slider-container" style="border-style:solid; border-width:2px; border-radius:10px;">
+            <div id="sorting-slider-container" style="border-style: solid; border-width: 2px; border-radius: 10px;">
               <div id="sorting-slider-label" style="text-align: center;">Animation Speed</div>
               <input class="ownslider" type="range" id="sorting-slider" name="slider-3" value="300" min="30" max="1500" step="3"
                      data-highlight="true" data-mini="true" style="display:none;"/>  
@@ -277,6 +280,21 @@
       </div>
     </div> 
     
+    <div id="training" data-role="page" data-theme="c" data-content-theme="c">
+      <canvas id="training-canvas" style="border-style: solid; border-width: 2px; display: block;"></canvas> 
+      <div data-role="fieldcontain" style="margin: 0;">
+        <fieldset id="guess-mode" data-role="controlgroup" data-type="horizontal">
+          <input type="radio" name="guess-mode" id="compare" value="compare" checked="checked"/>
+          <label for="compare">'Compare' Step</label>
+          <input type="radio" name="guess-mode" id="swap" value="swap"/>
+          <label for="swap">'Swap' Step</label>
+        </fieldset>
+        <div class="centre-wrapper">
+          <button id="am-i-right" data-theme="b" data-inline="true">Am I Right?</button>
+          <button id="show-me" data-theme="b" data-inline="true">Show Me!</button>
+        </div>
+      </div>
+    </div>
     
     <div id="about-page" data-role="page" data-theme="c" data-content-theme="c">  
     </div>

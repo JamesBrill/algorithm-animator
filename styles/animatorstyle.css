@@ -64,7 +64,27 @@
   top: 0 !important; 
 }
 
-/* Solves scrollbar problem, but allows scrollbar when popup hits bottom of page 
+.ui-btn {
+  margin: 0;
+}
+
+/* Solves scrollbar problem, but allows scrollbar when popup hits bottom of page */
 .ui-popup-screen {
   border: 0;
-}*/
+}
+
+#guess-mode .ui-controlgroup-controls {
+  width:100%;
+}
+
+#guess-mode .ui-radio {
+  width:50%;
+}
+
+.centre-wrapper {
+  text-align: center;
+}
+
+.centre-wrapper * {
+  margin: 0 auto;
+}
