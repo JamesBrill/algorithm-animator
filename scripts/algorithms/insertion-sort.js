@@ -83,6 +83,21 @@ InsertionSortAnimator.prototype.moveToPrevInstruction = function() {
   this.instructionIndex--;
 }
 
+// Get the next instruction that is animated
+InsertionSortAnimator.prototype.getNextAnimatedInstruction = function() {  
+  var tempIndex = this.instructionIndex;  
+  var instruction = this.insertionInstructions[tempIndex].split(" ");
+  while (instruction[0] != "compare" && instruction[0] != "swap") {    
+    tempIndex++;
+    if (tempIndex >= this.insertionInstructions.length) {
+      return null;
+    } 
+    instruction = this.insertionInstructions[tempIndex].split(" ");
+  }
+  
+  return this.insertionInstructions[tempIndex];
+}
+
 // Has animation ended?
 InsertionSortAnimator.prototype.isEnded = function() {
   return (this.instructionIndex >= this.insertionInstructions.length);

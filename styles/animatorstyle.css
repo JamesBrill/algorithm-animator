@@ -80,11 +80,3 @@
 #guess-mode .ui-radio {
   width:50%;
 }
-
-.centre-wrapper {
-  text-align: center;
-}
-
-.centre-wrapper * {
-  margin: 0 auto;
-}

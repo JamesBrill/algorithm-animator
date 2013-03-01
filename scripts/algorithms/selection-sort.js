@@ -1,7 +1,7 @@
 // Animator object for selection sort
 SelectionSortAnimator = function(animationData) {
   this.sortingInput = animationData.getSortingInput(); // Input to be sorted
-  this.insertionInstructions = new Array(); // Array of algorithm instructions
+  this.selectionInstructions = new Array(); // Array of algorithm instructions
   this.instructionIndex = 0; // Index of current instruction
   this.name = "Selection Sort"; // Name of algorithm
 }
@@ -49,26 +49,26 @@ SelectionSortAnimator.prototype.buildAnimation = function() {
 
 // Add new instruction
 SelectionSortAnimator.prototype.addNewInstruction = function(instruction) {
-  this.insertionInstructions.push(instruction);
+  this.selectionInstructions.push(instruction);
 }
 
 // Return current instruction
 SelectionSortAnimator.prototype.currentInstruction = function() {
-  return this.insertionInstructions[this.instructionIndex];
+  return this.selectionInstructions[this.instructionIndex];
 }
 
 // Return previous instruction
 SelectionSortAnimator.prototype.prevInstruction = function() {
   if (this.instructionIndex - 1 >= 0) {
-    return this.insertionInstructions[this.instructionIndex - 1];
+    return this.selectionInstructions[this.instructionIndex - 1];
   }
   return null;
 }
 
 // Return next instruction
 SelectionSortAnimator.prototype.nextInstruction = function() {
-  if (this.instructionIndex + 1 <= this.insertionInstructions.length - 1) {
-    return this.insertionInstructions[this.instructionIndex + 1];
+  if (this.instructionIndex + 1 <= this.selectionInstructions.length - 1) {
+    return this.selectionInstructions[this.instructionIndex + 1];
   }
   return null;
 }
@@ -83,14 +83,29 @@ SelectionSortAnimator.prototype.moveToPrevInstruction = function() {
   this.instructionIndex--;
 }
 
+// Get the next instruction that is animated
+SelectionSortAnimator.prototype.getNextAnimatedInstruction = function() {  
+  var tempIndex = this.instructionIndex;  
+  var instruction = this.selectionInstructions[tempIndex].split(" ");
+  while (instruction[0] != "compare" && instruction[0] != "swap") {    
+    tempIndex++;
+    if (tempIndex >= this.selectionInstructions.length) {
+      return null;
+    } 
+    instruction = this.selectionInstructions[tempIndex].split(" ");
+  }
+  
+  return this.selectionInstructions[tempIndex];
+}
+
 // Has animation ended?
 SelectionSortAnimator.prototype.isEnded = function() {
-  return (this.instructionIndex >= this.insertionInstructions.length);
+  return (this.instructionIndex >= this.selectionInstructions.length);
 }
 
 // Is the instruction index currently pointing to the last instruction
 SelectionSortAnimator.prototype.isLastInstruction = function() {
-  return (this.instructionIndex == this.insertionInstructions.length - 1);
+  return (this.instructionIndex == this.selectionInstructions.length - 1);
 }
 
 // Ensure instruction index points to something in the input array
@@ -98,7 +113,7 @@ SelectionSortAnimator.prototype.calibrateInstructionIndex = function() {
   if (this.instructionIndex < 0) {
     this.instructionIndex = 0;
   }
-  if (this.instructionIndex >= this.insertionInstructions.length) {
-    this.instructionIndex = this.insertionInstructions.length - 1;
+  if (this.instructionIndex >= this.selectionInstructions.length) {
+    this.instructionIndex = this.selectionInstructions.length - 1;
   }
 }

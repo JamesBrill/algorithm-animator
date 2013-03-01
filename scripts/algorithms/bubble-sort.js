@@ -135,14 +135,14 @@ BubbleSortAnimator.prototype.moveToPrevInstruction = function() {
 BubbleSortAnimator.prototype.getNextAnimatedInstruction = function() {  
   var tempIndex = this.instructionIndex;  
   var instruction = this.bubbleInstructions[tempIndex].split(" ");
-  while (!this.isEnded() && instruction[0] != "compare" && instruction[0] != "swap") {
+  while (instruction[0] != "compare" && instruction[0] != "swap") {    
     tempIndex++;
+    if (tempIndex >= this.bubbleInstructions.length) {
+      return null;
+    } 
     instruction = this.bubbleInstructions[tempIndex].split(" ");
   }
   
-  if (this.isEnded()) {
-    return null;
-  }
   return this.bubbleInstructions[tempIndex];
 }
 

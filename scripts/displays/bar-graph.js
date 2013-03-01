@@ -603,9 +603,6 @@ BarGraph.prototype.drawBar = function(barIndexPair) {
   
   // Draw bar with appropriate colour
   this.context.fillStyle = (input.getStatus() == "sorted") ? "#228B22" : "#ADFF2F";
-  if (buckets.arrays.contains(this.userSelectedBarIndexes, index)) {
-    this.context.fillStyle = "red";
-  }
   this.context.fillRect(topX, topY, this.barWidth, input.getSize());
   
   // Draw bar outline if it is in process of being compared or is swapping
@@ -613,6 +610,11 @@ BarGraph.prototype.drawBar = function(barIndexPair) {
     this.context.strokeStyle = "#228B22";
     this.drawBarOutline(topX, topY, this.barWidth, input.getSize());
   } 
+  
+  if (buckets.arrays.contains(this.userSelectedBarIndexes, index)) {
+    this.context.fillStyle = "red";
+    this.context.fillRect(topX, topY, this.barWidth, input.getSize());
+  }
   
   // Draw marker if bar has special propety
   if (input.getMarker() == "nextSmallest") {

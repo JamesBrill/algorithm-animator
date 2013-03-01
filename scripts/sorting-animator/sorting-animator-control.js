@@ -385,7 +385,7 @@ $(document).delegate('#sorting-animator','pageinit',function () {
 
   // Event listener for when sorting animator page is shown
   $('#sorting-animator').on('pageshow', function () {
-    drawTimer = setInterval(function () {draw()}, 25);
+    drawTimer = setInterval(function () { draw() }, 25);
     if (canvasArray[0].isActive()) {
       var animationController = canvasArray[0].getAnimationController();
       // What was the animation state when this page was last hidden?
@@ -462,11 +462,5 @@ $(document).delegate('#sorting-animator','pageinit',function () {
   // Draws all items to the canvas
   function draw () {
     drawDisplays();
-    
-    for (var i = 0; i < canvasArray.length; i++) {
-      if (canvasArray[i].isMarkedForRemoval()) {
-        removeCanvas(i);
-      }
-    }
   }  
 }); 
