@@ -80,3 +80,12 @@
 #guess-mode .ui-radio {
   width:50%;
 }
+
+#feed-mode .ui-controlgroup-controls {
+  width:100%;
+  margin-top:-8px;
+}
+
+#feed-mode .ui-radio {
+  width:50%;
+}

@@ -6,6 +6,7 @@ $(document).delegate('#sorting-animator','pageinit',function () {
   var algorithm = "selection"; // Algorithm currently being animated
   var numberOfActiveCanvases = 0; // Number of canvases ready to be drawn on
   var baseCanvasIndex = 0; // Visible canvas when no displays are drawn
+  var remainingHeight = determineRemainingCanvasHeight(); // Height allocated to canvas
 
   // Begin running the sorting animator
   init(); 
@@ -173,36 +174,43 @@ $(document).delegate('#sorting-animator','pageinit',function () {
     canvasArray[index].setAnimation(newDisplay, sortingInput, algorithm);
   }
   
-  // Resize all elements, unless width is too small
-  function resizeDivs() {
-    //if (width > 500 && height > 500) {       
+  // Resize all elements
+  function resizeDivs() {     
       // Update canvas size
       updateCanvasArray();
       
-      // Update size of other elements
-      $('#header').css('height', (0.06 * height)-1);
+      // Calculate remaining height allocated to canvas after resizing other major elements
+      determineRemainingCanvasHeight();
+      
+      // Update size of other elements      
       var menuButtonHeight = ($('#header').height() - 2);
       $('#menu-button').css('height', menuButtonHeight);      
       $('#menu-button').css('line-height', (0.4 * menuButtonHeight) + 'px');
-      $('#sorting-button-box').height(0.22 * height - 10);      
-      $('#sorting-animation-control-buttons').height(0.18 * height);
+      $('#sorting-animation-control-buttons').height('120px');
       $('#sorting-animation-control-buttons').width(0.3 * width);
       $('#sorting-animation-control-buttons').css("margin-left", (0.7 * width) + 'px');
       $('.control').css("height", 0.4 * ($('#sorting-animation-control-buttons').height()-4));
       $('.control').css("width", (1/6) * ($('#sorting-animation-control-buttons').width()+1));
       $('#sorting-slider-container').css('margin-top', '2px');
       $('#sorting-slider-container').css('width', $('#sorting-animation-control-buttons').width()-14);
-      $('#sorting-slider-container').css('height', 0.39 * ($('#sorting-animation-control-buttons').height()-4));
+      $('#sorting-slider-container').css('height', '50px');
       $('#sorting-slider-label').css('height', 0.5 * ($('#sorting-slider-container').height()-2));
       $('.ownslider + div.ui-slider').css("margin", '0px');
       $('.ownslider + div.ui-slider').css("width", $('#sorting-slider-container').width()-2);
-      $('.ownslider + div.ui-slider').css("height", 0.45 * ($('#sorting-slider-container').height()-2));      
-    //}
+      $('.ownslider + div.ui-slider').css("height", '20px');     
   }    
+  
+  function determineRemainingCanvasHeight() {
+    $('#header').css('height', '35px');
+    $('#sorting-button-box').height('115px');
+    remainingHeight = height - $('#header').height() - $('#sorting-button-box').height() - 10;
+    return remainingHeight;
+  }
+  
   
   function updateCanvasArray() {
     if (numberOfActiveCanvases == 0) {
-      canvasArray[baseCanvasIndex].setHeight(0.72 * height - 4);
+      canvasArray[baseCanvasIndex].setHeight(remainingHeight - 4);
       canvasArray[baseCanvasIndex].setWidth(width - 4);
     }
     else {
@@ -279,7 +287,7 @@ $(document).delegate('#sorting-animator','pageinit',function () {
       case 1:
         for (var i = 0; i < canvasArray.length; i++) {
           if (canvasArray[i].isActive()) {
-            canvasArray[i].setHeight(0.72 * height - 4);
+            canvasArray[i].setHeight(remainingHeight - 4);
             canvasArray[i].setWidth(width - 4);
           }
         }
@@ -287,7 +295,7 @@ $(document).delegate('#sorting-animator','pageinit',function () {
       case 2:
         for (i = 0; i < canvasArray.length; i++) {
           if (canvasArray[i].isActive()) {
-            canvasArray[i].setHeight(0.72 * height - 4);
+            canvasArray[i].setHeight(remainingHeight - 4);
             canvasArray[i].setWidth(0.5 * width - 4);
           }
         }
@@ -295,7 +303,7 @@ $(document).delegate('#sorting-animator','pageinit',function () {
       case 3:
         var activeCanvases = 0;
         for (i = 0; i < canvasArray.length; i++) {
-          canvasArray[i].setHeight(0.36 * height - 4);
+          canvasArray[i].setHeight(0.5 * remainingHeight - 4);
           if (canvasArray[i].isActive()) {
             activeCanvases++;
           }
@@ -310,7 +318,7 @@ $(document).delegate('#sorting-animator','pageinit',function () {
       case 4:
         for (i = 0; i < canvasArray.length; i++) {
           if (canvasArray[i].isActive()) {
-            canvasArray[i].setHeight(0.36 * height - 4);
+            canvasArray[i].setHeight(0.5 * remainingHeight - 4);
             canvasArray[i].setWidth(0.5 * width - 4);
           }
         }

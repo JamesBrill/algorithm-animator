@@ -39,44 +39,23 @@
     <div style="padding: 0;" id="home" data-role="page" data-theme="c" data-content-theme="c"> 
       <div id="banner-container" style="border-style:solid; border-width:2px; background-color: white;">
         <img id="banner" src="images/banner1.png" style="display: block; margin-left: auto; margin-right: auto;"/>
-      </div><a class="mode" data-role="button" id="graph" data-transition="slide" href="#graph-animator">Graph Algorithms</a>
-            <a class="mode" data-role="button" id="sort" data-transition="slide" href="#sorting-animator">Sorting Algorithms</a>
-            <a class="mode" data-role="button" id="train" data-transition="slide" href="#training">Training</a>
-            <a class="mode" data-role="button" id="about" data-transition="slide" href="#about-page">About Graph-O-Matic</a>
+      </div><a data-role="button" id="graph" data-transition="slide" href="#graph-animator">Graph Algorithms</a>
+            <a data-role="button" id="sort" data-transition="slide" href="#sorting-animator">Sorting Algorithms</a>
+            <a data-role="button" id="train" data-transition="slide" href="#training">Training</a>
+            <a data-role="button" id="about" data-transition="slide" href="#about-page">About Graph-O-Matic</a>
     </div>
     
     
     
     <div style="padding: 0;" id="graph-animator" data-role="page" data-theme="c" data-content-theme="c">       
       <div style="padding: 0;" data-role="content">  
-        <div data-role="header"> 
-                    <div data-role="popup" id="graph-menu-popup"> 
-            <div data-role="collapsible-set" data-theme="b" data-content-theme="c" 
-                 data-collapsed-icon="arrow-r" data-expanded-icon="arrow-d" style="margin:0; width:250px;">
-              <button type="submit" id="delete-node" data-theme="b">Delete Node</button>
-            </div>
-          </div>
-          <div>  
-           <!--<div data-role="fieldcontain" class="mode" id="graph-select-container" 
-                 style="margin-top:0px; margin-bottom:0px; margin-left: 15px;margin-right: 15px; float:left;">
-              <select id="graph-select" data-native-menu="false" data-theme="c">
-                <optgroup label="Choose a graph algorithm">
-                  <option value="dijkstra">Dijkstra</option>
-                  <option value="otherAlgorithm">Another Algorithm</option>
-                </optgroup>
-              </select>
-            </div>
-            
-            <a href="#home" class="mode main-menu" id="graph-main-menu" data-icon="home" data-transition="slide" data-direction="reverse" data-role="button" data-theme="c" 
-               style="margin-top:-2px;margin-left: 15px;margin-right: 15px; float: right;">Main Menu</a>-->
-               
-            <div data-role="navbar" class="mode ui-navbar ui-navbar-noicons" 
-                 style="text-align: center;margin-right: auto;margin-left: auto;" role="navigation">
-              <ul class="ui-grid-a">
-                <li class="ui-block-c"><a href="#" class="mode ui-btn-active" id="build" data-theme="c">Build</a></li>
-                <li class="ui-block-c"><a href="#" class="mode" id="run" data-theme="c">Run</a></li>
-              </ul>
-            </div>
+        <div data-role="header">                
+          <div data-role="navbar" class="mode ui-navbar ui-navbar-noicons" 
+               style="text-align: center;margin-right: auto;margin-left: auto;" role="navigation">
+            <ul class="ui-grid-a">
+              <li class="ui-block-c"><a href="#" class="mode ui-btn-active" id="build" data-theme="c">Build</a></li>
+              <li class="ui-block-c"><a href="#" class="mode" id="run" data-theme="c">Run</a></li>
+            </ul>
           </div>
         </div>
         
@@ -99,12 +78,12 @@
             <button class="control" id="graph-end"  data-role="none" title="End"><img class="dynamic-img" src='images/end.png'/></button>
             
             <div id="feed-mode-container" style="margin-left:1px;">
-              <div class="feed-mode" id="feed-mode" data-role="navbar" style="margin-top: 1px">
-                <ul>
-                  <li><a class="feed-mode feed-tip ui-btn-active" id="high-level" href="#">High-level</a></li>
-                  <li><a class="feed-mode feed-tip" id="pseudocode" href="#">Pseudocode</a></li>
-                </ul>
-              </div> 
+              <fieldset id="feed-mode" data-role="controlgroup" data-type="horizontal">
+                <input type="radio" name="feed-mode" id="high-level" value="high-level" checked="checked"/>
+                <label for="high-level">'High-level</label>
+                <input type="radio" name="feed-mode" id="pseudocode" value="pseudocode"/>
+                <label for="pseudocode">Pseudocode</label>
+              </fieldset>
             </div>
             
             <div id="graph-slider-container" style="border-style:solid; border-width:2px; border-radius:10px;">

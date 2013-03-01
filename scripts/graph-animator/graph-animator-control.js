@@ -64,48 +64,46 @@ $(document).delegate('#graph-animator','pageinit',function () {
     resizeDivs();
   })
   
-  // Resize all elements, unless width is too small
+  // Resize all elements
   function resizeDivs() {
-    //if (width > 500 && height > 500) {
       // Reposition nodes
       repositionNodes();
-  
+        
+      // Update size of other elements
+      $('.mode').css('height', '35px');
+      $('.mode').css('line-height', '100%');
+      $('#graph-button-box').height('150px');  
+      
+      
+      var remainingHeight = height - $('.mode').height() - $('#graph-button-box').height() - 16;
       // Update canvas size
-      canvas.height = 0.72 * height - 4;
+      canvas.height = remainingHeight;
       canvas.width = width - 4;
       
-      // Update size of other elements
-      $('.mode').css('height', (0.06 * height)-1);
-      $('.mode').css('line-height', '120%');
-      $('#graph-select-button').css('height', (0.06 * height)-1);
-      $('#graph-select-button').css('line-height', '140%');
-      $('#graph-main-menu').css('line-height', '140%');
-      $('#graph-button-box').height(0.22 * height - 10);
       $('#feed-title').height(0.15 * $('#graph-button-box').height());
       $('.bottom-left').css('width', 0.7 * width);
       $('.feed-box').css('height', $('#graph-button-box').height() - $('#feed-title').height());
       $('.feed-box').css('max-height', ($('#graph-button-box').height()) + 'px');
       $('.feed-box').css('max-width', (0.7 * width) + 'px');
-      $('#graph-animation-control-buttons').height(0.18 * height);
+      $('#graph-animation-control-buttons').height('120px');
       $('#graph-animation-control-buttons').width(0.3 * width);
       $('#graph-animation-control-buttons').css("margin-left", (0.7 * width) + 'px');
       $('.control').css("height", 0.4 * ($('#graph-animation-control-buttons').height()-4));
       $('.control').css("width", (1/6) * ($('#graph-animation-control-buttons').width()+1));
       $('#graph-slider-container').css('margin-top', '2px');
       $('#graph-slider-container').css('width', $('#graph-animation-control-buttons').width()-14);
-      $('#graph-slider-container').css('height', 0.39 * ($('#graph-animation-control-buttons').height()-4));
+      $('#graph-slider-container').css('height', '50px');
       $('#graph-slider-label').css('height', 0.5 * ($('#graph-slider-container').height()-2));
       $('.ownslider + div.ui-slider').css("margin", '0px');
       $('.ownslider + div.ui-slider').css("width", $('#graph-slider-container').width()-2);
-      $('.ownslider + div.ui-slider').css("height", 0.45 * ($('#graph-slider-container').height()-2));
+      $('.ownslider + div.ui-slider').css("height", '20px');
       $('#feed-mode-container').css('width', $('#graph-animation-control-buttons').width()-10);
-      $('#feed-mode-container').css('height', 0.3 * ($('#graph-animation-control-buttons').height()-4));
-      $('.feed-mode').css('height', 0.95 * $('#feed-mode-container').height()); 
+      $('#feed-mode-container').css('height', '42px');
+      $('.feed-mode').css('height', '30px'); 
       $('.feed-mode').css('line-height', '50%');
       
       // Set proportional node radius
       nodeRadius = (Math.max(canvas.width, canvas.height) / 50);
-    //}
   }
   
   // Reposition nodes so that they remain in correct position on canvas
@@ -348,13 +346,10 @@ $('#graph-canvas').bind('vmouseup', function () {
     // Ensure there are no timer duplicates
     animationController.clearTimer();
     
-    // Record the previous graph mode
-    var oldGraphMode = graphMode;   
-    
     graphMode = newGraphMode;
        
-    // If the user left Run Mode, remove the algorithm data from the nodes
-    if (oldGraphMode == "run" && graphMode != "run") {
+    // If in Build Mode...
+    if (graphMode == 'build') {
       // Disable alert message
       $('#graph-button-box').qtip('hide');
       if ($('#graph-button-box').qtip('disable', 'false')) {
@@ -371,15 +366,11 @@ $('#graph-canvas').bind('vmouseup', function () {
         nodes[i].setLabel(nodes[i].getName());
         nodes[i].resetAlgorithmSpecificData();
       }
-    }
-    
-    // If in Build Mode, hide the mod buttons (can't be used in this mode)
-    if (graphMode == "build") {
+      
+      // Hide the mod buttons (can't be used in this mode)
       $('#mod-buttons').hide();
-    }
-    
-    // Clear algorithm feed if user has left Run Mode
-    if (graphMode != "run") {
+      
+      // Clear algorithm feed
       $('#feed').val('');
     }
     
