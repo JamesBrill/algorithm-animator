@@ -1,6 +1,6 @@
-/* This object is a kind of display for sorting algorithms, which 
- * represents each number as a bar in a bar chart. It can animate
- * a number of different steps in common sorting algorithms, such 
+/* These objects represent the 'row of bars' algorithm view for sorting 
+ * algorithms, which shows each number as a bar in a bar chart. It can 
+ * animate a number of different steps in common sorting algorithms, such 
  * as swapping, recolouring and comparing. 
  */
 BarGraph = function(canvas) {
@@ -30,7 +30,7 @@ BarGraph.prototype.getInput = function() {
   return this.input;
 }
 
-// Set algorithm's input numbers in form
+// Set algorithm's input numbers in bar form
 BarGraph.prototype.setInput = function(input) {
   for (var i = 0; i < input.length; i++) {
     this.addInputNumber(input[i].getValue());
@@ -65,6 +65,7 @@ BarGraph.prototype.setReverse = function() {
 // Animate current step and then move to next step
 BarGraph.prototype.nextStep = function() { 
   this.skipMode = true;
+  // Ensure current instruction is not null
   this.animationController.calibrateInstructionIndex();
   
   // Wait for current animation to be skipped 
@@ -79,7 +80,6 @@ BarGraph.prototype.nextStep = function() {
     this.animateStep(this.animationController.currentInstruction(), "instant", "not reverse");
   }.bind(this), 40);
 }
-
 
 // Animate current step and then move to previous step
 BarGraph.prototype.prevStep = function() {
@@ -105,7 +105,7 @@ BarGraph.prototype.prevStep = function() {
     }.bind(this), 40);
 }
 
-// Go to beginning of animation, where all inputs are unsorted
+// Go to beginning of animation where all inputs are unsorted
 BarGraph.prototype.goToBeginning = function() { 
     this.skipMode = true;
     // Ensure current instruction is not null
@@ -113,12 +113,14 @@ BarGraph.prototype.goToBeginning = function() {
     
     // Wait for current animation to be skipped 
     setTimeout(function() {
+      // Compensate for changes in direction
       this.turnBackwards();
+      // Animate current step instantly in a backward direction
       this.animateStep(this.animationController.currentInstruction(), "instant", "reverse");
     }.bind(this), 40);
 }
 
-// Go to end of animation, where all inputs are sorted
+// Go to end of animation where all inputs are sorted
 BarGraph.prototype.goToEnd = function() {
     this.skipMode = true;
     // Ensure current instruction is not null
@@ -126,7 +128,9 @@ BarGraph.prototype.goToEnd = function() {
     
     // Wait for current animation to be skipped 
     setTimeout(function() {
+      // Compensate for changes in direction
       this.turnForwards();
+      // Animate current step instantly in a forward direction
       this.animateStep(this.animationController.currentInstruction(), "instant", "not reverse");
     }.bind(this), 40);
 }
@@ -155,6 +159,7 @@ BarGraph.prototype.play = function() {
   if (!this.animationController.isEnded()) {
     // Ensure current instruction is not null
     this.animationController.calibrateInstructionIndex();
+    // Animate current step in a forward direction
     this.animateStep(this.animationController.currentInstruction(), "not instant", "not reverse");
   }
 }
@@ -194,6 +199,8 @@ BarGraph.prototype.animateStep = function(instruction, instantMode, reverseMode)
   if (!this.animating) {
     // An animation is not in progress if this step is to be animated instantly
     this.animating = instantMode != "instant";
+    
+    // Operation to be animated
     var operation = instruction.split(" ");
     
     // If current step is a swap animation...
@@ -227,7 +234,7 @@ BarGraph.prototype.animateStep = function(instruction, instantMode, reverseMode)
 }
 
 // Animate "begin" step. This kind of step is just a sentinel with no
-// animation involved so that the overall animation has a step in which
+// animation involved just so that the overall animation has a step in which
 // all bars are unsorted
 BarGraph.prototype.begin = function(operation, instantMode, reverseMode) {
   // Move to following step, which is dependent on current direction
@@ -284,9 +291,9 @@ BarGraph.prototype.recolour = function(operation, instantMode, reverseMode) {
 
 // Animate "mark" step. This applies a special property to a given bar
 BarGraph.prototype.mark = function(operation, instantMode, reverseMode) {
-  // Bar to be recoloured depends on current direction
+  // Bar to be marked depends on current direction
   var operationIndexOfMarkedBar = (reverseMode == "reverse") ? 2 : 3;  
-  // Recolour the chosen bar
+  // Mark the chosen bar
   this.input[operation[1]].setMarker(operation[operationIndexOfMarkedBar]);
   
   // Move to following step, which is dependent on current direction
@@ -366,7 +373,7 @@ BarGraph.prototype.compare = function(operation, instantMode, reverseMode) {
   }
 }
 
-// Animate "swap" step. This swaps the position of two bars, either smoothly 
+// Animate "swap" step. This swaps the positions of two bars, either smoothly 
 // within the step delay or instantly.
 BarGraph.prototype.swap = function(operation, instantMode, reverseMode) {  
   // Create BarSwapper object to handle positioning of bars during the animation
@@ -437,7 +444,7 @@ BarGraph.prototype.swap = function(operation, instantMode, reverseMode) {
   }
 }
 
-// Move to next step of the algorithm - dependent on current direction
+// Move to following step of the algorithm - dependent on current direction
 BarGraph.prototype.moveToFollowingStep = function(reverseMode) {
   (reverseMode == "reverse") ? this.animationController.moveToPrevInstruction() 
                              : this.animationController.moveToNextInstruction();  
@@ -455,7 +462,7 @@ BarGraph.prototype.tidyUpLastStep = function(operation, reverseMode) {
    && splitLastInstruction[0] != "mark" && operation[0] != "begin" 
    && splitLastInstruction[0] != "begin") {
     // Reset status of bars operated on in last instruction to "unsorted" if 
-    // they are no operated on in the current instruction
+    // they are not operated on in the current instruction
     for (var i = 1; i < 3; i++) {
       var setBarToUnsorted = true;
       for (var j = 1; j < numberOfPreviousBarsToCheck + 1; j++) {
@@ -517,18 +524,24 @@ BarGraph.prototype.isDeleteClick = function(cursorX, cursorY) {
   return false;
 }
 
-// Handle any attempts by the user to click a bar
+// Handle any attempts by the user to click a bar in a training session
 BarGraph.prototype.registerClick = function(cursorX, cursorY) {
+  // For each bar...
   for (var i = 0; i < this.input.length; i++) {
+    // Coordinates of top-left corner of bar
     var topX = this.input[i].getXCoordinate();
     var topY = 0.85 * this.height - this.input[i].getSize();
     
+    // If the user has clicked on the bar...
     if (cursorX >= topX && cursorX <= (topX + this.barWidth) &&
         cursorY >= topY && cursorY <= (topY + this.input[i].getSize())) {
+      // If the bar is already selected, deselect it
       if (buckets.arrays.contains(this.userSelectedBarIndexes, i)) {
         buckets.arrays.remove(this.userSelectedBarIndexes, i);
       }  
+      // Otherwise, select it.
       else {
+        // If two bars already selected, deselect the first one to be selected
         if (this.userSelectedBarIndexes.length == 2) {
           var secondIndex = this.userSelectedBarIndexes[1];
           this.userSelectedBarIndexes = [secondIndex, i];
@@ -548,7 +561,8 @@ BarGraph.prototype.draw = function() {
   // Update canvas dimensions
   this.updateCanvasDimensions();
       
-  // Collect bars that are moving so that they can be drawn over other bars
+  // Collect bars that are moving so that they can be drawn over other bars.
+  // Moving bars take rendering priority over static bars.
   var movingBars = new Array();
   
   // Draw each bar
@@ -566,7 +580,8 @@ BarGraph.prototype.draw = function() {
     this.drawBar(movingBars[i]);
   }
   
-  this.drawTitle(); // Draw name of algorithm at top
+  this.drawTitle(); // Draw name of algorithm down the LHS
+  this.drawDatasetNumber(); // Draw number of dataset down the RHS  
   this.drawArrayBoxes(); // Draw boxes around input values
   this.drawIndexes(); // Draw index numbers
   if (!this.deleteIconHidden) {
@@ -578,23 +593,50 @@ BarGraph.prototype.draw = function() {
 
 // Draw name of algorithm down side of canvas
 BarGraph.prototype.drawTitle = function() {
+  // Name of algorithm
+  var title = this.animationController.getName();
+  
   this.context.save();
+  // Translate and rotate context so name can be written sideways
   this.context.translate(0,this.height);
   this.context.rotate(Math.PI*1.5);
   if (this.width > 3 * this.height) {
     this.prepareText(0.015 * this.width, "bottom");
-    this.context.fillText(this.animationController.getName(), this.height / 2, 0.028 * this.width, this.height / 3.5);
+    this.context.fillText(title, this.height / 2, 0.028 * this.width, this.height / 3.5);
   }
   else {
     this.prepareText(0.02 * this.width, "bottom");
-    this.context.fillText(this.animationController.getName(), this.height / 2, 0.035 * this.width, this.height / 4);
+    this.context.fillText(title, this.height / 2, 0.035 * this.width, this.height / 4);
   }
   this.context.restore();  
 }
 
+// Draw dataset's ID number down side of canvas
+BarGraph.prototype.drawDatasetNumber = function() {
+  // Dataset's ID number
+  var groupID = this.animationController.getGroupID();
+  var title = "Dataset #" + (groupID+1);
+  
+  this.context.save();
+  // Translate and rotate context so dataset's ID number can be written sideways
+  this.context.translate(0.995 * this.width,this.height);
+  this.context.rotate(Math.PI*1.5);
+  if (this.width > 3 * this.height) {
+    this.prepareText(0.015 * this.width, "bottom");
+    this.context.fillText(title, this.height / 2, 0, this.height / 3.5);
+  }
+  else {
+    this.prepareText(0.02 * this.width, "bottom");
+    this.context.fillText(title, this.height / 2, 0, this.height / 4);
+  }
+  this.context.restore(); 
+}
+
 // Draw a given bar
 BarGraph.prototype.drawBar = function(barIndexPair) {
+  // Data element/bar
   var input = barIndexPair.bar;
+  // Index of data element in the input array
   var index = barIndexPair.index;
   
   // Coordinates of the bar's top-left corner
@@ -611,12 +653,13 @@ BarGraph.prototype.drawBar = function(barIndexPair) {
     this.drawBarOutline(topX, topY, this.barWidth, input.getSize());
   } 
   
+  // If bar has been selected during a training session, paint it red
   if (buckets.arrays.contains(this.userSelectedBarIndexes, index)) {
     this.context.fillStyle = "red";
     this.context.fillRect(topX, topY, this.barWidth, input.getSize());
   }
   
-  // Draw marker if bar has special propety
+  // Draw marker if bar has special property 
   if (input.getMarker() == "nextSmallest") {
     this.context.fillStyle = 'red';
 

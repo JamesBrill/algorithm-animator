@@ -1,4 +1,4 @@
-// Animator object for selection sort
+// Animator class for selection sort
 SelectionSortAnimator = function(animationData) {
   this.sortingInput = animationData.getSortingInput(); // Input to be sorted
   this.selectionInstructions = new Array(); // Array of algorithm instructions
@@ -16,10 +16,20 @@ SelectionSortAnimator.prototype.buildAnimation = function() {
   var input = this.sortingInput;
   
   this.addNewInstruction("begin"); // Add a "begin" instruction
+  
+  // Perform one pass for each element of the array, meaning selection sort
+  // always runs in O(n^2) time.
   for (var i = 0; i < input.length; i++) {
-    this.addNewInstruction("mark " + i + " unmarked nextSmallest"); 
+    // Add a "mark" instruction. This comes in the form "mark index fromMarkedState toMarkedState"
+    // This means that the first element on this pass at index i is initially deemed to be
+    // the smallest element found so far on this pass.
+    this.addNewInstruction("mark " + i + " unmarked nextSmallest");     
+    // Index of smallest element found on this pass
     var smallestValueIndex = i;
 
+    // For each element after the current element, compare with the smallest
+    // element so far. When a new smallest element is found, mark it and update
+    // the index variable for the smallest element.
     for (var k = i+1; k < input.length; k++) {
       this.addNewInstruction("compare " + k + " " + smallestValueIndex);
       if (input[k].getValue() < input[smallestValueIndex].getValue()) {
@@ -29,8 +39,12 @@ SelectionSortAnimator.prototype.buildAnimation = function() {
       }
     }
 
+    // Unmark the smallest element for this pass
     this.addNewInstruction("mark " + smallestValueIndex + " nextSmallest unmarked"); 
     
+    // If the first element on this pass is not the smallest element, swap it with 
+    // the smallest element. Afterwards, in either case, recolour the smallest
+    // element as sorted.
     if (smallestValueIndex != i) {
       buckets.arrays.swap(input,i,smallestValueIndex);
       this.addNewInstruction("swap " + i + " " + smallestValueIndex);
@@ -40,6 +54,9 @@ SelectionSortAnimator.prototype.buildAnimation = function() {
       this.addNewInstruction("recolour " + smallestValueIndex + " unsorted sorted");
     }
     
+    // If there is one more unsorted element left, it is implicitly sorted as
+    // all previous elements are sorted. Recolour it as sorted and break out of 
+    // the loop.
     if (i == (input.length - 2)) {
       this.addNewInstruction("recolour " + (i+1) + " unsorted sorted");
       break;
@@ -103,7 +120,7 @@ SelectionSortAnimator.prototype.isEnded = function() {
   return (this.instructionIndex >= this.selectionInstructions.length);
 }
 
-// Is the instruction index currently pointing to the last instruction
+// Is the instruction index currently pointing to the last instruction?
 SelectionSortAnimator.prototype.isLastInstruction = function() {
   return (this.instructionIndex == this.selectionInstructions.length - 1);
 }

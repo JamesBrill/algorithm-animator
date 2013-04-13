@@ -1,7 +1,7 @@
 /* Creates a DijkstraAnimator, an object that alters the colour of a given
  * set of nodes to represent the execution of the Dijkstra shortest path 
  * algorithm. The object also produces an information feed to show the user
- * each step of the algorithm in various forms of pseudo-code. 
+ * each step of the algorithm in various forms of pseudocode. 
  */
 DijkstraAnimator = function (animationData) {
   this.nodes = animationData.getNodes(); // Nodes in graph to be operated on
@@ -10,6 +10,8 @@ DijkstraAnimator = function (animationData) {
   this.dijkstraStates = new Array(); // Array of all states reached during the algorithm
   this.stateIndex = 0; // Index of current state
   this.ended = false; // Has algorithm finished its last step?
+  
+  // Constants for unusual characters
   this.INFINITY = String.fromCharCode(8734);
   this.ASSIGNMENT = String.fromCharCode(8592);
   this.NOTEQUALS = String.fromCharCode(8800);
@@ -29,7 +31,7 @@ var compareDijkstraNodes = function (a,b) {
   return 0;
 }
 
-// Returns pseudo-code version of algorithm
+// Returns pseudocode version of algorithm
 DijkstraAnimator.prototype.getPseudoCode = function () {
   var startingName = this.startingNode.getName();
   return "d[" + startingName + "] " + this.ASSIGNMENT + " 0\nd[u] " + 
@@ -65,7 +67,7 @@ DijkstraAnimator.prototype.buildAnimation = function () {
   var fringe = new Array();
   
   // Initialise the d-values of all nodes. Starting node initialised to 0, 
-  // all other initialised to Infinity. Nodes than added to priority queue.
+  // all others initialised to Infinity. Nodes then added to priority queue.
   for (var i = 0; i < this.nodes.length; i++) {
     if (this.nodes[i] == this.startingNode) {
       this.nodes[i].setAlgorithmSpecificData(this.stateIndex,0);
@@ -106,7 +108,7 @@ DijkstraAnimator.prototype.buildAnimation = function () {
     
     // Add a new state that represents the current step of the algorithm
     name = newCloudNode.getName();
-    feedString.setHighLevel(this.tab(1) + "Remove " + name + " from Q.\n" + this.tab(1) + name + 
+    feedString.setHighLevel(this.tab(1) + "Remove " + name + " from queue.\n" + this.tab(1) + name + 
                  " was the node outside the cloud with the lowest d-label.\n");
     feedString.setPseudoCode("while Q is not empty, do\n" + this.tab(1) + "u " + 
                  this.ASSIGNMENT + " Q.removeMin()\n");           
@@ -149,6 +151,7 @@ DijkstraAnimator.prototype.buildAnimation = function () {
         fringe.push(adjacentNode);
       }
       
+      // Set state's pseudocode to context-appropriate text
       feedString.setHighLevel(this.tab(2) + adjacentName + " is adjacent to " + name + " and outside the cloud.\n" +
                    this.tab(2) + "Is d[" + name + "] + weight(" + name + "," + adjacentName + ") < d[" +
                    adjacentName + "]?\n");   
@@ -157,6 +160,7 @@ DijkstraAnimator.prototype.buildAnimation = function () {
       
       // Perform 'edge relaxation' to update d-value of adjacent node. The node is 
       // also repositioned in the priority queue to accommodate this adjustment.
+      // Add text to the state's pseudocode that reflects the update decision.
       if (cloudNodeDValue + weight < adjacentNodeDValue) {
         adjacentNode.setAlgorithmSpecificData(this.stateIndex,cloudNodeDValue + weight);
         queue.updateItem(adjacentNode);
@@ -171,6 +175,8 @@ DijkstraAnimator.prototype.buildAnimation = function () {
         feedString.concatPseudoCode(this.CROSS + "\n" + this.tab(2) + "else\n" + 
           this.tab(3) + "Do nothing.\n");
       }
+      
+      // Add a new state that represents the current step of the algorithm
       this.addNewState(cloud,fringe,newCloudNode, feedString); 
     }    
   }
@@ -199,10 +205,11 @@ DijkstraAnimator.prototype.getCurrentState = function () {
   return this.dijkstraStates[Math.max(this.stateIndex,0)];
 }
 
-// Get all of the steps to be shown in the text feed
+// Get all of the steps to be shown in the pseudocode text feed
 DijkstraAnimator.prototype.getFeedLines = function () {
   var feedLines = new Array();
   this.stateIndex = -1;
+  // Gather feed data until the end of the state list is reached
   while (!this.ended) {
     this.stateIndex++;
     var feedLine = this.getCurrentState().getFeedData();
@@ -264,7 +271,7 @@ DijkstraAnimator.prototype.atEnd = function () {
   return this.ended;
 }
 
-// Updates the colour and label of all nodes to represent the next 
+// Updates the colour and label of all nodes to represent the current 
 // state of Djkstra's algorithm.
 DijkstraAnimator.prototype.updateNodes = function () {
   // For each node...

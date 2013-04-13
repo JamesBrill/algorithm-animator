@@ -1,4 +1,4 @@
-// Object representing an input number in a sorting algorithm
+// Objects representing an input number in a sorting algorithm
 SortingInput = function(value) {
   this.value = value; // Numerical value
   this.status = "unsorted"; // Status - affects the way the input is drawn

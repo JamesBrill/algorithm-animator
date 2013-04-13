@@ -1,5 +1,5 @@
-// Object that handles the swapping of bars from a given input array of bars.
-// Speed of bar movement is dictated by the animation's step delay
+// Objects that handle the swapping of bars within a given input array of bars.
+// Speed of bar movement is dictated by the animation's step delay.
 BarSwapper = function(input, swapOperation, stepDelay) {
   this.input = input; // Input array
   this.firstBar = null; // First bar being swapped

@@ -1,13 +1,11 @@
+// This is the code to be run when the Main Menu page is initialised. 
 $(document).delegate('#home','pageinit',function () {
-  var width = $(window).width();
-  var height = $(window).height();
+  var width = $(window).width(); // Window width
+    
+  // Set CSS for banner      
+  resizeDivs();
   
-  init();
-  
-  function init() {    
-    resizeDivs();
-  }
-  
+  // Set CSS for banner  
   function resizeDivs() {
     $('#banner').css('width', 0.8 * width);
     $('#banner').css('height', (1/6) * $('#banner').width());
@@ -18,7 +16,6 @@ $(document).delegate('#home','pageinit',function () {
   $(window).resize(function() {
     // Update window size
     width = $(window).width();
-    height = $(window).height();
     resizeDivs();
   })  
 });

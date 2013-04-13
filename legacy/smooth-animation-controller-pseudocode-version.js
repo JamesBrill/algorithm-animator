@@ -1,13 +1,7 @@
-// Objects that control animation by acting as mediums between custom
-// animators, algorithm views and the sorting animator page. Support smooth
-// motion and are designed to be as general as possible without referring to 
-// specific implementations of Animators or Displays. Because of this, little
-// to no alterations will need to be made to this class when new animations 
-// are built; as long as the new objects satisfy the interfaces implicitly specified
-// by this class, their addition should be a relatively easy process. An improvement
-// to this class would be to create Javascript interfaces to define the methods
-// implemented in Animators and Displays that are required by this class; although
-// not an inherent feature of Javascript, interfaces can be simulated.
+// This will eventually replace original animation controller. Concept is
+// that this controller will be able to work with displays (views of an
+// algorithm on a canvas) to animate steps that use smooth transitions
+// rather than discrete ones. 
 SmoothAnimationController = function() {
   this.reset();
 }
@@ -29,7 +23,9 @@ SmoothAnimationController.prototype.reset = function() {
 SmoothAnimationController.prototype.init = function (animationData, algorithm, display) {
   this.display = display;
   this.display.setAnimationController(this); 
-  this.display.setInput(animationData.getSortingInput());  
+  if (!(this.display instanceof Pseudocode)) {
+    this.display.setInput(animationData.getSortingInput());   
+  }
   this.algorithmAnimator = AnimatorFactory.getAnimator(animationData, algorithm);  
   this.algorithmAnimator.buildAnimation(); 
 }
@@ -65,6 +61,16 @@ SmoothAnimationController.prototype.getDisplay = function() {
   return this.display;
 }
 
+// Get algorithm pseudocode as a string
+SmoothAnimationController.prototype.getPseudocode = function() {
+  return this.algorithmAnimator.getPseudocode();
+}
+
+// Get number of lines in algorithm's pseudocode
+SmoothAnimationController.prototype.getNumberOfPseudocodeLines = function() {
+  return this.algorithmAnimator.getNumberOfPseudocodeLines();
+}
+
 // Return current instruction of algorithm
 SmoothAnimationController.prototype.currentInstruction = function() {
   if (this.algorithmAnimator != null) {
@@ -89,7 +95,31 @@ SmoothAnimationController.prototype.nextInstruction = function() {
   return null;
 }
 
-// Get the next animated instruction from the animator
+// Return current pseudocode instruction of algorithm
+SmoothAnimationController.prototype.currentPseudocodeInstruction = function() {
+  if (this.algorithmAnimator != null) {
+    return this.algorithmAnimator.currentPseudocodeInstruction();
+  }  
+  return null;
+}
+
+// Return previous pseudocode instruction of algorithm
+SmoothAnimationController.prototype.prevPseudocodeInstruction = function() {
+  if (this.algorithmAnimator != null) {
+    return this.algorithmAnimator.prevPseudocodeInstruction();
+  }  
+  return null;
+}
+
+// Return next pseudocode instruction of algorithm
+SmoothAnimationController.prototype.nextPseudocodeInstruction = function() {
+  if (this.algorithmAnimator != null) {
+    return this.algorithmAnimator.nextPseudocodeInstruction();
+  }  
+  return null;
+}
+
+// Get the next instruction from the animator that is animated
 SmoothAnimationController.prototype.getNextAnimatedInstruction = function() {
   if (this.algorithmAnimator != null) {
     return this.algorithmAnimator.getNextAnimatedInstruction();
@@ -126,7 +156,7 @@ SmoothAnimationController.prototype.calibrateInstructionIndex = function() {
   this.algorithmAnimator.calibrateInstructionIndex();
 }
 
-// Is animator on last instruction?
+// Is animator on last instruction
 SmoothAnimationController.prototype.isLastInstruction = function() {
   this.algorithmAnimator.isLastInstruction();
 }
@@ -192,9 +222,6 @@ SmoothAnimationController.prototype.end = function() {
   }
 }
 
-// Note: the following three methods could be moved to a sub-class
-// designed for training animation controllers.
-
 // Has the user guessed the next step of the algorithm?
 SmoothAnimationController.prototype.guessMade = function() {
   if (this.algorithmAnimator != null && this.trainer) {
@@ -218,3 +245,5 @@ SmoothAnimationController.prototype.clearGuessIndexes = function() {
   }
   return null;
 }
+
+

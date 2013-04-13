@@ -1,5 +1,7 @@
-// Object that controls animation by storing an information feed and custom
-// animator that controls the algorithm views
+// Objects that control animation by storing a pseudocode feed and custom
+// animator that controls the algorithm views. Does not support smooth motion 
+// and only works with DijkstraAnimator objects. Succeeded by more sophisticated
+// SmoothAnimationController objects for the sorting animator.
 AnimationController = function() {
   // Initialise object properties
   this.reset();  
@@ -11,12 +13,12 @@ AnimationController.prototype.reset = function() {
   this.animationTimer = null; // Timer that dictates speed of algorithm
   this.animationReady = false; // Is animation ready to begin?
   this.currentFeedLine = -1; // Current line of algorithm
-  this.feedLines = new Array(); // All lines of algorithm
+  this.feedLines = new Array(); // All lines of pseudocode feed
   this.speed = 5000; // Delay between steps (ms)
   this.paused = false; // Is animation paused?
   this.feedMode = "high-level"; // High-level description or pseudocode?
   
-  // Select 'high-level' option
+  // Select 'high-level' option for pseudocode feed
   $('#high-level').addClass('ui-btn-active'); 
   $('#pseudocode').removeClass('ui-btn-active');
 }
@@ -26,33 +28,33 @@ AnimationController.prototype.init = function (animationData, algorithm) {
   this.algorithmAnimator = AnimatorFactory.getAnimator(animationData, algorithm);  
   this.algorithmAnimator.buildAnimation();
   this.feedLines = this.algorithmAnimator.getFeedLines();
-  this.update(this);
+  this.update();
   this.play();
 }
 
 // Move animation to next step, unless it is already at the end
-AnimationController.prototype.update = function(objectRef) {
-  if (!objectRef.algorithmAnimator.atEnd()) {
-    objectRef.algorithmAnimator.nextState();
+AnimationController.prototype.update = function() {
+  if (!this.algorithmAnimator.atEnd()) {
+    this.algorithmAnimator.nextState();
     if (this.currentFeedLine < this.feedLines.length - 1) {
       this.currentFeedLine++;
     }
     // Update contents of feed
-    objectRef.updateFeed(objectRef);
+    this.updateFeed();
   }
 }
 
 // Update contents of feed
-AnimationController.prototype.updateFeed = function(objectRef) {  
+AnimationController.prototype.updateFeed = function() {  
   var nextFeedLine = this.feedLines[this.currentFeedLine].getHighLevel();
   if (this.feedMode == "pseudocode") {
     nextFeedLine = this.feedLines[this.currentFeedLine].getPseudoCode();
   }
   $('#currentStep').val(nextFeedLine);
-  objectRef.buildFeed();  
+  this.buildFeed();  
 }
 
-// Put all lines of algorithm run so far into the 'feed' box
+// Put all lines of algorithm run so far into the pseudocode panel
 AnimationController.prototype.buildFeed = function() {
   if (this.feedMode == "high-level") {
     $('#feed').val('');
@@ -78,9 +80,8 @@ AnimationController.prototype.play = function() {
   if (this.algorithmAnimator != null) {
     this.paused = false;
     this.clearTimer();
-    var objectRef = this;
     // Update algorithm at rate dictated by speed property
-    this.animationTimer = setInterval(function() { objectRef.update(objectRef) }, this.speed);
+    this.animationTimer = setInterval(function() { this.update() }.bind(this), this.speed);
   }
 }
 
@@ -90,15 +91,10 @@ AnimationController.prototype.pause = function() {
   this.paused = true;
 }
 
-// Stop animation
-AnimationController.prototype.stop = function() {
-  this.clearTimer();
-}
-
 // Go to next step of animation
 AnimationController.prototype.next = function() {
   if (this.algorithmAnimator != null) {
-    this.update(this);
+    this.update();
   }
 }
 
@@ -110,7 +106,7 @@ AnimationController.prototype.prev = function() {
       this.currentFeedLine--;
     }
     // Update contents of feed
-    this.updateFeed(this);
+    this.updateFeed();
   }
 }
 
@@ -119,7 +115,7 @@ AnimationController.prototype.beginning = function() {
   if (this.algorithmAnimator != null) {
     this.algorithmAnimator.goToBeginning();
     this.currentFeedLine = 0;
-    this.updateFeed(this);
+    this.updateFeed();
   }
 }
 
@@ -128,7 +124,7 @@ AnimationController.prototype.end = function() {
   if (this.algorithmAnimator != null) {
     this.algorithmAnimator.goToEnd();
     this.currentFeedLine = this.feedLines.length - 1;
-    this.updateFeed(this);
+    this.updateFeed();
   }
 }
 

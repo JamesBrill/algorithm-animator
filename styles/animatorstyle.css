@@ -1,63 +1,30 @@
-/* 
-    Document   : animatorstyle
-    Created on : 17-Sep-2012, 17:43:34
-    Author     : jebby457
-*/
+.canvas {
+  border-style: solid; 
+  border-width: 2px; 
+  display: block;
+}
+
+.slider-container {
+  border-style: solid; 
+  border-width: 2px; 
+  border-radius: 10px;
+}
+
+.slider-label {
+  text-align: center;
+}
 
 .dynamic-img {
-  height:90%;
-  width:90%;
-  margin-left:0px;
-  margin-right:0px;
-  margin-bottom:-3px;
-  margin-top:0px;
+  height: 90%;
+  width: 90%;
+  margin-left: 0px;
+  margin-right: 0px;
+  margin-bottom: -3px;
+  margin-top: 0px;
 }
 
 .control {
-  margin-right:-6px;
-}
-
-/* Add some nice box-shadow-ness to the dialogues */
-.ui-tooltip-dialogue{
-	max-width: 420px;
-	min-width: 210px;
-  font-size: 15px;
-
-	-moz-box-shadow: 0 0 10px 1px rgba(0,0,0,.5);
-	-webkit-box-shadow: 0 0 10px 1px rgba(0,0,0,.5);
-	box-shadow: 0 0 10px 1px rgba(0,0,0,.5);
-}
-
-.ui-tooltip-dialogue .ui-tooltip-content{
-	padding: 10px;
-}
-
-.ui-tooltip-dialogue button{
-	float: left;
-	width: 47%;
-	margin-right: 10px;
-	padding: 3px 0;
-
-	text-align: center;
-	font-size: 10.5px;
-}
-
-.ui-tooltip-dialogue button + button{
-	float: right;
-	margin-right: 0;
-}
-
-.ui-tooltip-dialogue input{
-	width: 95%;
-	padding: 3px 0 3px 5px;
-	margin-bottom: 7px;
-
-	font-size: 10.5px;
-}
-
-.ui-tooltip-dialogue button.full{
-	float: none;
-	width: 100%;
+  margin-right: -6px;
 }
 
 #menu-popup-popup {
@@ -68,24 +35,120 @@
   margin: 0;
 }
 
-/* Solves scrollbar problem, but allows scrollbar when popup hits bottom of page */
 .ui-popup-screen {
   border: 0;
 }
 
 #guess-mode .ui-controlgroup-controls {
-  width:100%;
+  width: 100%;
 }
 
 #guess-mode .ui-radio {
-  width:50%;
+  width: 50%;
 }
 
 #feed-mode .ui-controlgroup-controls {
-  width:100%;
-  margin-top:-8px;
+  width: 100%;
+  margin-top: -8px;
 }
 
 #feed-mode .ui-radio {
-  width:50%;
+  width: 50%;
+}
+
+#banner-container {
+  border-style: solid; 
+  border-width: 2px; 
+  background-color: white;
+}
+
+#banner {
+  display: block; 
+  margin-left: auto; 
+  margin-right: auto;
+}
+
+#description-container {
+  text-align: center; 
+  font-family: Helvetica; 
+  font-size: 30px;           
+  border-style: solid; 
+  border-width: 2px; 
+  background-color: white;
+}
+
+#graph-animator-navbar {
+  text-align: center;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+#graph-button-box {
+  border-style: solid; 
+  border-width: 5px;
+}
+
+#feed-title {
+  text-align: center; 
+  float: left;
+}
+
+#algorithm-feed-container {
+  float: left;
+}
+
+#feed-mode-container {
+  margin-left: 1px;
+}
+
+#sorting-menu-button {
+  margin: 0; 
+  padding: 0;
+}
+
+.view-select-collapsible {
+  margin: 0; 
+  width: 250px;
+}
+
+.popup-menu-element {
+  margin: -10px;
+}
+
+#sorting-button-box {
+  border-style: solid; 
+  border-width: 5px;
+}
+
+#training-menu-position {
+  width: 250px;
+}
+
+#training-menu-button {
+  margin: 0; 
+  padding: 0;
+}
+
+.training-grid-a {
+  text-align: center; 
+  line-height: 35px; 
+  font-size: 35px; 
+  font-family: arial bold; 
+  padding-top: 0; 
+  padding-bottom: 6px;
+}
+
+.training-grid-b {
+  padding-left: 0; 
+  padding-right: 0; 
+  padding-top: 0
+}
+
+.training-grid-c { 
+  text-align: center; 
+  line-height: 35px; 
+  font-size: 20px; 
+  font-family: arial bold; 
+  padding-top: 0; 
+  padding-bottom: 6px;
 }

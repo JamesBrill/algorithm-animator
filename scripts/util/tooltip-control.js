@@ -1,121 +1,32 @@
-/*
- * Common dialogue() function that creates our dialogue qTip.
- * We'll use this method to create both our prompt and confirm dialogues
- * as they share very similar styles, but with varying content and titles.
- */
-function dialogue(content, title) {
-  /* 
-   * Since the dialogue isn't really a tooltip as such, we'll use a dummy
-   * out-of-DOM element as our target instead of an actual element like document.body
-   */
-  $('<div />').qtip(
-  {
-    content: {
-      text: content,
-      title: title
-    },
-    position: {
-      my: 'center', at: 'center', // Center it...
-      target: $(window) // ... in the window
-    },
-    show: {
-      ready: true, // Show it straight away
-      modal: {
-        on: true, // Make it modal (darken the rest of the page)...
-        blur: false // ... but don't close the tooltip when clicked
-      }
-    },
-    hide: false, // We'll hide it maunally so disable hide events
-    style: 'ui-tooltip-dialogue ui-tooltip-light', // Add a few styles
-    events: {
-      // Hide the tooltip when any buttons in the dialogue are clicked
-      render: function(event, api) {
-        $('button', api.elements.content).click(api.hide);
-      },
-      // Destroy the tooltip once it's hidden as we no longer need it!
-      hide: function(event, api) { api.destroy(); }
-    }
-  });
-}
-
-// Confirm method
-function confirm(question, callback)
-{
-  // Content will consist of the question and ok/cancel buttons
-  var message = $('<p />', { text: question }),
-    ok = $('<button />', { 
-      text: 'OK',
-      style: 'height: 40px;',
-      click: function() { callback(true); }
-    }),
-    cancel = $('<button />', { 
-      text: 'Cancel',
-      style: 'height: 40px;',
-      click: function() { callback(false); }
-    });
-
-  dialogue( message.add(ok).add(cancel), 'Confirm' );
-}
-
-// Initialise tooltips
+// Initialise qtip2 tooltips
 function initialiseTooltips(animationType) {
+  // Graph animator tooltips
   if (animationType == "graph") {
+    // Tooltip for Build Mode radio button
     $('#build').qtip({
       content: "Place nodes and edges.",
       position: {
         my: "top left",
-        at: "bottom left",
-        adjust: {
-          x: 50
-        }
+        at: "bottom center"
       },
       style: {
         classes: 'ui-tooltip-tipsy'
       }   
     });
 
-    $('#modify').qtip({
-      content: "Delete objects or change node labels/edge attributes.",
-      position: {
-        my: "top left",
-        at: "bottom left",
-        adjust: {
-          x: 50
-        }
-      },
-      style: {
-        classes: 'ui-tooltip-tipsy'
-      }   
-    });
-
+    // Tooltip for Run Mode radio button
     $('#run').qtip({
       content: "Animate the chosen algorithm on your data.",
       position: {
         my: "top left",
-        at: "bottom left",
-        adjust: {
-          x: 50
-        }
+        at: "bottom center"
       },
       style: {
         classes: 'ui-tooltip-tipsy'
       }   
     });
     
-    $('#graph-select-container').qtip( {
-      content: "Choose the graph algorithm you want to animate here.",
-      position: {
-        my: "top left",
-        at: "bottom right",
-        adjust: {
-          x: -20
-        }
-      },
-      style: {
-        classes: 'ui-tooltip-tipsy'
-      }
-    });
-    
+    // Tooltip for pseudocode selection radio buttons
     $('.feed-tip').qtip( {
       content: {
         text: function() {
@@ -136,6 +47,7 @@ function initialiseTooltips(animationType) {
       }
     });
     
+    // Prompt for user to select starting node before animating Dijkstra's algorithm
     $('#graph-button-box').qtip( {
       content: "A starting node must be selected from your graph to start the animation.",
       position: {
@@ -149,73 +61,119 @@ function initialiseTooltips(animationType) {
         classes: 'ui-tooltip-tipsy'
       } 
     });
-
+    // Disable prompt initially
     $('#graph-button-box').qtip('disable');  
+    
+    // Tooltip for graph speed control slider
+    $('#graph-slider-container').qtip( {
+      content : "Slider position determines animation speed in steps per minute (spm). \n\
+                 Leftmost position is 3spm. Rightmost position is 300spm.",
+      position: {
+        my: "bottom right",
+        at: "top left"
+      },
+      style: {
+        classes: 'ui-tooltip-tipsy'
+      }        
+    }); 
   }
+  // Sorting animator tooltips
+  else if (animationType == "sorting") {
+    // Tooltip for sorting speed control slider
+    $('#sorting-slider-container').qtip( {
+      content : "Slider position determines animation speed in steps per minute (spm). \n\
+                 Leftmost position is 30spm. Rightmost position is 1500spm.",
+      position: {
+        my: "bottom right",
+        at: "top left"
+      },
+      style: {
+        classes: 'ui-tooltip-tipsy'
+      }        
+    });   
+    
+    // Tooltip for algorithm view creation button
+    $('#sorting-menu-button').qtip({
+      content: "Create a new animation.",
+      position: {
+        my: "top left",
+        at: "bottom center"
+      },
+      style: {
+        classes: 'ui-tooltip-tipsy'
+      }   
+    });
+  }
+  // Trainer tooltips
+  else {
+    // Tooltip for training session creation button
+    $('#training-menu-button').qtip({
+      content: "Create a new training session.",
+      position: {
+        my: "top left",
+        at: "bottom center"
+      },
+      style: {
+        classes: 'ui-tooltip-tipsy'
+      }   
+    });  
+   
+    // Tooltip for comparison prediction button
+    $('#compare-button').qtip({
+      content: "Predict a compare step.",
+      position: {
+        my: "bottom left",
+        at: "top center",
+        adjust: {
+          y: 2
+        } 
+      },
+      style: {
+        classes: 'ui-tooltip-tipsy'
+      }   
+    });   
+    
+    // Tooltip for swap prediction button
+    $('#swap-button').qtip({
+      content: "Predict a swap step.",
+      position: {
+        my: "bottom left",
+        at: "top center",
+        adjust: {
+          y: 2
+        } 
+      },
+      style: {
+        classes: 'ui-tooltip-tipsy'
+      }   
+    });     
   
-  $('#sorting-select-container').qtip( {
-    content: "Choose the sorting algorithm you want to animate here.",
-    position: {
-      my: "top left",
-      at: "bottom right",
-      adjust: {
-        x: -20
+    // Tooltips for feedback text boxes
+    $('.training-grid').qtip( {
+      position: {
+        my: "bottom left",
+        at: "top center",
+        adjust: {
+          y: 2
+        }
+      },
+      style: {
+          classes: 'ui-tooltip-tipsy'
       }
-    },
-    style: {
-      classes: 'ui-tooltip-tipsy'
-    }
-  });
-  
-  $('.main-menu').qtip({
-    content: "Return to main menu.",
-    position: {
-      my: "top right",
-      at: "bottom right",
-      adjust: {
-        x: -20
-      }
-    },
-    style: {
-      classes: 'ui-tooltip-tipsy'
-    }   
-  });
+    });   
+  }
 
+  // Tooltips for 'tape recorder' animation control buttons
   $('.control').qtip( {
     position: {
       my: "bottom right",
-      at: "top left",
+      at: "top center",
       adjust: {
-        x: $('.control').width() / 2
+        y: 2
       }
     },
     style: {
         classes: 'ui-tooltip-tipsy'
     }
-  }); 
-  
-
-  $('#graph-slider-container').qtip( {
-    content : "Slider position determines animation speed in steps per minute (spm). \n\
-               Leftmost position is 3spm. Rightmost position is 300spm.",
-    position: {
-      my: "bottom right",
-      at: "top left"
-    },
-    style: {
-      classes: 'ui-tooltip-tipsy'
-    }        
-  });  
-  
-    $('#sorting-slider-container').qtip( {
-    content : "Slider position determines animation speed in steps per minute (spm). \n\
-               Leftmost position is 30spm. Rightmost position is 1500spm.",
-    position: {
-      my: "bottom right",
-      at: "top left"
-    },
-    style: {
-      classes: 'ui-tooltip-tipsy'
-    }        
   }); 
 }

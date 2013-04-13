@@ -1,5 +1,5 @@
-// Object representing a node. Takes five parameters, it's initial x/y coordinates,
-// its unique number and its relative position on the canvas. Also records whether
+// Objects representing a node. Takes five parameters: it's initial x/y coordinates,
+// its unique number and its normalised position on the canvas. Also records whether
 // the node is highlighted or not, its name and label as well as any algorithm-
 // specific data related to the node.
 Node = function (initX, initY, nodeNumber, xDepth, yDepth) {
@@ -8,9 +8,9 @@ Node = function (initX, initY, nodeNumber, xDepth, yDepth) {
   this.highlighted = false;
   this.name = "N" + nodeNumber; // Node name
   this.label = this.name; // Label next to node - name + node data
-  this.algorithmSpecificData = new Array(); // Algorithm-specific value at each step
-  this.verticalDepth = yDepth; // Relative vertical position on canvas (%)
-  this.horizontalDepth = xDepth; // Relative horizontal position on canvas (%)
+  this.algorithmSpecificData = new Array(); // History of the node's algorithm-specific value 
+  this.verticalDepth = yDepth; // Normalised vertical position on canvas (%)
+  this.horizontalDepth = xDepth; // Normalised horizontal position on canvas (%)
 }
 
 // Reset algorithm-specific data
@@ -18,7 +18,7 @@ Node.prototype.resetAlgorithmSpecificData = function () {
   this.algorithmSpecificData = new Array();
 }
 
-// Get the node's algorithm-specific value at a given step
+// Get the node's algorithm-specific value (e.g. d-value) at a given step
 Node.prototype.getAlgorithmSpecificData = function (index) {
   if (index < 0)  {
     alert ("Index out of bounds.");
@@ -88,27 +88,27 @@ Node.prototype.setY = function (newY) {
   this.y = newY; 
 }
 
-// Get node's current x-coordinate
-Node.prototype.highlight = function () {
+// Toggle highlight status of node
+Node.prototype.toggleHighlightStatus = function () {
   this.highlighted = !this.highlighted;
 }
 
-// Change highlight status of node
+// Is node highlighted?
 Node.prototype.isHighlighted = function () {
   return this.highlighted; 
 }
 
-// Get node's relative horizontal position on canvas
+// Get node's normalised horizontal position on canvas
 Node.prototype.getXDepth = function () {
   return this.horizontalDepth;
 }
 
-// Get node's relative vertical position on canvas
+// Get node's normalised vertical position on canvas
 Node.prototype.getYDepth = function () {
   return this.verticalDepth;
 }
 
-// Set node's relative position on canvas
+// Set node's normalised position on canvas
 Node.prototype.setDepth = function (newXDepth, newYDepth) {
   this.verticalDepth = newYDepth;
   this.horizontalDepth = newXDepth;

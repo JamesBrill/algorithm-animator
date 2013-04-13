@@ -1,4 +1,4 @@
-// Animator object for insertion sort
+// Animator class for insertion sort
 InsertionSortAnimator = function(animationData) {
   this.sortingInput = animationData.getSortingInput(); // Input to be sorted
   this.insertionInstructions = new Array(); // Array of algorithm instructions
@@ -16,9 +16,19 @@ InsertionSortAnimator.prototype.buildAnimation = function() {
   var input = this.sortingInput;
   
   this.addNewInstruction("begin"); // Add a "begin" instruction
+  
+  // For each element of the array, insert it into its correct position in
+  // the sub-array before it. The repeated and reversed 'recolour' instructions
+  // are added to make the animation of insertion sort reversible; the reason 
+  // for this is due to the fact that any 'recolour' instructions before and
+  // after an animated step are automatically executed, complicating an
+  // algorithm like insertion sort where elements can be sorted and unsorted
+  // multiple times. 
   for (var i = 0; i < input.length; i++) {
-    var value = input[i].getValue();
+    var value = input[i].getValue(); // Value of current element
 
+    // If not the first element, compare with previous element, 
+    // recolouring appropriately.
     if (i > 0) {
       this.addNewInstruction("recolour " + (i-1) + " sorted unsorted");
       this.addNewInstruction("recolour " + (i-1) + " unsorted sorted");
@@ -27,6 +37,8 @@ InsertionSortAnimator.prototype.buildAnimation = function() {
       this.addNewInstruction("recolour " + (i-1) + " unsorted sorted");
     }
     
+    // For each element before the current element, swap and compare until
+    // the current element is in its correct place
     for (var j = i - 1; j > -1 && input[j].getValue() > value; j--) {
       this.addNewInstruction("recolour " + j + " sorted unsorted");
       buckets.arrays.swap(input, j, j+1);
@@ -103,7 +115,7 @@ InsertionSortAnimator.prototype.isEnded = function() {
   return (this.instructionIndex >= this.insertionInstructions.length);
 }
 
-// Is the instruction index currently pointing to the last instruction
+// Is the instruction index currently pointing to the last instruction?
 InsertionSortAnimator.prototype.isLastInstruction = function() {
   return (this.instructionIndex == this.insertionInstructions.length - 1);
 }

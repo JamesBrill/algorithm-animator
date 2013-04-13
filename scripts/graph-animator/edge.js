@@ -1,4 +1,4 @@
-// Object representing an edge in a graph. Is initialised using two parameters,
+// Objects representing an edge in a graph. Is initialised using two parameters,
 // a 'from node' and a 'to node'. Also keeps track of edge weight and whether
 // the edge is highlighted or not.
 Edge = function (fromNode, toNode) {
@@ -8,8 +8,8 @@ Edge = function (fromNode, toNode) {
   this.weight = 0;
 }
     
-// Change highlight status of edge
-Edge.prototype.highlight = function () {
+// Toggle highlight status of edge
+Edge.prototype.toggleHighlightStatus = function () {
   this.highlighted = !this.highlighted;
 }
 
