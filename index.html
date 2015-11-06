@@ -2,84 +2,531 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Graph-O-Matic</title>
-    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.min.css" />
+    <title>Graph-O-Matic - Algorithm Animation Tool</title>
+    <link rel="stylesheet" href="jquery-mobile/jquery.mobile-1.2.0.css" />
+    <link rel="stylesheet" href="styles/external/jquery.qtip.min.css" />
     <link rel="stylesheet" href="styles/animatorstyle.css" />
-    <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.2.js"></script>
-    <script type="text/javascript" src="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.js"></script>
-    <script type="text/javascript" src="scripts/buckets.js"></script>
-    <script type="text/javascript" charset="utf-8" src="scripts/animator.js"></script>
-    <script type="text/javascript" src="scripts/node.js"></script>
-    <script type="text/javascript" src="scripts/edge.js"></script>
-    <script type="text/javascript" src="scripts/distance-calculator.js"></script>
-    <script type="text/javascript" charset="utf-8" src="scripts/dijkstra.js"></script>
-    <script type="text/javascript" charset="utf-8" src="scripts/animation-controller.js"></script>
-    <script type="text/javascript" charset="utf-8" src="scripts/feed-data.js"></script>
+    <script type="text/javascript" src="scripts/external/jquery-1.8.0.js"></script>
+    <script type="text/javascript" src="jquery-mobile/jquery.mobile-1.2.0.js"></script>
+    <script type="text/javascript" src="scripts/external/buckets.js"></script>
+    <script type="text/javascript" src="scripts/util/tooltip-control.js"></script>
+    <script type="text/javascript" src="scripts/trainer/training-control.js"></script>
+    <script type="text/javascript" src="scripts/graph-animator/graph-animator-control.js"></script>
+    <script type="text/javascript" src="scripts/sorting-animator/sorting-animator-control.js"></script>
+    <script type="text/javascript" src="scripts/main-menu/main-menu.js"></script>
+    <script type="text/javascript" src="scripts/graph-animator/node.js"></script>
+    <script type="text/javascript" src="scripts/graph-animator/edge.js"></script>
+    <script type="text/javascript" src="scripts/util/distance-calculator.js"></script>
+    <script type="text/javascript" src="scripts/algorithms/dijkstra.js"></script>
+    <script type="text/javascript" src="scripts/algorithms/bubble-sort.js"></script>
+    <script type="text/javascript" src="scripts/algorithms/selection-sort.js"></script>
+    <script type="text/javascript" src="scripts/algorithms/insertion-sort.js"></script>
+    <script type="text/javascript" src="scripts/graph-animator/animation-controller.js"></script>
+    <script type="text/javascript" src="scripts/sorting-animator/smooth-animation-controller.js"></script>
+    <script type="text/javascript" src="scripts/sorting-animator/sorting-input-generator.js"></script>    
+    <script type="text/javascript" src="scripts/algorithms/feed-data.js"></script>
+    <script type="text/javascript" src="scripts/algorithms/animator-factory.js"></script>
+    <script type="text/javascript" src="scripts/graph-animator/graph-animation-data.js"></script>
+    <script type="text/javascript" src="scripts/sorting-animator/sorting-animation-data.js"></script>
+    <script type="text/javascript" src="scripts/displays/bar-graph.js"></script>
+    <script type="text/javascript" src="scripts/displays/pseudocode.js"></script>
+    <script type="text/javascript" src="scripts/sorting-animator/sorting-input.js"></script>
+    <script type="text/javascript" src="scripts/displays/bar-swapper.js"></script>    
+    <script type="text/javascript" src="scripts/displays/canvas.js"></script> 
+    <script type="text/javascript" src="scripts/displays/canvas-group.js"></script> 
+    <script type="text/javascript" src="scripts/about-page/about-page.js"></script> 
+    <script type="text/javascript" src="scripts/external/jquery.qtip.min.js"></script>
   </head>
-  <body> 
-    <div style="padding: 0;" id="container" data-role="page" data-theme="c" data-content-theme="c">
-      <div style="padding: 0;" data-role="content">    
+  
+  <body>    
+    <!-- Home Page -->
+    <div id="home" data-role="page" data-theme="c" data-content-theme="c"> 
+      <!-- Home Page Banner -->
+      <div id="banner-container">
+        <img id="banner" src="images/banner1.png"/>
+      </div>
+      <!-- Home Page Description -->
+      <div id="description-container">
+        An algorithm animator that teaches basic algorithms via the HTML5 canvas element
+      </div>
+      <!-- Main Menu -->
+      <a data-role="button" id="about" data-transition="slide" href="#about-page">User Guide</a>
+      <a data-role="button" id="graph" data-transition="slide" href="#graph-animator">Graph Algorithms</a>            
+      <a data-role="button" id="sort" data-transition="slide" href="#sorting-animator">Sorting Algorithms</a>
+      <a data-role="button" id="train" data-transition="slide" href="#training">Training Mode</a>      
+    </div>    
+    
+    <!-- Graph Animator Page -->
+    <div id="graph-animator" data-role="page" data-theme="c" data-content-theme="c">       
+      <div style="padding: 0;" data-role="content">  
+        <!-- Mode Selection Bar -->
+        <div data-role="header">                
+          <div id="graph-animator-navbar" data-role="navbar" class="mode ui-navbar ui-navbar-noicons" role="navigation">
+            <ul class="ui-grid-a">
+              <li class="ui-block-c"><a href="#" class="mode ui-btn-active" id="build" data-theme="c">Build</a></li>
+              <li class="ui-block-c"><a href="#" class="mode" id="run" data-theme="c">Run</a></li>
+            </ul>
+          </div>
+        </div>
         
-        <div class="mode" id="mode" data-role="navbar">
-          <ul>
-            <li><a class="mode ui-btn-active" id="build" href="#">Build</a></li>
-            <li><a class="mode" id="modify" href="#">Modify</a></li>
-            <li><a class="mode" id="run" href="#">Run</a></li>
-          </ul>
-        </div>  
+        <!-- Graph Canvas -->
+        <canvas id="graph-canvas" class="canvas"></canvas>  
         
-        <canvas id="canvas" style="border-style:solid; border-width:2px; display: block;">
-          <p>Unfortunately, your browser is currently unsupported by our web 
-          application.  We are sorry for the inconvenience. Please use one of the 
-          supported browsers listed below, or draw the image you want using an 
-          offline tool.</p>
-          <p>Supported browsers: <a href="http://www.opera.com">Opera</a>, <a 
-            href="http://www.mozilla.com">Firefox</a>, <a 
-            href="http://www.apple.com/safari">Safari</a> and <a 
-            href="http://www.konqueror.org">Konqueror</a>.</p>
-        </canvas>  
-        
-        <div id="button-box" style="border-style:solid; border-width:5px;">
-          <div class="bottom-left hide-at-init" id="feed-title" style="text-align: center; float:left;">
+        <!-- User Control Panel -->
+        <div id="graph-button-box">
+          <!-- Pseudocode Panel Title -->
+          <div class="bottom-left hide-at-init" id="feed-title">
             Current Line Of Algorithm (click box to see all lines so far)</div>
-          <div class="bottom-left hide-at-init" id="algorithm-feed-container" style="float:left;">
+          <!-- Pseudocode Panel -->
+          <div class="bottom-left hide-at-init" id="algorithm-feed-container">
             <textarea class="feed-box" id="currentStep" style="margin: 0;"></textarea>
             <textarea class="feed-box" id="feed" style="margin: 0;"></textarea>          
           </div>
           
-          <div class="hide-at-init" id="animation-control-buttons">
-            <button class="control" id="play"  data-role="none">Play</button>
-            <button class="control" id="pause"  data-role="none">Pause</button>
-            <button class="control" id="start"  data-role="none">Start</button>
-            <button class="control" id="end"  data-role="none">End</button>
-            <button class="control" id="next"  data-role="none">Next</button>
-            <button class="control" id="prev"  data-role="none">Prev</button>   
-
-            <div id="feed-mode-container" style="margin-left:1px;">
-              <div class="feed-mode" id="feed-mode" data-role="navbar" style="margin-top: 1px">
-                <ul>
-                  <li><a class="feed-mode ui-btn-active" id="high-level" href="#">High-level</a></li>
-                  <li><a class="feed-mode" id="pseudocode" href="#">Pseudocode</a></li>
-                </ul>
-              </div> 
+          <!-- Animation Control Panel -->
+          <div class="hide-at-init" id="graph-animation-control-buttons">
+            <!-- Tape Recorder Buttons -->
+            <button class="control" id="graph-play" data-role="none" title="Play">
+              <img class="dynamic-img" src='images/play.png'/>
+            </button>
+            <button class="control" id="graph-pause"  data-role="none" title="Pause">
+              <img class="dynamic-img" id="graph-pause-button" src='images/pause.png'/>
+            </button>
+            <button class="control" id="graph-prev"  data-role="none" title="Previous Step">
+              <img class="dynamic-img" src='images/prev.png'/>
+            </button>   
+            <button class="control" id="graph-next"  data-role="none" title="Next Step">
+              <img class="dynamic-img" src='images/next.png'/>
+            </button>
+            <button class="control" id="graph-start"  data-role="none" title="Start">
+              <img class="dynamic-img" src='images/start.png'/>
+            </button>
+            <button class="control" id="graph-end"  data-role="none" title="End">
+              <img class="dynamic-img" src='images/end.png'/>
+            </button>
+            
+            <!-- Pseudocode Mode Bar -->
+            <div id="feed-mode-container">
+              <fieldset id="feed-mode" data-role="controlgroup" data-type="horizontal">
+                <input type="radio" name="feed-mode" id="high-level" value="high-level" checked="checked"/>
+                <label for="high-level">High-level</label>
+                <input type="radio" name="feed-mode" id="pseudocode" value="pseudocode"/>
+                <label for="pseudocode">Pseudocode</label>
+              </fieldset>
             </div>
             
-            <div id="slider-container" style="border-style:solid; border-width:2px; border-radius:10px;">
-              <div id="slider-label" style="text-align: center;">Step delay</div>
-              <input class="ownslider" type="range" name="slider-3" id="slider-3" value="5" min="0.1" max="10" step="0.1"
-                     data-highlight="true" data-mini="true" style="display:none;"/>  
+            <!-- Animation Speed Control Slider -->
+            <div id="graph-slider-container" class="slider-container">
+              <div id="graph-slider-label" class="slider-label">Animation Speed</div>
+              <input class="slider" type="range" id="graph-slider" name="slider-3" value="12" min="3" max="300" step="3"
+                     data-highlight="true" data-mini="true" style="display: none;"/>  
             </div>
           </div>
 
+          <!-- Graph Component Modification Buttons -->
           <div class="hide-at-init" id="mod-buttons">
-            <button id="delete" data-inline="true">Delete</button> 
-            <input type="text" id="rename-item" maxlength="30" value=""  />
+            <button id="delete" type="button" data-inline="true">Delete</button> 
+            <input type="text" id="rename-item" maxlength="30" value=""/>
           </div>
-          <div>
-            <p id="logdiv"></p>
-          </div>  
         </div> 
       </div>
     </div>  
+   
+    
+    <!-- Sorting Animator Page -->
+    <div id="sorting-animator" data-role="page" data-theme="c" data-content-theme="c">       
+      <div style="padding: 0;" data-role="content">  
+        
+        <!-- Dummy div used to position popup menu -->
+        <div id="menu-position" style="width: 250px;"></div>
+        
+        <div id="header" class="ui-tooltip-youtube">  
+          <!-- Algorithm View Creation Button -->
+          <a id="sorting-menu-button" data-theme="b" data-role="button">Create Algorithm View</a>
+          <!-- Algorithm View Creation Popup -->
+          <div data-role="popup" data-position-to="#menu-position" data-transition="slidedown" id="menu-popup" 
+               data-overlay-theme="a" data-tolerance="0,0"> 
+            <div class="view-select-collapsible" data-role="collapsible-set" data-theme="b" data-content-theme="c" 
+                 data-collapsed-icon="arrow-r" data-expanded-icon="arrow-d">
+              <!-- Algorithm Selection Menu -->
+              <div data-role="collapsible" data-inset="false" id="choose-algorithm">
+                <h2>Algorithm</h2>
+                <div class="popup-menu-element" data-role="fieldcontain">
+                  <fieldset data-role="controlgroup">
+                    <input type="radio" name="algo-radio" id="bubble" value="bubble" checked="checked"/>
+                    <label for="bubble">Bubble Sort</label>
+                    <input type="radio" name="algo-radio" id="selection" value="selection"/>
+                    <label for="selection">Selection Sort</label>
+                    <input type="radio" name="algo-radio" id="insertion" value="insertion"/>
+                    <label for="insertion">Insertion Sort</label>
+                  </fieldset>
+                </div>
+              </div>
+              <!-- View Selection Menu -->
+              <div data-role="collapsible" data-inset="false" id="choose-view">
+                <h2>View</h2>
+                <div class="popup-menu-element" data-role="fieldcontain">
+                  <fieldset data-role="controlgroup">
+                    <input type="radio" name="view-radio" id="bar-graph" value="bar-graph" checked="checked"/>
+                    <label for="bar-graph">Row of Bars</label>
+                  </fieldset>
+                </div>
+              </div>
+              <!-- Data Generation Menu -->
+              <div data-role="collapsible" data-inset="false" id="choose-data">
+                <h2>Data</h2>
+                <div class="popup-menu-element" data-role="collapsible-set" data-theme="a" data-content-theme="c" 
+                   data-collapsed-icon="arrow-r" data-expanded-icon="arrow-d">
+                  <!-- Random Data Generator -->
+                  <div data-role="collapsible" data-inset="false" id="choose-random-data">    
+                    <h2>Random Data</h2>
+                    <label for="random-data-size" class="">Size</label>
+                    <input type="js" name="random-data-size" id="random-data-size"/>
+                  </div>
+                  <!-- Custom Data Generator -->
+                  <div data-role="collapsible" data-inset="false" id="choose-custom-data">    
+                    <h2>Custom Data</h2>
+                    <label for="custom-data-content" class="">Input</label>
+                    <input type="js" name="custom-data-content" id="custom-data-content" placeholder="Separate by whitespace"/>
+                  </div>
+                  <!-- Data Order Menu -->
+                  <div data-role="collapsible" data-inset="false" id="choose-data-order">    
+                    <h2>Order</h2>
+                    <div class="popup-menu-element" data-role="fieldcontain">
+                      <fieldset data-role="controlgroup">
+                        <input type="radio" name="order" id="unchanged-order" value="unchanged" checked="checked"/>
+                        <label for="unchanged-order">Unchanged</label>
+                        <input type="radio" name="order" id="random-order" value="random"/>
+                        <label for="random-order">Random</label>   
+                        <input type="radio" name="order" id="in-order" value="in-order"/>
+                        <label for="in-order">In-Order</label>
+                        <input type="radio" name="order" id="reverse-order" value="reverse"/>
+                        <label for="reverse-order">Reverse</label>
+                      </fieldset>
+                    </div>
+                  </div>
+                  <!-- Data Mode Menu -->
+                  <div data-role="collapsible" data-inset="false" id="set-data">    
+                    <h2>Data Mode</h2>
+                    <div class="popup-menu-element" data-role="fieldcontain">
+                      <fieldset data-role="controlgroup">
+                        <input type="radio" name="set-data" id="use-random" value="random" checked="checked"/>
+                        <label for="use-random">Random</label>
+                        <input type="radio" name="set-data" id="use-custom" value="custom"/>
+                        <label for="use-custom">Custom</label>
+                      </fieldset>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Algorithm View Creation Button - Popup Version -->
+              <button type="submit" id="create-algorithm-view" data-theme="b">Create Algorithm View</button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Sorting Canvases -->
+        <div>
+          <canvas id="sorting-canvas1" class="canvas"></canvas>  
+          <canvas id="sorting-canvas2" class="canvas"></canvas>  
+          <canvas id="sorting-canvas3" class="canvas"></canvas>  
+          <canvas id="sorting-canvas4" class="canvas"></canvas> 
+        </div>
+        
+        <!-- User Control Panel -->
+        <div id="sorting-button-box"> 
+          <!-- Tape Recorder Buttons -->
+          <div id="sorting-animation-control-buttons">
+            <button class="control" id="sorting-play" data-role="none" title="Play">
+              <img class="dynamic-img" src='images/play.png'/>
+            </button>
+            <button class="control" id="sorting-pause"  data-role="none" title="Pause">
+              <img class="dynamic-img" id="sorting-pause-button" src='images/pause.png'/>
+            </button>
+            <button class="control" id="sorting-prev"  data-role="none" title="Previous Step">
+              <img class="dynamic-img" src='images/prev.png'/>
+            </button>   
+            <button class="control" id="sorting-next"  data-role="none" title="Next Step">
+              <img class="dynamic-img" src='images/next.png'/>
+            </button>
+            <button class="control" id="sorting-start"  data-role="none" title="Start">
+              <img class="dynamic-img" src='images/start.png'/>
+            </button>
+            <button class="control" id="sorting-end"  data-role="none" title="End">
+              <img class="dynamic-img" src='images/end.png'/>
+            </button>
+            
+            <!-- Animation Speed Control Slider -->
+            <div id="sorting-slider-container" class="slider-container">
+              <div id="sorting-slider-label" class="slider-label">Animation Speed</div>
+              <input class="slider" type="range" id="sorting-slider" name="slider-3" value="300" min="30" max="1500" step="3"
+                     data-highlight="true" data-mini="true" style="display: none;"/>  
+            </div>            
+          </div>
+        </div>         
+      </div>
+    </div> 
+    
+    <!-- Trainer Page -->
+    <div id="training" data-role="page" data-theme="c" data-content-theme="c">
+      <!-- Dummy div used to position popup menu -->
+      <div id="training-menu-position"></div>
+      
+      <div id="training-header" class="ui-tooltip-youtube"> 
+        <!-- Training Session Creation Button -->
+        <a id="training-menu-button" data-theme="b" data-role="button">New Training Session</a>
+        <!-- Training Session Creation Popup -->
+        <div data-role="popup" data-position-to="#training-menu-position" data-transition="slidedown" 
+             id="training-menu-popup" data-overlay-theme="a" data-tolerance="0,0"> 
+          <div class="view-select-collapsible" data-role="collapsible-set" data-theme="b" data-content-theme="c" 
+               data-collapsed-icon="arrow-r" data-expanded-icon="arrow-d">
+            <!-- Algorithm Selection Menu -->
+            <div data-role="collapsible" data-inset="false" id="training-choose-algorithm">
+              <h2>Algorithm</h2>
+              <div class="popup-menu-element" data-role="fieldcontain">
+                <fieldset data-role="controlgroup">
+                  <input type="radio" name="training-algo" id="training-bubble" value="bubble" checked="checked"/>
+                  <label for="training-bubble">Bubble Sort</label>
+                  <input type="radio" name="training-algo" id="training-selection" value="selection"/>
+                  <label for="training-selection">Selection Sort</label>
+                  <input type="radio" name="training-algo" id="training-insertion" value="insertion"/>
+                  <label for="training-insertion">Insertion Sort</label>
+                </fieldset>
+              </div>
+            </div>
+            <!-- Data Generation Menu -->
+            <div data-role="collapsible" data-inset="false" id="training-choose-data">
+              <h2>Data</h2>
+              <div class="popup-menu-element" data-role="collapsible-set" data-theme="a" data-content-theme="c" 
+                 data-collapsed-icon="arrow-r" data-expanded-icon="arrow-d">
+                <!-- Random Data Generator -->
+                <div data-role="collapsible" data-inset="false" id="training-choose-random-data">    
+                  <h2>Random Data</h2>
+                  <label for="training-random-data-size" class="">Size</label>
+                  <input type="js" name="training-random-data-size" id="training-random-data-size"/>
+                </div>
+                <!-- Custom Data Generator -->
+                <div data-role="collapsible" data-inset="false" id="training-choose-custom-data">    
+                  <h2>Custom Data</h2>
+                  <label for="training-custom-data-content" class="">Input</label>
+                  <input type="js" name="training-custom-data-content" id="training-custom-data-content" placeholder="Separate by whitespace"/>
+                </div>
+                <!-- Data Order Menu -->
+                <div data-role="collapsible" data-inset="false" id="training-choose-data-order">    
+                  <h2>Order</h2>
+                  <div class="popup-menu-element" data-role="fieldcontain">
+                    <fieldset data-role="controlgroup">
+                      <input type="radio" name="training-order" id="training-unchanged-order" value="unchanged" checked="checked"/>
+                      <label for="training-unchanged-order">Unchanged</label>
+                      <input type="radio" name="training-order" id="training-random-order" value="random"/>
+                      <label for="training-random-order">Random</label>   
+                      <input type="radio" name="training-order" id="training-in-order" value="in-order"/>
+                      <label for="training-in-order">In-Order</label>
+                      <input type="radio" name="training-order" id="training-reverse-order" value="reverse"/>
+                      <label for="training-reverse-order">Reverse</label>
+                    </fieldset>
+                  </div>
+                </div>
+                <!-- Data Mode Menu -->
+                <div data-role="collapsible" data-inset="false" id="training-set-data">    
+                  <h2>Data Mode</h2>
+                  <div class="popup-menu-element" data-role="fieldcontain">
+                    <fieldset data-role="controlgroup">
+                      <input type="radio" name="training-set-data" id="training-use-random" value="random" checked="checked"/>
+                      <label for="training-use-random">Random</label>
+                      <input type="radio" name="training-set-data" id="training-use-custom" value="custom"/>
+                      <label for="training-use-custom">Custom</label>
+                    </fieldset>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Training Session Creation Button - Popup Version -->
+            <button type="submit" id="create-training-session" data-theme="b">Create Training Session</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Training Canvas -->
+      <canvas id="training-canvas" class="canvas"></canvas> 
+      
+      <!-- Prediction and Feedback Panel -->
+      <div data-role="fieldcontain" style="margin: 0;">
+        <!-- Operation Prediction Bar -->
+        <fieldset id="guess-mode" data-role="controlgroup" data-type="horizontal">
+          <input type="radio" name="guess-mode" id="compare" value="compare" checked="checked"/>
+          <label for="compare" id="compare-button">'Compare' Step</label>
+          <input type="radio" name="guess-mode" id="swap" value="swap"/>
+          <label for="swap" id="swap-button">'Swap' Step</label>
+        </fieldset>
+        <!-- Feedback Text Boxes -->
+        <div class="ui-grid-c">
+          <div class="ui-block-a"><div title="Result for your last prediction." id="correct-or-wrong" class="ui-bar ui-bar-c training-grid training-grid-a"></div></div>
+          <div class="ui-block-b"><div title="Get feedback on the correctness of your prediction." class="ui-bar ui-bar-c training-grid training-grid-b"><button id="am-i-right" data-theme="b">Am I Right?</button></div></div>
+          <div class="ui-block-c"><div title="View next step. Counts as failed prediction." class="ui-bar ui-bar-c training-grid training-grid-b"><button id="show-me" data-theme="b">Show Me!</button></div></div>
+          <div class="ui-block-d"><div title="Score" id="correct-ratio" class="ui-bar ui-bar-c training-grid training-grid-a"></div></div>
+		    </div>
+        <!-- Feedback Request Buttons -->
+        <div class="ui-grid-a">
+          <div class="ui-block-a"><div title="Your predicted step." id="user-step" class="ui-bar ui-bar-c training-grid training-grid-c"></div></div>
+          <div class="ui-block-b"><div title="Actual step taken by algorithm." id="actual-step" class="ui-bar ui-bar-c training-grid training-grid-c"></div></div>
+		    </div>
+      </div>
+    </div>
+    
+    <!-- About Page -->
+    <div id="about-page" data-role="page" data-theme="c" data-content-theme="c">  
+      <h1>User Guide</h1>
+      <ol>
+        <li>
+          <h3>What is Graph-O-Matic?</h3>
+          Graph-O-Matic is an educational tool aimed primarily at computer science undergraduates. The concepts being
+          taught are basic algorithms and the method for teaching them is algorithm animation. Not only will you be 
+          able to watch these algorithms come to life, but you will also be able to experiment with the dataset and 
+          control the animation yourself.
+          <br><br>
+          Graph-O-Matic currently supports four algorithms: bubble sort, selection sort, insertion sort and Dijkstra's
+          shortest path algorithm.
+        </li>
+        
+        <li>
+          <h3>What is the graph animator?</h3>
+          The graph animator is accessible on the Graph Algorithms page and comes in two parts. The first part is a 
+          graph editor that allows you to produce your own datasets in graph form. The second part animates Dijkstra's 
+          shortest path algorithm on the graph you constructed.
+        </li>
+        
+        <li>
+          <h3>How do I use the graph editor?</h3>
+          To use the graph editor, first make sure you are in Build Mode. This can be done by clicking Build at the top
+          of the screen. Now you can build a graph in the canvas, the blank area that takes up most of the screen.
+          <br><br>
+          The first thing you'll notice is that the cursor is a circle on the canvas. This indicates a graph node that
+          you could potentially place at that location. Nodes can be placed by left-clicking the mouse or tapping the
+          touch-screen if you are using a tablet. If the cursor is green, you can place a node. If red, you'll have
+          to find an empty space to place the node.
+          <br><br>
+          Once a node has been placed on the canvas, you'll notice its name floating next to it. This is a node label, 
+          something you can change. To do this, you have to select a node. Nodes can be selected by clicking on them again, 
+          turning them blue. Once a node is selected, an options panel appears at the bottom of the page. Here you can either
+          delete the node or change the node's label by typing a new one into the text input box. Note that deleting a 
+          node will also delete any attached edges.
+          <br><br>
+          Selected nodes can be used to produce graph edges. Whenever you put your cursor on a different node, you'll see a
+          potential edge connecting the selected node and the node your cursor is on. Clicking that node will then create the
+          edge between the two nodes.
+          <br><br>
+          Edges also have a value floating next to them; this is their edge attribute and represents the distance between
+          the two nodes that each edge connects. Selecting an edge produces the options panel again, allowing you to 
+          delete the edge or change its edge attribute. Only positive numbers will be accepted as edge attributes.
+          <br><br>
+          Whenever you put your cursor over any node or edge, it will be highlighted yellow to indicate that it can be
+          selected. If you want to move a node or create an edge without selecting a new node, simply drag the node
+          you click on.
+          <br><br>
+          Once you are happy with your graph, you are now ready to animate Dijkstra's algorithm on it. Remember that
+          Dijkstra's algorithm requires a connected graph so make sure all your nodes can reach each other via a 
+          sequence of edges (known as a path).
+        </li>
+        
+        <li>
+          <h3>How do I animate Dijkstra's algorithm?</h3>
+          Once you have a graph ready for animation, click Run at the top of the screen to enter Run Mode.
+          <br><br>
+          The animator will prompt you to click on a starting node for the algorithm. All shortest path distances 
+          calculated will be from this node.
+          <br><br>
+          As soon as you click on your starting node, the animation will begin. The shortest path distances from 
+          the starting node to node X will appear next to node X's label in brackets. At each step of the animation, 
+          you'll notice the colours of each node changing. The following guide provides a key to the meaning of these 
+          colours:        
+          <img src='images/userguide1.png'/>
+          <br>
+          You can control the animation by using the buttons in the bottom-right of the screen. These include some 
+          buttons in the style of the controls you may see on a tape recorder or remote control for a DVD player. The 
+          slider bar can also be used to adjust the speed of the animation.
+        </li>
+        
+        <li>
+          <h3>What is the pseudocode panel?</h3>
+          The animation is supplemented by a text area in the bottom-left of the screen; this contains the pseudocode
+          for Dijkstra's algorithm and explains what is going on using text rather than animation. By default, this 
+          text area will contain only the current step of the algorithm that is being animated on the graph. If you 
+          want to see all the steps performed so far, simply click the text area to toggle its contents. Another
+          default for the text area is to display the code in a 'high-level' notation, meaning that it uses natural
+          language to try and make it easier for you to understand. If you want to see notation that is more similar
+          to the pseudocode used in textbooks, click on 'Pseudocode' using the buttons in the bottom-right corner.
+          You can go back to the high-level notation using the same buttons.
+        </li>
+        
+        <li>
+          <h3>What is the sorting animator?</h3>
+          The sorting animator is accessible on the Sorting Algorithms page and can be used to animate basic sorting
+          algorithms. Up to four animations can be run at the same time so you can compare how the performance of one
+          algorithm differs from another.
+        </li>
+        
+        <li>
+          <h3>How do I animate sorting algorithms?</h3>
+          The first thing you need to do is make an 'algorithm view'; this is simply a visual representation of an
+          algorithm that can be animated. Click on the 'Create Algorithm View' button at the top of the screen. This
+          will produce a popup menu. You can use this menu to specify what kind of sorting algorithm is going to be
+          animated and the dataset that it is performed on. 
+          <br><br>
+          From the first sub-menu, you can choose from bubble sort, 
+          selection sort and insertion sort for your sorting algorithm. The second sub-menu will let you choose the
+          visual representation used for your animation, though it is currently limited to just the 'row of bars' view.
+          The third sub-menu is the one where you can experiment with different input data. This input data is nothing 
+          more than a list of numbers to be sorted. You can either have a list of numbers generated for you or specify
+          your own. This list must contain between 2 and 15 numbers.
+          <br><br>
+          To make a random dataset, choose the Random Data option and type in the size of the random dataset you want.
+          To make a custom dataset, choose the Custom Data option and type in the numbers you want to be sorted; make
+          sure you separate them with spaces. Open up the Data Mode selection menu to specify whether you want the random
+          or custom data to be used. Finally, you can specify the ordering of your dataset with the Order selection
+          menu. This allows you to see how certain algorithms perform with different orderings; for example, you may
+          discover that some algorithms such as selection sort still perform n passes even when the dataset is already 
+          sorted! The different orderings available are random, reverse order, in-order and unchanged (the default
+          ordering).
+          <br><br>
+          Now you've specified the contents of your animation, it is time to add it to the web page. To do this, click 
+          on 'Create Algorithm View' from inside the popup. Your algorithm view will now appear in the animation area.
+          Note the algorithm type is written down its left-hand side and its dataset is numbered and written down its
+          right-hand side. In the 'row of bars' view, each number is written below the bar that represents it. Below
+          this number is its array index number. You can make up to four of these views
+          and can delete them by clicking on the red cross in their top-left corners. You can now animate them by using 
+          the control buttons in the bottom-right of the screen. Below is a quick guide to the colour coding used by the 
+          sorting animator:
+          <img src='images/userguide2.png'/>
+        </li>
+        
+        <li>
+          <h3>What is the trainer?</h3>
+          The trainer is accessible on the Training Mode page and can be used to test your knowledge of sorting algorithms.
+        </li>
+        
+        <li>
+          <h3>How do I use the trainer?</h3>
+          As with the sorting animator, the first thing you need to do is create an algorithm view. This is done by the
+          same process, though this time only one view can be made. Once your desired algorithm view is on the page, 
+          you now go through the process of testing your knowledge of the chosen algorithm. You do this by predicting 
+          each step of the algorithm until the end; at each step, you'll get feedback on whether you were right or not.
+          Predicting a step is simple. First, click on two bars from the algorithm view; they'll turn red. These represent
+          the two numbers that you believe will be involved in the next step of the algorithm. Next, click on either
+          'Compare Step' or 'Swap Step' to specify what kind of operation is going to be performed on these two numbers.
+          <br><br>
+          To find out if this was indeed the next step of the algorithm, click on 'Am I Right?'. This will produce feedback
+          in a number of text boxes around the bottom of the page. The one next to the 'Am I Right' button will read either
+          'Correct' or 'Wrong' in green or red respectively. The box on the opposite side will give you a score in the form
+          of the number of your correct guesses out of the number of total guesses. The two boxes at the very bottom of the
+          screen compare your predicted step with the actual step taken by the algorithm. The actual step taken will also be
+          animated for you to transform the dataset to a state in which you can predict the next step.
+          <br><br>
+          If at any point you aren't sure what the next step of the algorithm is, simply click 'Show Me!'. This will just
+          animate the next step of the algorithm for you, though will count as a failed prediction against your score. Keep 
+          practising and try to get a perfect score on all the algorithms!
+        </li>        
+      </ol>
+    </div>
   </body>
 </html>

@@ -1,5 +1,5 @@
 // Object that controls animation by storing an information feed and custom
-// animator that controls appearance of nodes in a graph
+// animator that controls the algorithm views
 AnimationController = function() {
   // Initialise object properties
   this.reset();  
@@ -22,8 +22,8 @@ AnimationController.prototype.reset = function() {
 }
   
 // Initialise animator and feed information  
-AnimationController.prototype.init = function (nodes, edges, startingNode) {  
-  this.algorithmAnimator = new DijkstraAnimator(nodes,edges,startingNode);
+AnimationController.prototype.init = function (animationData, algorithm) { 
+  this.algorithmAnimator = AnimatorFactory.getAnimator(animationData, algorithm);  
   this.algorithmAnimator.buildAnimation();
   this.feedLines = this.algorithmAnimator.getFeedLines();
   this.update(this);
@@ -43,12 +43,12 @@ AnimationController.prototype.update = function(objectRef) {
 }
 
 // Update contents of feed
-AnimationController.prototype.updateFeed = function(objectRef) {
+AnimationController.prototype.updateFeed = function(objectRef) {  
   var nextFeedLine = this.feedLines[this.currentFeedLine].getHighLevel();
   if (this.feedMode == "pseudocode") {
     nextFeedLine = this.feedLines[this.currentFeedLine].getPseudoCode();
   }
-  $('#currentStep').html(nextFeedLine);
+  $('#currentStep').val(nextFeedLine);
   objectRef.buildFeed();  
 }
 
@@ -64,17 +64,13 @@ AnimationController.prototype.buildFeed = function() {
   }
   else if (this.feedMode == "pseudocode") {
     $('#feed').val(this.algorithmAnimator.getPseudoCode());
+    $('#feed').scrollTop(0);
   }
 }
 
-// Toggle the contents of the feed between a high-level description and pseudocode
-AnimationController.prototype.toggleFeedMode = function() {  
-  if (this.feedMode == "high-level") {
-    this.feedMode = "pseudocode";
-  }
-  else {
-    this.feedMode = "high-level";
-  }
+// Set the feed mode to either high-level or pseudocode
+AnimationController.prototype.setFeedMode = function(newFeedMode) {  
+  this.feedMode = newFeedMode;
 }
 
 // Play animation
@@ -92,6 +88,11 @@ AnimationController.prototype.play = function() {
 AnimationController.prototype.pause = function() {
   this.clearTimer();
   this.paused = true;
+}
+
+// Stop animation
+AnimationController.prototype.stop = function() {
+  this.clearTimer();
 }
 
 // Go to next step of animation
@@ -139,6 +140,7 @@ AnimationController.prototype.clearTimer = function() {
 // Change speed of animation
 AnimationController.prototype.changeSpeed = function(newSpeed) {
   this.speed = newSpeed;
+  // If not currently paused, call the play method so the animation runs in the new speed
   if (!this.paused) {
     this.play();
   }
@@ -146,12 +148,17 @@ AnimationController.prototype.changeSpeed = function(newSpeed) {
 
 // Has an animation been built?
 AnimationController.prototype.isActive = function() {
-  return this.algorithmAnimator == null;
+  return this.algorithmAnimator != null;
 }
 
 // Draw a given node according to the custom animator
 AnimationController.prototype.draw = function(node, context, nodeRadius) {
   this.algorithmAnimator.drawNode(node, context, nodeRadius);
+}
+
+// Is animation paused?
+AnimationController.prototype.isPaused = function() {
+  return this.paused;
 }
 
 // Is animation ready to play?

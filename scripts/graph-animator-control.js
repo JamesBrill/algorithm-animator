@@ -1,5 +1,6 @@
-$(document).bind('pagecreate',function () {
+$(document).delegate('#graph-animator','pageinit',function () {
   var canvas, context; // Canvas variables
+  var drawTimer; // Dictates rate at which canvas objects are redrawn
   var nodeRadius; // Radius of all nodes on the canvas
   var cursorX = -1; // X coordinate of cursor
   var cursorY = -1; // Y coordinate of cursor
@@ -12,20 +13,22 @@ $(document).bind('pagecreate',function () {
   var startY = 0; // Starting Y coordinate of a drag
   var isMouseDown = false; // Is the left mouse button held down?
   var nodeJustBeenPlaced = false; // Has a node just been placed?
-  var graphMode = "build"; // The editing mode for the graph editor (build/modify/run)
+  var graphMode = "build"; // The editing mode for the graph editor (build/run)
   var nodeNumber = 1; // Current node number
   var animationController = new AnimationController(); // Object that controls animation
-  var alertTimer; // Timer that enables flashing alert message
   var width = $(window).width(); // Width of window
   var height = $(window).height(); // Height of window
+  var pageX = 0; // Relative mouse x-coordinate
+  var pageY = 0; // Relative mouse y-coordinate
+  var algorithm = "dijkstra"; // Algorithm currently being animated
 
-  // Begin running the app
+  // Begin running the graph animator
   init(); 
 
   // Initialization sequence
   function init () {
     // Find the canvas element
-    canvas = $('#canvas')[0];
+    canvas = $('#graph-canvas')[0];
     if (!canvas || !canvas.getContext) {
       alert('Error: browser does not support HTML5 canvas.');
       return;
@@ -46,8 +49,11 @@ $(document).bind('pagecreate',function () {
     // Resize all elements on screen
     resizeDivs();
     
+    // Initialise tooltips
+    initialiseTooltips("graph");
+    
     // Begin drawing on the canvas
-    setInterval(function () { draw() }, 25);
+    drawTimer = setInterval(function () { draw() }, 25);
   }
   
   // When the window is resized, resize all elements
@@ -69,32 +75,34 @@ $(document).bind('pagecreate',function () {
       canvas.width = width - 4;
       
       // Update size of other elements
-      $('.mode').css('height', 0.06 * height);
-      $('#button-box').height(0.22 * height - 10);
-      $('#feed-title').height(0.15 * $('#button-box').height());
+      $('.mode').css('height', (0.06 * height)-1);
+      $('.mode').css('line-height', '120%');
+      $('#graph-select-button').css('height', (0.06 * height)-1);
+      $('#graph-select-button').css('line-height', '140%');
+      $('#graph-main-menu').css('line-height', '140%');
+      $('#graph-button-box').height(0.22 * height - 10);
+      $('#feed-title').height(0.15 * $('#graph-button-box').height());
       $('.bottom-left').css('width', 0.7 * width);
-      $('.feed-box').css('height', $('#button-box').height() - $('#feed-title').height());
-      $('.feed-box').css('max-height', ($('#button-box').height()) + 'px');
+      $('.feed-box').css('height', $('#graph-button-box').height() - $('#feed-title').height());
+      $('.feed-box').css('max-height', ($('#graph-button-box').height()) + 'px');
       $('.feed-box').css('max-width', (0.7 * width) + 'px');
-      $('#animation-control-buttons').height(0.18 * height);
-      $('#animation-control-buttons').width(0.3 * width);
-      $('#animation-control-buttons').css("margin-left", (0.7 * width) + 'px');
-      $('.control').css("height", 0.4 * ($('#animation-control-buttons').height()-2));
-      $('.control').css("width", (1/6) * ($('#animation-control-buttons').width()-30));
-      $('#slider-container').css('margin-top', '2px');
-      $('#slider-container').css('width', $('#animation-control-buttons').width()-14);
-      $('#slider-container').css('height', 0.4 * ($('#animation-control-buttons').height()-2));
-      $('#slider-label').css('height', 0.5 * ($('#slider-container').height()-2));
-      $('.ownslider + div.ui-slider').css("margin-left", '0px');
-      $('.ownslider + div.ui-slider').css("margin-right", '0px');
-      $('.ownslider + div.ui-slider').css("margin-top", '0px');
-      $('.ownslider + div.ui-slider').css("margin-bottom", '0px');
-      $('.ownslider + div.ui-slider').css("width", $('#slider-container').width()-2);
-      $('.ownslider + div.ui-slider').css("height", 0.5 * ($('#slider-container').height()-2));
-      $('#feed-mode-container').css('width', $('#animation-control-buttons').width()-12);
-      $('#feed-mode-container').css('height', 0.3 * ($('#animation-control-buttons').height()-2));
+      $('#graph-animation-control-buttons').height(0.18 * height);
+      $('#graph-animation-control-buttons').width(0.3 * width);
+      $('#graph-animation-control-buttons').css("margin-left", (0.7 * width) + 'px');
+      $('.control').css("height", 0.4 * ($('#graph-animation-control-buttons').height()-4));
+      $('.control').css("width", (1/6) * ($('#graph-animation-control-buttons').width()+1));
+      $('#graph-slider-container').css('margin-top', '2px');
+      $('#graph-slider-container').css('width', $('#graph-animation-control-buttons').width()-14);
+      $('#graph-slider-container').css('height', 0.39 * ($('#graph-animation-control-buttons').height()-4));
+      $('#graph-slider-label').css('height', 0.5 * ($('#graph-slider-container').height()-2));
+      $('.ownslider + div.ui-slider').css("margin", '0px');
+      $('.ownslider + div.ui-slider').css("width", $('#graph-slider-container').width()-2);
+      $('.ownslider + div.ui-slider').css("height", 0.45 * ($('#graph-slider-container').height()-2));
+      $('#feed-mode-container').css('width', $('#graph-animation-control-buttons').width()-10);
+      $('#feed-mode-container').css('height', 0.3 * ($('#graph-animation-control-buttons').height()-4));
       $('.feed-mode').css('height', 0.95 * $('#feed-mode-container').height()); 
-
+      $('.feed-mode').css('line-height', '50%');
+      
       // Set proportional node radius
       nodeRadius = (width / 60);
     }
@@ -107,49 +115,93 @@ $(document).bind('pagecreate',function () {
       nodes[i].setY(nodes[i].getYDepth() * (0.72 * height - 4));
     }  
   }
-    
-  // Virtual mouse-down event handler
-  $('#canvas').bind('vmousedown', function (ev) {   
-    // Prevent text from being highlighted
-    ev.preventDefault();
-    
+  
+  // Virtual mouse-move event handler
+  $('#graph-canvas').bind('vmousemove', function (ev) {
+    // If in Build Mode...
+    if (graphMode == "build" || (graphMode == "run" && !animationController.isReady())) {
+      // Get the mouse position relative to the canvas element
+      if (ev.pageX == undefined || ev.pageY == undefined) {
+        cursorX = pageX - this.offsetLeft - 2; // Accommodates border of 2px
+        cursorY = pageY - this.offsetTop - 2; // Accommodates border of 2px        
+      }
+      else {
+        // Get the mouse position relative to the canvas element
+        cursorX = ev.pageX - this.offsetLeft - 2; // Accommodates border of 2px
+        cursorY = ev.pageY - this.offsetTop - 2; // Accommodates border of 2px
+      }
+    }
+
+    // Variable that will contain the item the user has their mouse over
+    var containingItem;
+
     // If in Build Mode...
     if (graphMode == "build") {
-      // Attempt to place a node. If a new node cannot be placed, the user may 
-      // have intended to have been trying to place a new edge; try this instead.
-      if (!placeNode()) { 
-        placeEdge();
-      }  
+      // Get the node that the cursor is currently on, if there is one
+      containingItem = determineSelectedItem();
+
+      // Update the current item that the cursor is on
+      updateCurrentItem(containingItem);
     }
-    
-    // If in Build Mode or Modify Mode...
-    if (graphMode == "build" || graphMode == "modify") {
+
+    if (graphMode == "run" && !animationController.isReady()) {
+      // Get the node that the cursor is currently on, if there is one
+      containingItem = getNearbyNode(cursorX, cursorY, false, 1);     
+
+      // Update the current item that the cursor is on
+      updateCurrentItem(containingItem);
+    }
+  });
+  
+  // Virtual mouse-down event handler
+$('#graph-canvas').bind('vmousedown', function (ev) { 
+    // Prevent text from being highlighted
+    ev.preventDefault();
+
+    // Store current relative mouse position so vmousemove event handler can 
+    // access it when it is fired (they are undefined in that handler otherwise).
+    pageX = ev.pageX;
+    pageY = ev.pageY;
+
+    // Ensures cursor is moved to current location on touch devices
+    $('#graph-canvas').trigger('vmousemove');
+
+    // If in Build Mode...
+    if (graphMode == "build") {
+      if (!(currentItem != null && currentItem.isHighlighted() && currentItem instanceof Edge)) {
+        // Attempt to place a node. If a new node cannot be placed, the user may 
+        // have intended to have been trying to place a new edge; try this instead.
+        if (!placeNode()) { 
+          placeEdge();
+        }  
+      }
+      
       // Attempt to initiate a dragging action
-      initiateDrag();    
+      initiateDrag(); 
     }
-    
+
     // If in Run Mode and starting node hasn't been selected yet...
     if (graphMode == "run" && !animationController.isReady()) { 
       // If user has clicked on a node...
       if (currentItem != null && currentItem instanceof Node) {
         // Unhighlight that node and turn off highlight mode
         currentItem.highlight();
-        highlightMode = false;
-        
-        // Turn off the flashing alert and return feed font to normal
-        clearInterval(alertTimer);
-        $('#currentStep').css('color', 'black');
-        $('#currentStep').css('font-size', '100%');
+        highlightMode = false;        
+
+        // Disable alert message
+        $('#graph-button-box').qtip('hide');
+        $('#graph-button-box').qtip('disable');
 
         // Initialise animation controller
-        animationController.init(nodes, edges, currentItem);
+        var animationData = new AnimationData(nodes, edges, currentItem);
+        animationController.init(animationData, algorithm);
         animationController.setReady();
       }
     }
   });
 
   // Virtual mouse-up event handler 
-  $('#canvas').bind('vmouseup', function () {
+$('#graph-canvas').bind('vmouseup', function () {
     // If in Build Mode...
     if (graphMode == "build") {
       // If no drag was performed and the cursor is over a node that hasn't
@@ -164,64 +216,61 @@ $(document).bind('pagecreate',function () {
       if (nodeJustBeenPlaced) {
         nodeJustBeenPlaced = false;
       }
-    }
-        
-    // If in Modify Mode...
-    if (graphMode == "modify") {
-      // If the user has not performed a drag...
-      if (cursorX == startX && cursorY == startY) {
-        // Record any changes to the selected item
-        updateSelectedItem();
-        
-        // Update the mod buttons accordingly
-        updateModificationButtons();
-      }     
-    }
-    
-    // If in Build Mode or Modify Mode...
-    if (graphMode == "build" || graphMode == "modify") {
+      
+      // Update the mod buttons accordingly
+      updateModificationButtons();
+
       // Record that the mouse button is no longer being held down
       isMouseDown = false;
     }
+  });    
+
+  // Event listener for when graph animator page is shown
+  $('#graph-animator').on('pageshow', function () {
+    drawTimer = setInterval(function () { draw() }, 25);
+    if (animationController.isReady()) {
+      if (animationController.isPaused()) {
+        animationController.pause();
+      }
+      else {
+        animationController.play();
+      }
+    }   
   });
+
+  // Event listener for when graph animator page is hidden
+  $('#graph-animator').on('pagehide', function () {
+    clearInterval(drawTimer);
+    if (animationController.isReady()) {
+      animationController.stop();
+    }    
+  }); 
   
-  // Virtual mouse-move event handler
-  $('#canvas').bind('vmousemove', function (ev) {
-    // If in Build Mode or Modify Mode...
-    if (graphMode == "build" || graphMode == "modify" || (graphMode == "run" && !animationController.isReady())) {
-      // Get the mouse position relative to the canvas element
-      cursorX = ev.pageX - this.offsetLeft - 2; // Accommodates border of 2px
-      cursorY = ev.pageY - this.offsetTop - 2; // Accommodates border of 2px
-    }
-    
-    // Variable that will contain the item the user has their mouse over
-    var containingItem;
-    
-    // If in Build Mode...
-    if (graphMode == "build") {
-      // Get the node that the cursor is currently on, if there is one
-      containingItem = getNearbyNode(cursorX, cursorY, false, 1);
-      
-      // Update the current item that the cursor is on
-      updateCurrentItem(containingItem);
-    }
-    
-    // If in Build Mode
-    if (graphMode == "modify") {
-      // Get the node or edge that the cursor is currently on, if there is one
-      containingItem = determineSelectedItem();
-      
-      // Update the current item that the cursor is on
-      updateCurrentItem(containingItem);
-    }
-    
-    if (graphMode == "run" && !animationController.isReady()) {
-      // Get the node that the cursor is currently on, if there is one
-      containingItem = getNearbyNode(cursorX, cursorY, false, 1);     
-     
-      // Update the current item that the cursor is on
-      updateCurrentItem(containingItem);
-    }
+  // When a graph algorithm is selected, update the algorithm to be animated
+  $('#graph-select').change(function () {
+    confirm('Do you want to reset the animator?', function(yes) {
+      // If user clicked 'OK', reset animator
+			if (yes) {
+        algorithm = $('#graph-select option:selected').val();
+        animationController.stop();
+        animationController = new AnimationController();
+        $('#feed').val('');
+        $('#currentStep').val('');
+        nodes = new Array(); 
+        edges = new Array(); 
+        currentItem = null;
+        highlightMode = false; 
+        selectedItem = null;
+        isMouseDown = false; 
+        nodeJustBeenPlaced = false;
+        nodeNumber = 1; 
+      }
+      // If user clicked 'Cancel', return selected algorithm to original value
+      else {
+        $('#graph-select').val(algorithm);
+        $('#graph-select').selectmenu("refresh",true);
+      }
+		});    
   });
   
   // Click event handler for the 'delete' button
@@ -265,16 +314,16 @@ $(document).bind('pagecreate',function () {
     }
   })
   
+  // Make sure the 'select starting node' tooltip is hidden when user moves to main menu
+  $('#graph-main-menu').click(function() {
+    $('#graph-button-box').qtip('hide');
+  });
+  
   // Change mode to Build when the "Build" button is clicked
   $('#build').click(function() {
     changeMode('build');
   })
-  
-  // Change mode to Modify when the "Modify" button is clicked
-  $('#modify').click(function() {
-    changeMode('modify');
-  })
-  
+    
   // Change mode to Run when the "Run" button is clicked
   $('#run').click(function() {
     if (graphMode != 'run') {
@@ -282,13 +331,15 @@ $(document).bind('pagecreate',function () {
     }
   })
   
+  // Change feed mode to 'high-level'
   $('#high-level').click(function() {
-    animationController.toggleFeedMode();
+    animationController.setFeedMode("high-level");
     animationController.updateFeed(animationController);
   });
 
+  // Change feed mode to 'pseudocode'
   $('#pseudocode').click(function() {
-    animationController.toggleFeedMode();
+    animationController.setFeedMode("pseudocode");
     animationController.updateFeed(animationController);
   });
   
@@ -304,12 +355,15 @@ $(document).bind('pagecreate',function () {
        
     // If the user left Run Mode, remove the algorithm data from the nodes
     if (oldGraphMode == "run" && graphMode != "run") {
-      // Ensure alert timer is still not running
-      clearInterval(alertTimer); 
+      // Disable alert message
+      $('#graph-button-box').qtip('hide');
+      if ($('#graph-button-box').qtip('disable', 'false')) {
+        $('#graph-button-box').qtip('disable');
+      }
       // Hide animation elements
       $('.hide-at-init').hide();
       // Ensure text on pause button is correct
-      $('#pause').html('Pause');
+      $('#graph-pause-button').attr('src', 'images/pause.png');
       // Reset animation controller
       animationController.reset();
       // Remove all animation-related data from nodes
@@ -348,37 +402,23 @@ $(document).bind('pagecreate',function () {
       $('#feed').hide();
       $('#feed').val('');
       $('#currentStep').show();
-      $('#currentStep').css('font-size', '300%');
-      $('#currentStep').html("SELECT STARTING NODE.");
+      $('#currentStep').val("");
       
       // Turn off highlight mode to enable cursor after mode change
       highlightMode = false;
       
-      // Enable the 'pause' button and set the slider to 5
-      $('#pause').prop('disabled', false);
-      $('#slider-3').val(5).slider('refresh');
+      // Enable the 'pause' button and set the slider to 12
+      $('#graph-slider').val(12).slider('refresh');
 
-      // Start the flashing alert
-      activateAlertTimer();
+      // Turn on alert for user to select starting node
+      activateAlert();
     }
   }
   
-  // Show flashing alert asking the user to select a starting node for animation
-  function activateAlertTimer() {
-    // Variable representing whether alert message is black. Its value is passed 
-    // to an anonymous function via a closure.
-    var black = false;
-    // Change colour of alert message every 300 milliseconds
-    alertTimer = setInterval(function() {        
-      if(black) {
-        $('#currentStep').css('color', 'red');
-        black = false;
-      }
-      else {
-        $('#currentStep').css('color', 'black');
-        black = true;
-      }
-    }, 300);    
+  // Alert user to the fact that a starting node needs to be selected
+  function activateAlert() {
+    $('#graph-button-box').qtip('enable');
+    $('#graph-button-box').qtip('show');
   }  
     
   // When 'current step' box is clicked, show 'feed' box
@@ -398,43 +438,43 @@ $(document).bind('pagecreate',function () {
   });
   
   // When 'play' button is clicked, play algorithm and enable 'pause' button
-  $('#play').click(function () {
+  $('#graph-play').click(function () {
     animationController.play();
-    $('#pause').prop('disabled', false);
-    $('#pause').html('Pause');
+    $('#graph-pause-button').attr('src', 'images/pause.png');
   });
   
   // When 'pause' button is clicked, pause algortihm and disable 'pause' button
-  $('#pause').click(function () {
-    animationController.pause();
-    $('#pause').prop('disabled', true);
-    $('#pause').html('Paused');
+  $('#graph-pause').click(function () {
+    if (animationController.isReady()) {
+      animationController.pause();
+      $('#graph-pause-button').attr('src', 'images/paused.png');
+    }
   });
   
   // When 'next' button is clicked, go to next step of algorithm
-  $('#next').click(function () {
+  $('#graph-next').click(function () {
     animationController.next();
   });
   
   // When 'prev' button is clicked, go to previous step of algorithm
-  $('#prev').click(function () {
+  $('#graph-prev').click(function () {
     animationController.prev();
   });
   
   // When 'start' button is clicked, go to first step of algorithm
-  $('#start').click(function () {
+  $('#graph-start').click(function () {
     animationController.beginning();
   });
   
   // When 'end' button is clicked, go to end of algorithm
-  $('#end').click(function () {
+  $('#graph-end').click(function () {
     animationController.end();
   });
   
   // 'Change' event handler for slider. Updates step delay value
-  $('#slider-3').change(function(){
-    var stepDelay = $(this).val();
-    animationController.changeSpeed(stepDelay*1000);
+  $('#graph-slider').change(function(){
+    var stepsPerMinute = $(this).val();
+    animationController.changeSpeed(60000 / stepsPerMinute);
  })
    
   // Updates the node or edge that is currently selected
@@ -540,7 +580,7 @@ $(document).bind('pagecreate',function () {
     var edgePotentials = new Array();
     
     // For each edge...
-    for (var i = 0; i < edges.length; i++) {
+    for (var i = 0; i < edges.length; i++) {      
       // Coordinates of the edge's start and end points
       var startX = edges[i].getFromNode().getX();
       var startY = edges[i].getFromNode().getY();
@@ -582,7 +622,7 @@ $(document).bind('pagecreate',function () {
     }
   }
   
-  // Deletes edges incident to the selected node in Modify Mode
+  // Deletes edges incident to the selected node 
   function deleteIncidentEdges() {
     // Initialise an array of edges to be deleted
     var deletedEdges = new Array();
@@ -644,7 +684,7 @@ $(document).bind('pagecreate',function () {
   function placeNode () {
     // If there is space for a node to be placed at the cursor's position,
     // create a new node there
-    if (nodeCanBePlaced()) { 
+    if (nodeCanBePlaced()) {       
       // These depth coordinates record node's relative position on canvas
       var xDepth = cursorX/canvas.width;
       var yDepth = cursorY/canvas.height;
@@ -672,7 +712,8 @@ $(document).bind('pagecreate',function () {
   // Returns true if edge can be placed between the selected and current nodes
   function edgeCanBePlaced() {
     // If user has not clicked a node different to the selected node, return false
-    if (selectedItem == null || currentItem == null || currentItem == selectedItem) {
+    if (selectedItem == null || currentItem == null || currentItem == selectedItem ||
+        currentItem instanceof Edge || selectedItem instanceof Edge) {
       return false;
     }
     
@@ -728,21 +769,21 @@ $(document).bind('pagecreate',function () {
     for (var i = 0; i < nodes.length; i++) {
       drawNode(nodes[i]);
     }
-    
+
     // If nothing is being highlighted while building, draw an appropriate cursor
     if (!highlightMode && (graphMode == "build" || (graphMode == "run" && !animationController.isReady()))) {
       drawCursor();
     }
-    
+
     // If the user is in build mode, suggest a potential edge if possible
     if (graphMode == "build") {
       drawPotentialEdge();
     }    
-    
+
     // Draw each edge
     for (i = 0; i < edges.length; i++) {      
       drawEdge(edges[i]);
-    }    
+    }   
   }  
   
   // Draws a cursor on the canvas
@@ -781,7 +822,7 @@ $(document).bind('pagecreate',function () {
     context.fillText(node.getLabel(), x + nodeRadius, y - nodeRadius);
     
     // Use the algorithm animator to draw the node if in Run Mode
-    if (graphMode == "run" && !animationController.isActive()) {
+    if (graphMode == "run" && animationController.isActive()) {
       animationController.draw(node, context, nodeRadius);
     }
     else {
@@ -808,12 +849,14 @@ $(document).bind('pagecreate',function () {
   // Draws a 'ghost' edge that could potentially be placed if the mouse was clicked
   function drawPotentialEdge() {
     // If user has clicked a node different to the selected node, draw the potential edge
-    if (selectedItem != null && currentItem != null && currentItem != selectedItem) {
+    if (selectedItem != null && currentItem != null && currentItem != selectedItem &&
+        selectedItem instanceof Node && currentItem instanceof Node && 
+        edgeCanBePlaced()) {
       var potentialEdge = new Edge(currentItem,selectedItem); 
       potentialEdge.setWeight(0);
       drawEdge(potentialEdge);
     }
-  }
+  }  
   
   // Draw edge with given endpoints on to the canvas
   function drawEdge(edge) {
